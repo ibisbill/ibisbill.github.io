@@ -5,7 +5,7 @@ navbar_name: "Maggie's Space"
 positions:
 - logo: /assets/images/badges/Penn.jpeg  # Logo is optional
   name: Master's at University of Pennsylvania
-- logo: /assets/images/badges/Beyz.png
+- logo: /assets/images/badges/Beyz.jpeg
   name: Cheif Scientist at Beyz
 
 
@@ -35,10 +35,10 @@ linkedin: maggie-huan
 short_bio_text_justify: false
 short_bio: >-
   <p>
-    Hi this is Maggie. I am a first-year master student at the University of Pennsylvania. I like research and apply technologies that can interact with the world. In free time I serve at <a href="https://beyz.ai/" target="_blank">Beyz</a>. at Cheif Scientist
+    Hi this is Maggie. I am a first-year master student at the University of Pennsylvania. On the "serious side", I like research with deep logics expecially about how human and machine can make rational decisions. On the "fun" side, I am excited about technologies that interact with this ever-changing world. In free time I serve at <a href="https://beyz.ai/" target="_blank">Beyz</a>. at Cheif Scientist
   </p>
   <p>
-    Research Interest: 
+    Research Interest: My research interest lies in the intersection of NLP and RL. I am interested in how language can be used to guide the learning of agents in complex environments through interaction. 
   </p>
 
 portrait_url: /assets/images/photos/portrait.jpg
@@ -53,6 +53,22 @@ education:
     School of Engineering and Applied Science <br/>
     Master of Science in Engineering 
   date: Sep. 2024 - present
+
+research experience:
+- name: University of Pennsylvania
+  logo: /assets/images/badges/Penn.jpeg
+  position: >- 
+    School of Engineering and Applied Science <br/>
+    Master of Science in Engineering 
+  date: Sep. 2024 - present
+
+industry experience:
+- name: Microsoft Research Asia
+  logo: /assets/images/badges/Penn.jpeg
+  position: >- 
+    Research Intern <br/>
+    Machine Learning Group
+  date: Jan. 2023 - Oct. 2023
 # - name: Peking University
 #   logo: /assets/images/badges/PKU_red.png
 #   position: B.S. in Computer Science
