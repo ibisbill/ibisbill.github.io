@@ -35,13 +35,15 @@ linkedin: maggie-huan
 short_bio_text_justify: false
 short_bio: >-
   <p>
-    Hi this is Maggie! I am a first-year master student at the University of Pennsylvania. I'm ingited by these ideas about how AI can driven our life to the more automated future, and I like working on related areas. On the "serious side", I like conductng research with deep logics expecially about how human and machine can make cooler decisions. On the "fun side", I am excited about building next Gen AI tools that people can change their lifestyle with. 
+    Hi this is Maggie! I am a first-year master student at the University of Pennsylvania. I am inspired by the future where AI and human creativity can together shape a new world. And I'd love to be one of the “little builders” crafting this bold, imaginative future.
+  </p>
+  <p>
+    On the "serious side", I like conducting research about how human and machine can make cooler decisions. On the "fun side", I am excited about building next Gen AI tools that can facilitate us. 
     For research, I'm an intern at Berkeley NLP Group guided by my amazing mentors Alane Suhr and Nicholas Tomlin. We explore how language agents can learn though interactions and collaborate with each other for optimal decisions.
     In free time I also work on an real-time AI interview assistant called <a href="https://beyz.ai/" target="_blank">Beyz</a> with my friends where I serve as Chief Scientist.
   </p>
   <p>
-    Research Interest: 
-    My research interest lies in the intersection of NLP and RL. I am interested in how language can be used to guide the learning of agents in complex environments through interaction. 
+    My research interest lies in the intersection of NLP and RL. Currently, I am interested in how language can be used to guide the learning of agents in complex environments through interaction. 
   </p>
 
 portrait_url: /assets/images/photos/portrait.jpg
