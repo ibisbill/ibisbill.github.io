@@ -5,8 +5,8 @@ navbar_name: "Maggie's Space"
 positions:
 - logo: /assets/images/badges/Penn.jpeg  # Logo is optional
   name: Master's at University of Pennsylvania
-- logo: /assets/images/badges/Beyz.jpeg
-  name: Cheif Scientist at Beyz
+# - logo: /assets/images/badges/Beyz.jpeg
+#   name: Cheif Scientist at Beyz
 
 
 email: "ziyuh@seas.upenn.edu"
@@ -35,17 +35,19 @@ linkedin: maggie-huan
 short_bio_text_justify: false
 short_bio: >-
   <p>
-    Hi this is Maggie! I am a first-year master student at the University of Pennsylvania. I'm inspired by a future where AI and human creativity come together to build a world powered by smart solutions, blending technological progress with human values to create a society that's innovative, inclusive, and compassionate. And I'd love to be one of the “little builders” crafting this bold, imaginative future.
+    Hi, this is Maggie! I am a first-year master's student at the University of Pennsylvania. I'm inspired by a image where AI and human creativity come together to build a world powered by smart solutions. And I'd love to be one of the “little builders” crafting this bold, imaginative future.
   </p>
   <p>
-    On the "serious side", I like conducting research about how human and machine can make cooler decisions. On the "fun side", I am excited about building next Gen AI tools that can facilitate us. 
-    For research, I'm an intern at Berkeley NLP Group guided by my amazing mentors Alane Suhr and Nicholas Tomlin. We explore how language agents can learn through interactions and collaborate with each other for optimal decisions.
-    In free time I also work on an real-time AI interview assistant called <a href="https://beyz.ai/" target="_blank">Beyz</a> with my friends where I serve as Chief Scientist.
+    On the "serious side", I like researching how humans and machines can make cooler decisions. On the "fun side", I am excited about building next-gen AI tools to facilitate us. 
+    For research, I'm an intern at Berkeley NLP Group guided by my amazing mentors <a href="https://alanesuhr.com/" target="_blank">Alane Suhr</a> and <a href="https://people.eecs.berkeley.edu/~nicholas_tomlin/" target="_blank">Nicholas Tomlin</a>. We explore how language agents can learn through interactions and collaborate for optimal decisions. 
+    In my free time, I also work on a real-time AI interview assistant called <a href="https://beyz.ai/" target="_blank">Beyz</a> with my friends where I serve as Chief Scientist.
+    
   </p>
   <p>
-    My research interest lies in the intersection of NLP and RL. Currently, I am interested in how language can be used to guide the learning of agents in complex environments through interaction. 
+    My research interest lies in the intersection of NLP and RL. 
+    Currently, I am particularly interested in how language can be used to guide the learning of agents in complex environments through interaction.
   </p>
-
+# I like thoughts on what intelligence might be, and especially interested in how we form our wisdom through interactions in society, and inverse how we utilize these knowledge for choosing better actions. Can we use our deeper understanding on intelligence to teach machines do the same?
 portrait_url: /assets/images/photos/portrait.jpg
 portrait_caption: >-
   Photo in October at Penn
