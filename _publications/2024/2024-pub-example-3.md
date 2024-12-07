@@ -13,7 +13,7 @@ abstract: >-
 cover:          /assets/images/covers/cover3.png
 authors:
   - Zeyuan Liu*
-  - Maggie Ziyu Huan*
+  - Ziyu Huan*
   - Xiyao Wang
   - Jiafei Lyu
   - Jian Tao
