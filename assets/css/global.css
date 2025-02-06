@@ -5,6 +5,10 @@ body {
     padding-top: 5.0rem;
 }
 
+.bg-light {
+    background-color: #fee5e99d !important;
+}
+
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
     font-weight: 700;
