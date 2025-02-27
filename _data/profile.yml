@@ -36,11 +36,15 @@ linkedin: maggie-huan
 short_bio_text_justify: false
 short_bio: >-
   <p>
-    Hi, this is Maggie! I am a first-year master's student at the University of Pennsylvania. 
+  Hi, this is Maggie! I am a first-year master's student at the University of Pennsylvania. I'm passionate about the intersection of NLP and reinforcement learning.
   </p>
+
   <p>
-    My research interest lies in the intersection of NLP and RL. 
-    Currently, I am particularly interested in how language can be used to guide the learning of agents in complex environments through interaction.
+    I'm currently an intern at the Berkeley NLP Group working with  <a href=" " target="_blank">Alane Suhr</a> and <a href="https://people.eecs.berkeley.edu/~nicholas_tomlin/" target="_blank">Nicholas Tomlin</a>. Together, we study how language agents learn through interactions and collaborate for better decision-making.
+  </p>
+
+  <p>
+    My research interests focus on how language can guide agents in complex environments, helping them learn more effectively. 
   </p>
 # short_bio: >-
 #   <p>
@@ -56,7 +60,14 @@ short_bio: >-
 #     My research interest lies in the intersection of NLP and RL. 
 #     Currently, I am particularly interested in how language can be used to guide the learning of agents in complex environments through interaction.
 #   </p>
-# I like thoughts on what intelligence might be, and especially interested in how we form our wisdom through interactions in society, and inverse how we utilize these knowledge for choosing better actions. Can we use our deeper understanding on intelligence to teach machines do the same?
+  # <p>
+  #   Hi, this is Maggie! I am a first-year master's student at the University of Pennsylvania. 
+  # </p>
+  # <p>
+  #   My research interest lies in the intersection of NLP and RL. 
+  #   Currently, I am particularly interested in how language can be used to guide the learning of agents in complex environments through interaction.
+  # </p>
+
 portrait_url: /assets/images/photos/portrait.jpg
 portrait_caption: >-
   Photo in October at Penn
