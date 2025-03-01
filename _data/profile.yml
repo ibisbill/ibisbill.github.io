@@ -36,11 +36,12 @@ linkedin: maggie-huan
 short_bio_text_justify: false
 short_bio: >-
   <p>
-    Hi, this is Maggie! I am a first-year master's student at the University of Pennsylvania. 
+  Hi, this is Maggie! I am a first-year master's student at the University of Pennsylvania. 
   </p>
+
   <p>
-    My research interest lies in the intersection of NLP and RL. 
-    Currently, I am particularly interested in how language can be used to guide the learning of agents in complex environments through interaction.
+    I'm currently an intern at the Berkeley NLP Group working with  <a href="https://alanesuhr.com/" target="_blank">Alane Suhr</a> and <a href="https://people.eecs.berkeley.edu/~nicholas_tomlin/" target="_blank">Nicholas Tomlin</a>. Together, we study how language agents learn through interactions and collaborate for better decision-making.
+    My research interests focus on how language can guide agents in complex environments, helping them learn more effectively. 
   </p>
 # short_bio: >-
 #   <p>
