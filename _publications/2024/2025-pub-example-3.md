@@ -2,7 +2,7 @@
 title:          "World Models with Hints of Large Language Models for Goal Achieving"
 date:           2024-05-12 00:01:00 +0800
 selected:       true
-pub:            "The 2025 Annual Conference of the Nations of the Americas Chapter of the ACL (NAACL 2025 Main)"
+pub:            "<strong>NAACL 2025 Oral</strong>"
 # pub_pre:        "Submitted to "
 # pub_post:       'NAACL'
 # pub_last:       ' <span class="badge badge-pill badge-publication badge-success">Spotlight</span>'
@@ -13,7 +13,7 @@ abstract: >-
 cover:          /assets/images/covers/cover3.png
 authors:
   - Zeyuan Liu*
-  - Ziyu Huan*
+  - <strong>Ziyu Huan*</strong>
   - Xiyao Wang
   - Jiafei Lyu
   - Jian Tao
