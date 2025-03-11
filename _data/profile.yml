@@ -21,18 +21,7 @@ twitter: maggie_h2024  # Do not include the '@' symbol
 linkedin: maggie-huan
 # orcid: 0000-0000-0000-0000
 
-# short_bio_text_justify: false
-# short_bio: >-
-#   # <p>
-#   #   A <a href="https://en.wikipedia.org/wiki/Bicolor_cat" target="_blank">bicolor cat</a> is a cat with white fur combined with fur of some other colour, for example solid black, tabby, or colourpointed.
-#   # </p>
-#   <p>
-#     Hi this is Maggie. I am a first-year master student at the University of Pennsylvania. 
-#   </p>
 
-# portrait_url: /assets/images/photos/portrait.jpg
-# portrait_caption: >-
-#   Photo by Manja Vitolic on Unsplash (this caption is optional, comment it out to disable).
 short_bio_text_justify: false
 short_bio: >-
   <p>
@@ -40,10 +29,10 @@ short_bio: >-
   </p>
   <p>
     My research interest lies in the intersection of NLP and RL. 
-    I am very fortunate to be guided by my amazing mentors <a href="https://alanesuhr.com/" target="_blank">Alane Suhr</a> and <a href="https://people.eecs.berkeley.edu/~nicholas_tomlin/" target="_blank">Nicholas Tomlin</a> at the Berkeley NLP Group. Together, we study how language agents learn through interactions and collaborate for better decision-making.
+    I am very lucky to be guided by my amazing mentors <a href="https://alanesuhr.com/" target="_blank">Alane Suhr</a> and <a href="https://people.eecs.berkeley.edu/~nicholas_tomlin/" target="_blank">Nicholas Tomlin</a> at the Berkeley NLP Group. Together, we study how language agents learn through interactions and collaborate for better decision-making.
   </p>
   <p>
-    My name Ziyu(梓堉) reads as /tsɨ²¹⁴ y²⁵/ in IPA, which is somehow hard to pronounce for some people. Feel free to call me the name you like! I normally react to both of them :)
+    My legal name Ziyu(梓堉) reads as /tsɨ²¹⁴ y²⁵/ in IPA, which is sometimes hard to pronounce. Feel free to call me the name you like! I normally react to both of them :)
   </p>
 # short_bio: >-
 #   <p>
