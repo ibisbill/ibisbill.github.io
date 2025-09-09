@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster-Based Predicate Distribution Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            background-color: #fafafa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .header .metadata {
+            font-size: 0.95em;
+            opacity: 0.8;
+            margin-top: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 25px;
+        }
+
+        .side-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 25px;
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #34495e;
+        }
+
+        .control-group input, .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        #mainVisualization {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            background: #fdfdfd;
+        }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2980b9;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .legend {
+            margin-bottom: 25px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .cluster-details {
+            border-top: 1px solid #ecf0f1;
+            padding-top: 20px;
+        }
+
+        .cluster-info {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .cluster-info.active {
+            display: block;
+        }
+
+        .predicate-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ecf0f1;
+            border-radius: 4px;
+        }
+
+        .predicate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f2f6;
+            font-size: 0.85em;
+        }
+
+        .predicate-item:last-child {
+            border-bottom: none;
+        }
+
+        .predicate-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .predicate-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            font-size: 0.8em;
+            color: #7f8c8d;
+        }
+
+        .circle-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            stroke: #ffffff;
+            stroke-width: 1.5;
+        }
+
+        .circle-node:hover {
+            stroke: #2980b9;
+            stroke-width: 3;
+            filter: brightness(1.1);
+        }
+
+        .circle-node.selected {
+            stroke: #e74c3c;
+            stroke-width: 3;
+            filter: brightness(1.2);
+        }
+
+        .node-label {
+            font-size: 10px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+            fill: #2c3e50;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 280px;
+            line-height: 1.4;
+        }
+
+        .analysis-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .chart-container {
+            background: #fdfdfd;
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .methodology {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 25px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .methodology h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Cluster-Based Predicate Distribution Analysis</h1>
+        <div class="subtitle">Computational Linguistics Research Dashboard</div>
+        <div class="metadata">
+            Dataset: 100 Clusters | Total Predicates: 1,667,889 | Analysis Framework: D3.js v7.8.5
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard">
+            <div class="main-panel">
+                <div class="panel-title">🔬 Interactive Cluster Visualization</div>
+                
+                <div class="export-buttons">
+                    <button class="btn btn-primary" onclick="exportVisualization()">📊 Export SVG</button>
+                    <button class="btn btn-secondary" onclick="exportData()">📋 Export Data</button>
+                </div>
+
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="searchInput">🔍 Search Predicates</label>
+                        <input type="text" id="searchInput" placeholder="e.g., click, type, navigate...">
+                    </div>
+                    <div class="control-group">
+                        <label for="sizeMetric">📏 Node Size Metric</label>
+                        <select id="sizeMetric">
+                            <option value="total">Total Predicates</option>
+                            <option value="diversity">Type Diversity</option>
+                            <option value="entropy">Shannon Entropy</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="colorMetric">🎨 Color Encoding</label>
+                        <select id="colorMetric">
+                            <option value="diversity">Predicate Diversity</option>
+                            <option value="dominance">Dominant Predicate %</option>
+                            <option value="size">Cluster Size</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="scaleSlider">🔍 Scale Factor</label>
+                        <input type="range" id="scaleSlider" min="0.3" max="2.5" step="0.1" value="1.0">
+                    </div>
+                </div>
+                
+                <div id="mainVisualization"></div>
+            </div>
+
+            <div class="side-panel">
+                <div class="panel-title">📊 Dataset Statistics</div>
+                
+                <div class="statistics-grid">
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalClusters">100</span>
+                        <div class="stat-label">Total Clusters</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalPredicates">1.67M</span>
+                        <div class="stat-label">Total Predicates</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="avgDiversity">4.2</span>
+                        <div class="stat-label">Avg. Diversity</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="maxDiversity">156</span>
+                        <div class="stat-label">Max Diversity</div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="panel-title">🎨 Legend</div>
+                    <div id="legendContainer"></div>
+                </div>
+
+                <div class="cluster-details">
+                    <div class="panel-title">🔍 Cluster Details</div>
+                    <div class="cluster-info" id="clusterInfo">
+                        <p style="color: #7f8c8d; font-style: italic;">Click on a cluster to view detailed predicate distribution</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-section">
+            <div class="panel-title">📈 Statistical Analysis</div>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Predicate Diversity Distribution</div>
+                    <canvas id="diversityChart" width="400" height="300"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Cluster Size Distribution</div>
+                    <canvas id="sizeChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <div class="methodology">
+                <h3>📋 Methodology</h3>
+                <p><strong>Data Structure:</strong> Each cluster represents a semantic grouping of predicates with associated frequency distributions. The visualization employs force-directed layout algorithms to minimize overlap while preserving cluster relationships.</p>
+                <p><strong>Metrics:</strong> Node sizes encode total predicate frequency or Shannon entropy (H = -Σp<sub>i</sub>log<sub>2</sub>p<sub>i</sub>). Color mappings represent diversity indices or dominance ratios of primary predicates.</p>
+                <p><strong>Interaction:</strong> Click nodes for detailed breakdowns. Search functionality filters clusters by predicate names using case-insensitive substring matching.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Data processing and initialization
+        const clusterData = [
+            {id: 0, totalPredicates: 43344, uniqueTypes: 2, predicates: [{name: "wait", count: 43338, percentage: 100.0}, {name: "wait for", count: 6, percentage: 0.0}]},
+            {id: 1, totalPredicates: 588224, uniqueTypes: 5, predicates: [{name: "click", count: 588135, percentage: 100.0}, {name: "find and click", count: 44, percentage: 0.0}, {name: "click and hold", count: 43, percentage: 0.0}, {name: "continue clicking", count: 1, percentage: 0.0}, {name: "re-click", count: 1, percentage: 0.0}]},
+            {id: 2, totalPredicates: 258375, uniqueTypes: 3, predicates: [{name: "scroll", count: 258370, percentage: 100.0}, {name: "scroll down", count: 4, percentage: 0.0}, {name: "continue scrolling", count: 1, percentage: 0.0}]},
+            {id: 3, totalPredicates: 129165, uniqueTypes: 3, predicates: [{name: "type", count: 129163, percentage: 100.0}, {name: "optionally type", count: 1, percentage: 0.0}, {name: "re-type", count: 1, percentage: 0.0}]},
+            {id: 4, totalPredicates: 99603, uniqueTypes: 6, predicates: [{name: "select", count: 99590, percentage: 100.0}, {name: "browse and select", count: 8, percentage: 0.0}, {name: "select or enter", count: 2, percentage: 0.0}, {name: "search and select", count: 1, percentage: 0.0}, {name: "find and select", count: 1, percentage: 0.0}, {name: "enter or select", count: 1, percentage: 0.0}]},
+            {id: 5, totalPredicates: 74284, uniqueTypes: 3, predicates: [{name: "navigate", count: 74281, percentage: 100.0}, {name: "navigate back", count: 2, percentage: 0.0}, {name: "navigate to", count: 1, percentage: 0.0}]},
+            {id: 6, totalPredicates: 30820, uniqueTypes: 4, predicates: [{name: "check", count: 30806, percentage: 100.0}, {name: "check for", count: 12, percentage: 0.0}, {name: "double-check", count: 1, percentage: 0.0}, {name: "check off", count: 1, percentage: 0.0}]},
+            {id: 7, totalPredicates: 74355, uniqueTypes: 4, predicates: [{name: "enter", count: 74295, percentage: 99.9}, {name: "re-enter", count: 56, percentage: 0.1}, {name: "enter text", count: 2, percentage: 0.0}, {name: "optionally enter", count: 2, percentage: 0.0}]},
+            {id: 8, totalPredicates: 14780, uniqueTypes: 2, predicates: [{name: "confirm", count: 14779, percentage: 100.0}, {name: "confirm following", count: 1, percentage: 0.0}]},
+            {id: 9, totalPredicates: 19567, uniqueTypes: 2, predicates: [{name: "review", count: 19566, percentage: 100.0}, {name: "review and update", count: 1, percentage: 0.0}]},
+            {id: 10, totalPredicates: 2437, uniqueTypes: 3, predicates: [{name: "adjust", count: 2433, percentage: 99.8}, {name: "make adjustments", count: 3, percentage: 0.1}, {name: "verify and adjust", count: 1, percentage: 0.0}]},
+            {id: 11, totalPredicates: 14746, uniqueTypes: 2, predicates: [{name: "open", count: 14736, percentage: 99.9}, {name: "reopen", count: 10, percentage: 0.1}]},
+            {id: 12, totalPredicates: 6042, uniqueTypes: 2, predicates: [{name: "locate", count: 5962, percentage: 98.7}, {name: "locate and click", count: 80, percentage: 1.3}]},
+            {id: 13, totalPredicates: 9886, uniqueTypes: 3, predicates: [{name: "read", count: 9882, percentage: 100.0}, {name: "read and accept", count: 2, percentage: 0.0}, {name: "read through", count: 2, percentage: 0.0}]},
+            {id: 14, totalPredicates: 3631, uniqueTypes: 1, predicates: [{name: "return", count: 3631, percentage: 100.0}]},
+            {id: 15, totalPredicates: 4077, uniqueTypes: 1, predicates: [{name: "note", count: 4077, percentage: 100.0}]},
+            {id: 16, totalPredicates: 12335, uniqueTypes: 2, predicates: [{name: "verify", count: 12328, percentage: 99.9}, {name: "validate", count: 7, percentage: 0.1}]},
+            {id: 17, totalPredicates: 2207, uniqueTypes: 2, predicates: [{name: "hover", count: 2206, percentage: 100.0}, {name: "hover over", count: 1, percentage: 0.0}]},
+            {id: 18, totalPredicates: 4210, uniqueTypes: 1, predicates: [{name: "view", count: 4210, percentage: 100.0}]},
+            {id: 19, totalPredicates: 5378, uniqueTypes: 2, predicates: [{name: "look", count: 5377, percentage: 100.0}, {name: "look at", count: 1, percentage: 0.0}]},
+            {id: 20, totalPredicates: 1283, uniqueTypes: 1, predicates: [{name: "update", count: 1283, percentage: 100.0}]},
+            {id: 21, totalPredicates: 6287, uniqueTypes: 3, predicates: [{name: "choose", count: 6243, percentage: 99.3}, {name: "pick", count: 25, percentage: 0.4}, {name: "decide", count: 19, percentage: 0.3}]},
+            {id: 22, totalPredicates: 5988, uniqueTypes: 2, predicates: [{name: "repeat", count: 5984, percentage: 99.9}, {name: "repeat click", count: 4, percentage: 0.1}]},
+            {id: 23, totalPredicates: 1702, uniqueTypes: 1, predicates: [{name: "use", count: 1702, percentage: 100.0}]},
+            {id: 24, totalPredicates: 4246, uniqueTypes: 1, predicates: [{name: "toggle", count: 4246, percentage: 100.0}]},
+            {id: 25, totalPredicates: 1119, uniqueTypes: 4, predicates: [{name: "uncheck", count: 994, percentage: 88.8}, {name: "check/uncheck", count: 114, percentage: 10.2}, {name: "check or uncheck", count: 10, percentage: 0.9}, {name: "opt-out", count: 1, percentage: 0.1}]},
+            {id: 26, totalPredicates: 1802, uniqueTypes: 4, predicates: [{name: "paste", count: 1797, percentage: 99.7}, {name: "copy and paste", count: 3, percentage: 0.2}, {name: "paste or type", count: 1, percentage: 0.1}, {name: "paste or enter", count: 1, percentage: 0.1}]},
+            {id: 27, totalPredicates: 5117, uniqueTypes: 3, predicates: [{name: "press", count: 5113, percentage: 99.9}, {name: "press and hold", count: 2, percentage: 0.0}, {name: "long press", count: 2, percentage: 0.0}]},
+            {id: 28, totalPredicates: 1789, uniqueTypes: 1, predicates: [{name: "clear", count: 1789, percentage: 100.0}]},
+            {id: 29, totalPredicates: 2217, uniqueTypes: 3, predicates: [{name: "log out", count: 2171, percentage: 97.9}, {name: "logout", count: 45, percentage: 2.0}, {name: "log out and log back in", count: 1, percentage: 0.0}]},
+            {id: 30, totalPredicates: 2681, uniqueTypes: 1, predicates: [{name: "filter", count: 2681, percentage: 100.0}]},
+            {id: 31, totalPredicates: 2261, uniqueTypes: 1, predicates: [{name: "copy", count: 2261, percentage: 100.0}]},
+            {id: 32, totalPredicates: 1831, uniqueTypes: 3, predicates: [{name: "add", count: 1827, percentage: 99.8}, {name: "invite", count: 3, percentage: 0.2}, {name: "add or update", count: 1, percentage: 0.1}]},
+            {id: 33, totalPredicates: 1199, uniqueTypes: 1, predicates: [{name: "browse", count: 1199, percentage: 100.0}]},
+            {id: 34, totalPredicates: 1248, uniqueTypes: 2, predicates: [{name: "bookmark", count: 1246, percentage: 99.8}, {name: "bookmark or share", count: 2, percentage: 0.2}]},
+            {id: 35, totalPredicates: 1712, uniqueTypes: 1, predicates: [{name: "upload", count: 1712, percentage: 100.0}]},
+            {id: 36, totalPredicates: 1369, uniqueTypes: 3, predicates: [{name: "fill", count: 1109, percentage: 81.0}, {name: "fill out", count: 239, percentage: 17.5}, {name: "fill in", count: 21, percentage: 1.5}]},
+            {id: 37, totalPredicates: 677, uniqueTypes: 1, predicates: [{name: "drag", count: 677, percentage: 100.0}]},
+            {id: 38, totalPredicates: 1939, uniqueTypes: 1, predicates: [{name: "close", count: 1939, percentage: 100.0}]},
+            {id: 39, totalPredicates: 849, uniqueTypes: 1, predicates: [{name: "take", count: 849, percentage: 100.0}]},
+            {id: 40, totalPredicates: 1663, uniqueTypes: 2, predicates: [{name: "search", count: 1662, percentage: 99.9}, {name: "search for", count: 1, percentage: 0.1}]},
+            {id: 41, totalPredicates: 954, uniqueTypes: 1, predicates: [{name: "attach", count: 954, percentage: 100.0}]},
+            {id: 42, totalPredicates: 661, uniqueTypes: 1, predicates: [{name: "set", count: 661, percentage: 100.0}]},
+            {id: 43, totalPredicates: 474, uniqueTypes: 1, predicates: [{name: "save", count: 474, percentage: 100.0}]},
+            {id: 44, totalPredicates: 503, uniqueTypes: 2, predicates: [{name: "observe", count: 502, percentage: 99.8}, {name: "observe and record", count: 1, percentage: 0.2}]},
+            {id: 45, totalPredicates: 1052, uniqueTypes: 8, predicates: [{name: "log in", count: 908, percentage: 86.3}, {name: "login", count: 57, percentage: 5.4}, {name: "sign up", count: 32, percentage: 3.0}, {name: "sign in", count: 21, percentage: 2.0}, {name: "log back in", count: 21, percentage: 2.0}, {name: "authenticate", count: 8, percentage: 0.8}, {name: "sign up or log in", count: 3, percentage: 0.3}, {name: "log in or create", count: 2, percentage: 0.2}]},
+            {id: 46, totalPredicates: 527, uniqueTypes: 2, predicates: [{name: "identify", count: 526, percentage: 99.8}, {name: "identify and compare", count: 1, percentage: 0.2}]},
+            {id: 47, totalPredicates: 739, uniqueTypes: 1, predicates: [{name: "compare", count: 739, percentage: 100.0}]},
+            {id: 48, totalPredicates: 982, uniqueTypes: 1, predicates: [{name: "find", count: 982, percentage: 100.0}]},
+            {id: 49, totalPredicates: 464, uniqueTypes: 1, predicates: [{name: "ensure", count: 464, percentage: 100.0}]},
+            {id: 50, totalPredicates: 894, uniqueTypes: 3, predicates: [{name: "highlight", count: 879, percentage: 98.3}, {name: "highlight and copy", count: 14, percentage: 1.6}, {name: "highlight and select", count: 1, percentage: 0.1}]},
+            {id: 51, totalPredicates: 1221, uniqueTypes: 2, predicates: [{name: "right-click", count: 1203, percentage: 98.5}, {name: "right click", count: 18, percentage: 1.5}]},
+            {id: 52, totalPredicates: 631, uniqueTypes: 5, predicates: [{name: "analyze", count: 570, percentage: 90.3}, {name: "examine", count: 29, percentage: 4.6}, {name: "evaluate", count: 23, percentage: 3.6}, {name: "inspect", count: 7, percentage: 1.1}, {name: "assess", count: 2, percentage: 0.3}]},
+            {id: 53, totalPredicates: 855, uniqueTypes: 4, predicates: [{name: "download", count: 838, percentage: 98.0}, {name: "install", count: 15, percentage: 1.8}, {name: "download and open", count: 1, percentage: 0.1}, {name: "download and install", count: 1, percentage: 0.1}]},
+            {id: 54, totalPredicates: 346, uniqueTypes: 3, predicates: [{name: "pause", count: 344, percentage: 99.4}, {name: "pause/resume", count: 1, percentage: 0.3}, {name: "play/pause", count: 1, percentage: 0.3}]},
+            {id: 55, totalPredicates: 977, uniqueTypes: 7, predicates: [{name: "take note", count: 840, percentage: 86.0}, {name: "take notes", count: 107, percentage: 11.0}, {name: "make note", count: 13, percentage: 1.3}, {name: "take note of", count: 12, percentage: 1.2}, {name: "make notes", count: 3, percentage: 0.3}, {name: "compare notes", count: 1, percentage: 0.1}, {name: "make a note", count: 1, percentage: 0.1}]},
+            {id: 56, totalPredicates: 514, uniqueTypes: 1, predicates: [{name: "look for", count: 514, percentage: 100.0}]},
+            {id: 57, totalPredicates: 409, uniqueTypes: 3, predicates: [{name: "follow", count: 406, percentage: 99.3}, {name: "follow up", count: 2, percentage: 0.5}, {name: "follow prompts", count: 1, percentage: 0.2}]},
+            {id: 58, totalPredicates: 507, uniqueTypes: 1, predicates: [{name: "record", count: 507, percentage: 100.0}]},
+            {id: 59, totalPredicates: 300, uniqueTypes: 2, predicates: [{name: "make", count: 240, percentage: 80.0}, {name: "compile", count: 60, percentage: 20.0}]},
+            {id: 60, totalPredicates: 675, uniqueTypes: 5, predicates: [{name: "refresh", count: 591, percentage: 87.6}, {name: "restart", count: 52, percentage: 7.7}, {name: "reload", count: 29, percentage: 4.3}, {name: "reset", count: 2, percentage: 0.3}, {name: "re-check", count: 1, percentage: 0.1}]},
+            {id: 61, totalPredicates: 284, uniqueTypes: 3, predicates: [{name: "go back", count: 214, percentage: 75.4}, {name: "go", count: 68, percentage: 23.9}, {name: "back", count: 2, percentage: 0.7}]},
+            {id: 62, totalPredicates: 152, uniqueTypes: 3, predicates: [{name: "continue", count: 138, percentage: 90.8}, {name: "stop", count: 10, percentage: 6.6}, {name: "continue typing", count: 4, percentage: 2.6}]},
+            {id: 63, totalPredicates: 296, uniqueTypes: 1, predicates: [{name: "log", count: 296, percentage: 100.0}]},
+            {id: 64, totalPredicates: 314, uniqueTypes: 2, predicates: [{name: "zoom", count: 313, percentage: 99.7}, {name: "zoom in", count: 1, percentage: 0.3}]},
+            {id: 65, totalPredicates: 177, uniqueTypes: 3, predicates: [{name: "tap", count: 174, percentage: 98.3}, {name: "double-tap", count: 2, percentage: 1.1}, {name: "tap and hold", count: 1, percentage: 0.6}]},
+            {id: 66, totalPredicates: 303, uniqueTypes: 1, predicates: [{name: "note down", count: 303, percentage: 100.0}]},
+            {id: 67, totalPredicates: 387, uniqueTypes: 6, predicates: [{name: "receive", count: 198, percentage: 51.2}, {name: "accept", count: 80, percentage: 20.7}, {name: "send", count: 49, percentage: 12.7}, {name: "retrieve", count: 35, percentage: 9.0}, {name: "enjoy", count: 24, percentage: 6.2}, {name: "accept or decline", count: 1, percentage: 0.3}]},
+            {id: 68, totalPredicates: 298, uniqueTypes: 1, predicates: [{name: "watch", count: 298, percentage: 100.0}]},
+            {id: 69, totalPredicates: 83, uniqueTypes: 4, predicates: [{name: "resize", count: 64, percentage: 77.1}, {name: "maximize", count: 14, percentage: 16.9}, {name: "resize and position", count: 4, percentage: 4.8}, {name: "resize or reposition", count: 1, percentage: 1.2}]},
+            {id: 70, totalPredicates: 128, uniqueTypes: 1, predicates: [{name: "document", count: 128, percentage: 100.0}]},
+            {id: 71, totalPredicates: 245, uniqueTypes: 1, predicates: [{name: "expand", count: 245, percentage: 100.0}]},
+            {id: 72, totalPredicates: 259, uniqueTypes: 4, predicates: [{name: "sort", count: 225, percentage: 86.9}, {name: "arrange", count: 14, percentage: 5.4}, {name: "organize", count: 14, percentage: 5.4}, {name: "reorder", count: 6, percentage: 2.3}]},
+            {id: 73, totalPredicates: 143, uniqueTypes: 1, predicates: [{name: "edit", count: 143, percentage: 100.0}]},
+            {id: 74, totalPredicates: 243, uniqueTypes: 2, predicates: [{name: "exit", count: 216, percentage: 88.9}, {name: "leave", count: 27, percentage: 11.1}]},
+            {id: 75, totalPredicates: 223, uniqueTypes: 2, predicates: [{name: "monitor", count: 157, percentage: 70.4}, {name: "display", count: 66, percentage: 29.6}]},
+            {id: 76, totalPredicates: 130, uniqueTypes: 1, predicates: [{name: "complete", count: 130, percentage: 100.0}]},
+            {id: 77, totalPredicates: 162, uniqueTypes: 5, predicates: [{name: "enable", count: 103, percentage: 63.6}, {name: "configure", count: 43, percentage: 26.5}, {name: "disable", count: 12, percentage: 7.4}, {name: "activate", count: 3, percentage: 1.9}, {name: "enable/disable", count: 1, percentage: 0.6}]},
+            {id: 78, totalPredicates: 134, uniqueTypes: 4, predicates: [{name: "create", count: 126, percentage: 94.0}, {name: "generate", count: 4, percentage: 3.0}, {name: "sign in or create", count: 3, percentage: 2.2}, {name: "create or open", count: 1, percentage: 0.7}]},
+            {id: 79, totalPredicates: 445, uniqueTypes: 8, predicates: [{name: "modify", count: 175, percentage: 39.3}, {name: "change", count: 113, percentage: 25.4}, {name: "refine", count: 79, percentage: 17.8}, {name: "customize", count: 38, percentage: 8.5}, {name: "make changes", count: 33, percentage: 7.4}, {name: "add or modify", count: 3, percentage: 0.7}, {name: "add or edit", count: 3, percentage: 0.7}, {name: "revise", count: 1, percentage: 0.2}]},
+            {id: 80, totalPredicates: 159, uniqueTypes: 1, predicates: [{name: "interact", count: 159, percentage: 100.0}]},
+            {id: 81, totalPredicates: 124, uniqueTypes: 4, predicates: [{name: "move", count: 84, percentage: 67.7}, {name: "rearrange", count: 19, percentage: 15.3}, {name: "position", count: 19, percentage: 15.3}, {name: "transfer", count: 2, percentage: 1.6}]},
+            {id: 82, totalPredicates: 127, uniqueTypes: 1, predicates: [{name: "share", count: 127, percentage: 100.0}]},
+            {id: 83, totalPredicates: 142, uniqueTypes: 1, predicates: [{name: "format", count: 142, percentage: 100.0}]},
+            {id: 84, totalPredicates: 145, uniqueTypes: 2, predicates: [{name: "apply", count: 126, percentage: 86.9}, {name: "resume", count: 19, percentage: 13.1}]},
+            {id: 85, totalPredicates: 170, uniqueTypes: 3, predicates: [{name: "double-click", count: 161, percentage: 94.7}, {name: "double click", count: 8, percentage: 4.7}, {name: "repeat clicking", count: 1, percentage: 0.6}]},
+            {id: 86, totalPredicates: 99, uniqueTypes: 1, predicates: [{name: "rate", count: 99, percentage: 100.0}]},
+            {id: 87, totalPredicates: 65, uniqueTypes: 1, predicates: [{name: "scan", count: 65, percentage: 100.0}]},
+            {id: 88, totalPredicates: 423, uniqueTypes: 5, predicates: [{name: "drag and drop", count: 311, percentage: 73.5}, {name: "click and drag", count: 106, percentage: 25.1}, {name: "drop", count: 4, percentage: 0.9}, {name: "drag and resize", count: 1, percentage: 0.2}, {name: "drag-and-drop", count: 1, percentage: 0.2}]},
+            {id: 89, totalPredicates: 218, uniqueTypes: 6, predicates: [{name: "allow", count: 103, percentage: 47.2}, {name: "grant", count: 59, percentage: 27.1}, {name: "authorize", count: 20, percentage: 9.2}, {name: "access", count: 18, percentage: 8.3}, {name: "provide", count: 13, percentage: 6.0}, {name: "utilize", count: 5, percentage: 2.3}]},
+            {id: 90, totalPredicates: 137, uniqueTypes: 2, predicates: [{name: "explore", count: 115, percentage: 83.9}, {name: "visit", count: 22, percentage: 16.1}]},
+            {id: 91, totalPredicates: 60, uniqueTypes: 2, predicates: [{name: "screenshot", count: 56, percentage: 93.3}, {name: "take screenshots", count: 4, percentage: 6.7}]},
+            {id: 92, totalPredicates: 157, uniqueTypes: 1, predicates: [{name: "preview", count: 157, percentage: 100.0}]},
+            {id: 93, totalPredicates: 278, uniqueTypes: 16, predicates: [{name: "delete", count: 87, percentage: 31.3}, {name: "remove", count: 57, percentage: 20.5}, {name: "deselect", count: 36, percentage: 12.9}, {name: "redirect", count: 34, percentage: 12.2}, {name: "add or remove", count: 17, percentage: 6.1}, {name: "add/remove", count: 16, percentage: 5.8}, {name: "rename", count: 8, percentage: 2.9}, {name: "replace", count: 7, percentage: 2.5}, {name: "unselect", count: 7, percentage: 2.5}, {name: "revoke", count: 2, percentage: 0.7}, {name: "disconnect", count: 2, percentage: 0.7}, {name: "unmute", count: 1, percentage: 0.4}, {name: "replace or remove", count: 1, percentage: 0.4}, {name: "deactivate", count: 1, percentage: 0.4}, {name: "eject", count: 1, percentage: 0.4}, {name: "unfollow", count: 1, percentage: 0.4}]},
+            {id: 94, totalPredicates: 136, uniqueTypes: 2, predicates: [{name: "listen", count: 85, percentage: 62.5}, {name: "speak", count: 51, percentage: 37.5}]},
+            {id: 95, totalPredicates: 1135, uniqueTypes: 156, predicates: [{name: "switch", count: 90, percentage: 7.9}, {name: "answer", count: 71, percentage: 6.3}, {name: "write", count: 55, percentage: 4.8}, {name: "summarize", count: 49, percentage: 4.3}, {name: "input", count: 49, percentage: 4.3}, {name: "test", count: 44, percentage: 3.9}, {name: "post", count: 37, percentage: 3.3}, {name: "map", count: 31, percentage: 2.7}, {name: "subscribe", count: 29, percentage: 2.6}, {name: "capture", count: 28, percentage: 2.5}]},
+            {id: 96, totalPredicates: 108, uniqueTypes: 1, predicates: [{name: "release", count: 108, percentage: 100.0}]},
+            {id: 97, totalPredicates: 512, uniqueTypes: 20, predicates: [{name: "proceed", count: 194, percentage: 37.9}, {name: "submit", count: 68, percentage: 13.3}, {name: "play", count: 51, percentage: 10.0}, {name: "launch", count: 36, percentage: 7.0}, {name: "appear", count: 25, percentage: 4.9}, {name: "perform", count: 25, percentage: 4.9}, {name: "run", count: 23, percentage: 4.5}, {name: "participate", count: 20, percentage: 3.9}, {name: "engage", count: 14, percentage: 2.7}, {name: "join", count: 11, percentage: 2.1}]},
+            {id: 98, totalPredicates: 105, uniqueTypes: 4, predicates: [{name: "print", count: 91, percentage: 86.7}, {name: "print or save", count: 11, percentage: 10.5}, {name: "download or print", count: 2, percentage: 1.9}, {name: "print or share", count: 1, percentage: 1.0}]},
+            {id: 99, totalPredicates: 85, uniqueTypes: 2, predicates: [{name: "export", count: 78, percentage: 91.8}, {name: "import", count: 7, percentage: 8.2}]}
+        ];
+
+        // Calculate additional metrics
+        clusterData.forEach(d => {
+            // Shannon entropy calculation
+            let entropy = 0;
+            d.predicates.forEach(p => {
+                const prob = p.count / d.totalPredicates;
+                if (prob > 0) {
+                    entropy -= prob * Math.log2(prob);
+                }
+            });
+            d.entropy = entropy;
+            
+            // Dominance (percentage of most frequent predicate)
+            d.dominance = d.predicates[0].percentage;
+            
+            // Gini coefficient for inequality
+            const sortedCounts = d.predicates.map(p => p.count).sort((a, b) => a - b);
+            let gini = 0;
+            const n = sortedCounts.length;
+            const mean = d.totalPredicates / n;
+            for (let i = 0; i < n; i++) {
+                gini += (2 * (i + 1) - n - 1) * sortedCounts[i];
+            }
+            d.gini = gini / (n * d.totalPredicates);
+        });
+
+        // Global statistics
+        const totalPredicatesGlobal = clusterData.reduce((sum, d) => sum + d.totalPredicates, 0);
+        const avgDiversity = d3.mean(clusterData, d => d.uniqueTypes);
+        const maxDiversity = d3.max(clusterData, d => d.uniqueTypes);
+
+        // Update statistics display
+        document.getElementById('totalPredicates').textContent = (totalPredicatesGlobal / 1000000).toFixed(2) + 'M';
+        document.getElementById('avgDiversity').textContent = avgDiversity.toFixed(1);
+        document.getElementById('maxDiversity').textContent = maxDiversity;
+
+        // Visualization setup
+        const width = 1050;
+        const height = 600;
+        const tooltip = d3.select("#tooltip");
+
+        const svg = d3.select("#mainVisualization")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .style("background", "#fdfdfd");
+
+        // Scales
+        let currentSizeMetric = 'total';
+        let currentColorMetric = 'diversity';
+        let selectedCluster = null;
+
+        const sizeScales = {
+            total: d3.scaleSqrt().domain(d3.extent(clusterData, d => d.totalPredicates)).range([3, 35]),
+            diversity: d3.scaleSqrt().domain(d3.extent(clusterData, d => d.uniqueTypes)).range([3, 35]),
+            entropy: d3.scaleSqrt().domain(d3.extent(clusterData, d => d.entropy)).range([3, 35])
+        };
+
+        const colorScales = {
+            diversity: d3.scaleSequential(d3.interpolateViridis).domain(d3.extent(clusterData, d => d.uniqueTypes)),
+            dominance: d3.scaleSequential(d3.interpolateRdYlBu).domain([100, 0]),
+            size: d3.scaleSequential(d3.interpolatePlasma).domain(d3.extent(clusterData, d => d.totalPredicates))
+        };
+
+        // Force simulation
+        const simulation = d3.forceSimulation(clusterData)
+            .force("charge", d3.forceManyBody().strength(-80))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide().radius(d => sizeScales[currentSizeMetric](getValue(d, currentSizeMetric)) + 2));
+
+        function getValue(d, metric) {
+            switch(metric) {
+                case 'total': return d.totalPredicates;
+                case 'diversity': return d.uniqueTypes;
+                case 'entropy': return d.entropy;
+                case 'dominance': return d.dominance;
+                case 'size': return d.totalPredicates;
+                default: return d.totalPredicates;
+            }
+        }
+
+        // Create circles
+        const circles = svg.selectAll(".circle-node")
+            .data(clusterData)
+            .enter()
+            .append("circle")
+            .attr("class", "circle-node")
+            .attr("r", d => sizeScales[currentSizeMetric](getValue(d, currentSizeMetric)))
+            .attr("fill", d => colorScales[currentColorMetric](getValue(d, currentColorMetric)))
+            .on("mouseover", function(event, d) {
+                if (d !== selectedCluster) {
+                    d3.select(this).classed("selected", false);
+                }
+                
+                tooltip
+                    .style("opacity", 1)
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 10) + "px")
+                    .html(`
+                        <strong>Cluster ${d.id}</strong><br>
+                        <strong>Main:</strong> ${d.predicates[0].name}<br>
+                        <strong>Total:</strong> ${d.totalPredicates.toLocaleString()}<br>
+                        <strong>Types:</strong> ${d.uniqueTypes}<br>
+                        <strong>Entropy:</strong> ${d.entropy.toFixed(2)}<br>
+                        <strong>Dominance:</strong> ${d.dominance.toFixed(1)}%
+                    `);
+            })
+            .on("mousemove", function(event) {
+                tooltip
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mouseout", function(d) {
+                tooltip.style("opacity", 0);
+            })
+            .on("click", function(event, d) {
+                // Clear previous selection
+                circles.classed("selected", false);
+                
+                // Select current
+                d3.select(this).classed("selected", true);
+                selectedCluster = d;
+                
+                showClusterDetails(d);
+            });
+
+        // Create labels
+        const labels = svg.selectAll(".node-label")
+            .data(clusterData)
+            .enter()
+            .append("text")
+            .attr("class", "node-label")
+            .text(d => d.id)
+            .attr("dy", "0.35em");
+
+        // Update positions
+        simulation.on("tick", function() {
+            circles
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+            
+            labels
+                .attr("x", d => d.x)
+                .attr("y", d => d.y);
+        });
+
+        // Control handlers
+        document.getElementById("sizeMetric").addEventListener("change", function(e) {
+            currentSizeMetric = e.target.value;
+            updateVisualization();
+        });
+
+        document.getElementById("colorMetric").addEventListener("change", function(e) {
+            currentColorMetric = e.target.value;
+            updateVisualization();
+            updateLegend();
+        });
+
+        document.getElementById("scaleSlider").addEventListener("input", function(e) {
+            const scale = parseFloat(e.target.value);
+            circles.attr("r", d => sizeScales[currentSizeMetric](getValue(d, currentSizeMetric)) * scale);
+            simulation.force("collision", d3.forceCollide().radius(d => sizeScales[currentSizeMetric](getValue(d, currentSizeMetric)) * scale + 2));
+            simulation.alpha(0.3).restart();
+        });
+
+        document.getElementById("searchInput").addEventListener("input", function(e) {
+            const query = e.target.value.toLowerCase();
+            
+            circles.style("opacity", d => {
+                if (!query) return 1;
+                return d.predicates.some(p => p.name.toLowerCase().includes(query)) ? 1 : 0.3;
+            });
+            
+            labels.style("opacity", d => {
+                if (!query) return 1;
+                return d.predicates.some(p => p.name.toLowerCase().includes(query)) ? 1 : 0.3;
+            });
+        });
+
+        function updateVisualization() {
+            circles
+                .transition()
+                .duration(750)
+                .attr("r", d => sizeScales[currentSizeMetric](getValue(d, currentSizeMetric)))
+                .attr("fill", d => colorScales[currentColorMetric](getValue(d, currentColorMetric)));
+            
+            simulation.force("collision", d3.forceCollide().radius(d => sizeScales[currentSizeMetric](getValue(d, currentSizeMetric)) + 2));
+            simulation.alpha(0.3).restart();
+        }
+
+        function updateLegend() {
+            const legendContainer = document.getElementById("legendContainer");
+            legendContainer.innerHTML = "";
+            
+            const scale = colorScales[currentColorMetric];
+            const domain = scale.domain();
+            const steps = 5;
+            
+            for (let i = 0; i < steps; i++) {
+                const value = domain[0] + (domain[1] - domain[0]) * i / (steps - 1);
+                const color = scale(value);
+                
+                const item = document.createElement("div");
+                item.className = "legend-item";
+                item.innerHTML = `
+                    <div class="legend-circle" style="background: ${color};"></div>
+                    <span>${value.toFixed(1)}</span>
+                `;
+                legendContainer.appendChild(item);
+            }
+        }
+
+        function showClusterDetails(cluster) {
+            const clusterInfo = document.getElementById("clusterInfo");
+            
+            let predicatesList = cluster.predicates
+                .slice(0, 10) // Show top 10
+                .map(p => `
+                    <div class="predicate-item">
+                        <span class="predicate-name">${p.name}</span>
+                        <div class="predicate-stats">
+                            <span>${p.count.toLocaleString()}</span>
+                            <span>${p.percentage.toFixed(1)}%</span>
+                        </div>
+                    </div>
+                `).join("");
+
+            clusterInfo.innerHTML = `
+                <h4>Cluster ${cluster.id}</h4>
+                <p><strong>Primary Predicate:</strong> ${cluster.predicates[0].name}</p>
+                <p><strong>Total Predicates:</strong> ${cluster.totalPredicates.toLocaleString()}</p>
+                <p><strong>Unique Types:</strong> ${cluster.uniqueTypes}</p>
+                <p><strong>Shannon Entropy:</strong> ${cluster.entropy.toFixed(3)}</p>
+                <p><strong>Gini Coefficient:</strong> ${cluster.gini.toFixed(3)}</p>
+                
+                <h5 style="margin-top: 15px;">Top Predicates:</h5>
+                <div class="predicate-list">
+                    ${predicatesList}
+                    ${cluster.predicates.length > 10 ? `<div style="padding: 10px; text-align: center; color: #7f8c8d; font-style: italic;">... and ${cluster.predicates.length - 10} more</div>` : ''}
+                </div>
+            `;
+            clusterInfo.classList.add("active");
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Diversity distribution chart
+            const diversityData = d3.rollup(clusterData, v => v.length, d => d.uniqueTypes);
+            const diversityChart = new Chart(document.getElementById('diversityChart'), {
+                type: 'bar',
+                data: {
+                    labels: Array.from(diversityData.keys()).sort((a, b) => a - b),
+                    datasets: [{
+                        label: 'Number of Clusters',
+                        data: Array.from(diversityData.keys()).sort((a, b) => a - b).map(k => diversityData.get(k)),
+                        backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Frequency'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Unique Predicate Types'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Size distribution chart (log scale)
+            const sizeRanges = [
+                {label: '< 100', min: 0, max: 100},
+                {label: '100-1K', min: 100, max: 1000},
+                {label: '1K-10K', min: 1000, max: 10000},
+                {label: '10K-100K', min: 10000, max: 100000},
+                {label: '> 100K', min: 100000, max: Infinity}
+            ];
+            
+            const sizeCounts = sizeRanges.map(range => ({
+                label: range.label,
+                count: clusterData.filter(d => d.totalPredicates >= range.min && d.totalPredicates < range.max).length
+            }));
+
+            const sizeChart = new Chart(document.getElementById('sizeChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: sizeCounts.map(d => d.label),
+                    datasets: [{
+                        data: sizeCounts.map(d => d.count),
+                        backgroundColor: [
+                            'rgba(231, 76, 60, 0.8)',
+                            'rgba(230, 126, 34, 0.8)',
+                            'rgba(241, 196, 15, 0.8)',
+                            'rgba(46, 204, 113, 0.8)',
+                            'rgba(155, 89, 182, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Export functions
+        function exportVisualization() {
+            const svgElement = document.querySelector("#mainVisualization svg");
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svgElement);
+            
+            const blob = new Blob([svgString], {type: "image/svg+xml"});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "cluster_visualization.svg";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportData() {
+            const csvData = clusterData.map(d => ({
+                cluster_id: d.id,
+                total_predicates: d.totalPredicates,
+                unique_types: d.uniqueTypes,
+                shannon_entropy: d.entropy.toFixed(4),
+                gini_coefficient: d.gini.toFixed(4),
+                dominance_percentage: d.dominance.toFixed(2),
+                primary_predicate: d.predicates[0].name,
+                primary_count: d.predicates[0].count,
+                primary_percentage: d.predicates[0].percentage
+            }));
+
+            const csv = d3.csvFormat(csvData);
+            const blob = new Blob([csv], {type: "text/csv"});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "cluster_analysis_data.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize everything
+        updateLegend();
+        initializeCharts();
+        
+        // Show initial message
+        const clusterInfo = document.getElementById("clusterInfo");
+        clusterInfo.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #7f8c8d;">
+                <p><strong>🔍 Analysis Ready</strong></p>
+                <p>Click on any cluster node to explore its predicate distribution and statistical properties.</p>
+                <p style="font-size: 0.85em; margin-top: 10px;">Use the controls above to adjust visualization parameters and search for specific predicates.</p>
+            </div>
+        `;
+        clusterInfo.classList.add("active");
+
+        // Add keyboard shortcuts info
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && selectedCluster) {
+                circles.classed("selected", false);
+                selectedCluster = null;
+                clusterInfo.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <p><strong>🔍 Analysis Ready</strong></p>
+                        <p>Click on any cluster node to explore its predicate distribution and statistical properties.</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
