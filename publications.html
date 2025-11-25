@@ -420,114 +420,229 @@
     </footer>
 
     <script>
-        // 访客统计功能
+        // 访客统计功能 - 与index.html保持一致
         class VisitorTracker {
             constructor() {
                 this.apiEndpoints = [
-                    'https://api.ipify.org?format=json',
-                    'https://ipapi.co/json/',
-                    'https://ipinfo.io/json'
+                    {
+                        url: 'https://ipapi.co/json/',
+                        parser: this.parseIpapiData
+                    },
+                    {
+                        url: 'https://ipinfo.io/json',
+                        parser: this.parseIpinfoData
+                    },
+                    {
+                        url: 'https://api.ipgeolocation.io/ipgeo?apiKey=free',
+                        parser: this.parseIpgeolocationData
+                    }
                 ];
                 this.init();
             }
 
             async init() {
-                await this.getVisitorInfo();
                 this.updateVisitCount();
                 this.updateTodayVisitors();
+                await this.getVisitorInfo();
             }
 
             async getVisitorInfo() {
-                for (let endpoint of this.apiEndpoints) {
+                console.log('开始获取访客信息...');
+                
+                for (let i = 0; i < this.apiEndpoints.length; i++) {
+                    const endpoint = this.apiEndpoints[i];
                     try {
-                        const response = await fetch(endpoint);
-                        const data = await response.json();
+                        console.log(`尝试API ${i + 1}: ${endpoint.url}`);
                         
-                        if (data.ip) {
-                            this.displayVisitorInfo(data);
-                            this.logVisitor(data);
-                            return;
+                        const response = await fetch(endpoint.url, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                            timeout: 5000
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log(`API ${i + 1} 返回数据:`, data);
+                        
+                        if (data && (data.ip || data.query)) {
+                            const parsedData = endpoint.parser(data);
+                            if (parsedData.ip) {
+                                this.displayVisitorInfo(parsedData);
+                                this.logVisitor(parsedData);
+                                console.log('成功获取访客信息:', parsedData);
+                                return;
+                            }
                         }
                     } catch (error) {
-                        console.log(`尝试 ${endpoint} 失败:`, error);
+                        console.warn(`API ${i + 1} 失败:`, error.message);
                         continue;
                     }
                 }
                 
-                // 如果所有API都失败，显示默认信息
-                document.getElementById('visitor-ip').textContent = '无法获取';
-                document.getElementById('visitor-location').textContent = '无法获取';
+                console.error('所有IP API都失败了');
+                this.displayFallbackInfo();
+            }
+
+            parseIpapiData(data) {
+                return {
+                    ip: data.ip,
+                    country: data.country_name || data.country,
+                    region: data.region,
+                    city: data.city,
+                    timezone: data.timezone,
+                    isp: data.org
+                };
+            }
+
+            parseIpinfoData(data) {
+                return {
+                    ip: data.ip,
+                    country: data.country,
+                    region: data.region,
+                    city: data.city,
+                    timezone: data.timezone,
+                    isp: data.org
+                };
+            }
+
+            parseIpgeolocationData(data) {
+                return {
+                    ip: data.ip,
+                    country: data.country_name,
+                    region: data.state_prov,
+                    city: data.city,
+                    timezone: data.time_zone?.name,
+                    isp: data.isp
+                };
             }
 
             displayVisitorInfo(data) {
                 const ipElement = document.getElementById('visitor-ip');
                 const locationElement = document.getElementById('visitor-location');
                 
+                if (!ipElement || !locationElement) {
+                    console.error('找不到显示元素');
+                    return;
+                }
+                
                 if (data.ip) {
                     ipElement.textContent = data.ip;
+                    ipElement.style.color = 'var(--primary)';
                 }
                 
-                let location = '';
-                if (data.country) {
-                    location = data.country;
-                    if (data.region || data.regionName) {
-                        location += `, ${data.region || data.regionName}`;
-                    }
-                    if (data.city) {
-                        location += `, ${data.city}`;
-                    }
-                } else if (data.country_name) {
-                    location = data.country_name;
-                    if (data.region) {
-                        location += `, ${data.region}`;
-                    }
-                    if (data.city) {
-                        location += `, ${data.city}`;
-                    }
+                let locationParts = [];
+                
+                if (data.city && data.city !== 'Unknown') {
+                    locationParts.push(data.city);
                 }
                 
-                locationElement.textContent = location || '未知位置';
+                if (data.region && data.region !== 'Unknown' && data.region !== data.city) {
+                    locationParts.push(data.region);
+                }
+                
+                if (data.country && data.country !== 'Unknown') {
+                    const countryName = this.getCountryNameInChinese(data.country);
+                    locationParts.push(countryName);
+                }
+                
+                const locationText = locationParts.length > 0 ? locationParts.join(', ') : '未知位置';
+                locationElement.textContent = locationText;
+                locationElement.style.color = 'var(--primary)';
+                
+                console.log('显示位置信息:', locationText);
+            }
+
+            getCountryNameInChinese(countryCode) {
+                const countryMap = {
+                    'CN': '中国', 'US': '美国', 'JP': '日本', 'KR': '韩国', 'GB': '英国',
+                    'DE': '德国', 'FR': '法国', 'CA': '加拿大', 'AU': '澳大利亚', 'SG': '新加坡',
+                    'HK': '香港', 'TW': '台湾', 'IN': '印度', 'RU': '俄罗斯', 'BR': '巴西',
+                    'IT': '意大利', 'ES': '西班牙', 'NL': '荷兰', 'SE': '瑞典', 'CH': '瑞士'
+                };
+                return countryMap[countryCode] || countryCode;
+            }
+
+            displayFallbackInfo() {
+                const ipElement = document.getElementById('visitor-ip');
+                const locationElement = document.getElementById('visitor-location');
+                
+                if (ipElement) {
+                    ipElement.textContent = '无法获取';
+                    ipElement.style.color = 'var(--text-muted)';
+                }
+                
+                if (locationElement) {
+                    locationElement.textContent = '无法获取';
+                    locationElement.style.color = 'var(--text-muted)';
+                }
             }
 
             logVisitor(data) {
                 const now = new Date();
                 const visitorLog = {
                     ip: data.ip,
-                    location: `${data.country || data.country_name || ''}, ${data.city || ''}`,
+                    country: data.country,
+                    region: data.region,
+                    city: data.city,
+                    location: `${data.country || ''}, ${data.region || ''}, ${data.city || ''}`.replace(/^,\s*|,\s*$/g, '').replace(/,\s*,/g, ','),
                     timestamp: now.toISOString(),
                     date: now.toDateString(),
                     page: 'publications',
                     userAgent: navigator.userAgent,
-                    referrer: document.referrer || 'direct'
+                    referrer: document.referrer || 'direct',
+                    timezone: data.timezone,
+                    isp: data.isp
                 };
 
-                // 存储到localStorage
-                let visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
-                visitors.push(visitorLog);
-                
-                // 只保留最近1000条记录
-                if (visitors.length > 1000) {
-                    visitors = visitors.slice(-1000);
+                try {
+                    let visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
+                    visitors.push(visitorLog);
+                    
+                    if (visitors.length > 1000) {
+                        visitors = visitors.slice(-1000);
+                    }
+                    
+                    localStorage.setItem('visitors', JSON.stringify(visitors));
+                    console.log('访客记录已保存:', visitorLog);
+                } catch (error) {
+                    console.error('保存访客记录失败:', error);
                 }
-                
-                localStorage.setItem('visitors', JSON.stringify(visitors));
-                console.log('访客记录已保存:', visitorLog);
             }
 
             updateVisitCount() {
-                let count = parseInt(localStorage.getItem('visitCount') || '0');
-                count++;
-                localStorage.setItem('visitCount', count.toString());
-                document.getElementById('visit-count').textContent = count.toLocaleString();
+                try {
+                    let count = parseInt(localStorage.getItem('visitCount') || '0');
+                    count++;
+                    localStorage.setItem('visitCount', count.toString());
+                    
+                    const countElement = document.getElementById('visit-count');
+                    if (countElement) {
+                        countElement.textContent = count.toLocaleString();
+                    }
+                } catch (error) {
+                    console.error('更新访问计数失败:', error);
+                }
             }
 
             updateTodayVisitors() {
-                const today = new Date().toDateString();
-                const visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
-                const todayVisitors = visitors.filter(v => v.date === today);
-                const uniqueIPs = new Set(todayVisitors.map(v => v.ip));
-                
-                document.getElementById('today-visitors').textContent = uniqueIPs.size.toString();
+                try {
+                    const today = new Date().toDateString();
+                    const visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
+                    const todayVisitors = visitors.filter(v => v.date === today);
+                    const uniqueIPs = new Set(todayVisitors.map(v => v.ip));
+                    
+                    const todayElement = document.getElementById('today-visitors');
+                    if (todayElement) {
+                        todayElement.textContent = uniqueIPs.size.toString();
+                    }
+                } catch (error) {
+                    console.error('更新今日访客失败:', error);
+                }
             }
         }
 
