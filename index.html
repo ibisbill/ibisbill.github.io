@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maggie Ziyu Huan - Academic Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* ----- 调色板：你可以修改这里的颜色代码来换风格 ----- */
+            
+            /* 风格：现代学术蓝 (Modern Academic Blue) */
+            --bg-body: #f8fafc;          /* 极淡的灰蓝色背景 */
+            --bg-card: #ffffff;          /* 卡片白色背景 */
+            --text-main: #2c332e;
+    --text-muted: #6b7280;
+    --primary: #4d7c5e;
+    --primary-dark: #3a6048;
+    --accent-bg: #edf5f0;
+    --border: #e2e8f0; 
+    
+
+    
+            /* 尺寸变量 */
+            --max-width: 960px;
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 通用链接样式 */
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* 容器 */
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* --- 导航栏 --- */
+        nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 0;
+        }
+
+        nav .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* --- Hero Section (个人简介) --- */
+        .hero {
+            padding: 60px 0 10px;
+        }
+
+        .hero-inner {
+            display: grid;
+            grid-template-columns: 1fr 220px; /* 左侧文字，右侧图片 */
+            gap: 20px;
+            align-items: start;
+        }
+
+        .hero-text h1 {
+            font-family: 'Playfair Display', serif; /* 标题使用衬线体增加优雅感 */
+            font-size: 2.8rem;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .hero-text .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+
+        .hero-text .bio {
+            color: var(--text-main);
+            margin-bottom: 25px;
+            font-size: 1.05rem;
+        }
+
+        .hero-text .bio p {
+            margin-bottom: 12px; /* 减少段落间距 */
+        }
+
+        .social-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .social-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--accent-bg);
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        /* 头像区域 */
+        .avatar-wrapper {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin-top: calc(2.8rem * 1.2 + 60px); /* 与subtitle对齐：标题高度 + 标题下边距 */
+        }
+
+        .avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%; /* 圆形头像 */
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+            border: 4px solid #fff;
+            transition: opacity 0.5s ease;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+        }
+
+        .avatar-wrapper img.active {
+            opacity: 1;
+        }
+
+        /* --- Section Styles --- */
+        section {
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title .view-all {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .section-title .view-all:hover {
+            text-decoration: none;
+            color: var(--primary-dark);
+        }
+
+        /* --- Publications --- */
+        .pub-list {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .pub-item {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .pub-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08);
+            border-color: var(--border);
+        }
+
+        .pub-item.highlight {
+            background: #fff;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+        }
+
+        /* 如果有缩略图可以放这里，没有就隐藏 */
+        .pub-img {
+            display: none; /* 如果你想放paper缩略图，把这里改为 block 并设置宽高 */
+        } 
+
+        .pub-content {
+            flex: 1;
+        }
+
+        .pub-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .pub-authors {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .pub-authors strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .pub-venue {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .tag-oral {
+            display: inline-block;
+            background-color: #fef3c7; /* 淡黄色背景 */
+            color: #92400e; /* 深褐色文字 */
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-style: normal;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pub-links {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .pub-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+                justify-items: center; /* 图片居中 */
+            }
+
+            .hero-text h1 {
+                font-size: 2.2rem;
+            }
+
+            .avatar-wrapper {
+                width: 180px;
+                height: 180px;
+                order: -1; /* 移动端图片在上方 */
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="container nav-inner">
+            <div class="nav-logo">Maggie's Space</div>
+            <div class="nav-links">
+                <a href="index.html">Brief</a>
+                <a href="publications.html">Publications</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero" id="about">
+            <div class="hero-inner">
+                <div class="hero-text">
+                    <h1>Maggie Ziyu Huan</h1>
+                    <div class="subtitle">MS Student @ UPenn </div>
+                    
+                    <div class="bio">
+                        <p>
+                            Hi, I am a Master's student at the <strong>University of Pennsylvania</strong>, 
+                            working in natural language processing. I study how language facilitates reasoning and planning. Currently I am interested in how linguistic representations can move beyond static inference, to shape generalizable agents that act dynamically within situated contexts.
+                        </p>
+                        <p>
+                              During my research journey, I am super lucky to be guided by my amazing mentors, <strong><a href="https://www.alanesuhr.com/" target="_blank">Prof. Alane Suhr</a></strong> and <strong><a href="https://nicktomlin.github.io/" target="_blank">Prof. Nicholas Tomlin</a></strong> at Berkeley NLP Group; 
+                              <strong><a href="https://www.seas.upenn.edu/~myatskar/" target="_blank">Prof. Mark Yatskar</a></strong> at Penn NLP Group; <strong><a href="https://www.phontron.com/" target="_blank">Prof. Graham Neubig</a></strong> and <strong><a href="https://xiangyue9607.github.io/" target="_blank">Dr. Xiang Yue</a></strong> at CMU LTI. Thanks to their continuous support and help, I've been able to develop my research skills gradually, and enjoy the process more and more :)
+                        </p>
+                        <p>
+                            My original name could be hard to pronounce sometimes. Happy to call me Maggie or Ziyu (IPA: /tsɯˇ. yˋ/) if you like, I react to both of them!
+                        </p>
+                    </div>
+
+                    <div class="social-links">
+                        <a href="mailto:ziyuhuan.ac@gmail.com" class="social-btn">ziyuhuan.ac AT gmail.com</a>
+                        <a href="https://scholar.google.com/citations?user=Wl1A2PsAAAAJ&hl=en" target="_blank" class="social-btn">Google Scholar</a>
+                        <a href="https://github.com/ibisbill" target="_blank" class="social-btn">GitHub</a>
+                        <a href="https://linkedin.com/in/maggie-huan" target="_blank" class="social-btn">LinkedIn</a>
+                    </div>
+                </div>
+
+                <div class="avatar-wrapper">
+                    <img src="pic1.png" alt="Maggie Huan">
+                    <img src="profile2.jpeg" alt="Maggie Huan">
+                    <img src="pic4.png" alt="Maggie Huan">
+                    <img src="pic5.png" alt="Maggie Huan">
+                    <img src="pic6.jpg" alt="Maggie Huan">
+                    <img src="pic8.jpg" alt="Maggie Huan">
+                    <img src="pic9.jpg" alt="Maggie Huan">
+                </div>
+            </div>
+        </section>
+
+        <section id="selected-publications">
+            <div class="section-title">
+                <span>Selected Publications</span>
+                <a href="publications.html" class="view-all">View All →</a>
+            </div>
+            
+            <div class="pub-list">
+                
+                <div class="pub-item highlight">
+                    <div class="pub-content">
+                        <div class="pub-title">Does Math Reasoning Improve General LLM Capabilities? Understanding Transferability of LLM Reasoning</div>
+                        <div class="pub-authors">
+                            <strong>Maggie Huan*</strong>, Yuetai Li*, Tuney Zheng*, Xiaoyu Xu, Seungone Kim, Minxin Du, Radha Poovendran, Graham Neubig, Xiang Yue
+                        </div>
+                        <div class="pub-venue">In Submission, 2025</div>
+                        <div class="pub-links">
+                            <a href="https://arxiv.org/abs/2507.00432" target="_blank">Paper</a>
+                            <a href="https://github.com/ReasoningTransfer/Transferability-of-LLM-Reasoning" target="_blank">Code</a>
+                            <a href="#" target="_blank">Dataset</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pub-item highlight">
+                    <div class="pub-content">
+                        <div class="pub-title">World Models with Hints of Large Language Models for Goal Achieving</div>
+                        <div class="pub-authors">
+                            <strong>Maggie Huan*</strong>, Zeyuan Liu*, Xiyao Wang, Jiafei Lyu, Jian Tao, Xiu Li†, Furong Huang†, Huazhe Xu†
+                        </div>
+                        <div class="pub-venue">
+                            NAACL 2025 <span class="tag-oral">Oral Presentation</span>
+                        </div>
+                        <div class="pub-links">
+                            <a href="https://aclanthology.org/2025.naacl-long.3.pdf" target="_blank">Paper</a>
+                            <a href="https://github.com/sand-nine/Dreaming-with-Large-Language-Model" target="_blank">Code</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            "I will brave the odds once more, for the grace of serendipitous love and kindness."
+            <br>
+        </div>
+    </footer>
+
+    <script>
+        window.addEventListener('load', () => {
+            const images = document.querySelectorAll('.avatar-wrapper img');
+            if(images.length > 0){
+                const seed = Date.now() + Math.random() * 1000;
+                const randomIndex = Math.floor(seed % images.length);
+                images[randomIndex].classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
