@@ -103,7 +103,7 @@
 
         /* --- Page Header --- */
         .page-header {
-            padding: 80px 0 40px;
+            padding: 60px 0 40px;
         }
 
         .page-header h1 {
@@ -224,6 +224,52 @@
             gap: 4px;
         }
 
+        /* 访客统计样式 */
+        .visitor-stats {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 30px 0;
+            margin-top: 60px;
+        }
+
+        .stats-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .stats-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: var(--accent-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .stats-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .stats-value {
+            font-size: 1rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .privacy-notice {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
         /* Footer */
         footer {
             text-align: center;
@@ -243,6 +289,15 @@
             .nav-links {
                 gap: 1rem;
             }
+
+            .stats-content {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .stats-item {
+                padding: 12px;
+            }
         }
     </style>
 </head>
@@ -250,7 +305,7 @@
 
     <nav>
         <div class="container nav-inner">
-            <div class="nav-logo">Maggie Ziyu Huan</div>
+            <div class="nav-logo">Maggie's Work</div>
             <div class="nav-links">
                 <a href="index.html">About</a>
                 <a href="publications.html" class="active">Publications</a>
@@ -261,7 +316,7 @@
     <div class="container">
         <div class="page-header">
             <h1>Publications</h1>
-            <div class="subtitle">Research papers and conference proceedings</div>
+            <div class="subtitle">Papers and Preprints</div>
         </div>
 
         <section>
@@ -331,11 +386,170 @@
         </section>
     </div>
 
+    <!-- 访客统计区域 -->
+    <div class="visitor-stats">
+        <div class="container">
+            <div class="stats-content">
+                <div class="stats-item">
+                    <span class="stats-label">当前访客IP:</span>
+                    <span id="visitor-ip" class="stats-value">获取中...</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">访客位置:</span>
+                    <span id="visitor-location" class="stats-value">获取中...</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">页面访问次数:</span>
+                    <span id="visit-count" class="stats-value">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">今日访客:</span>
+                    <span id="today-visitors" class="stats-value">0</span>
+                </div>
+            </div>
+            <div class="privacy-notice">
+                <small>* 访客信息仅用于统计目的，不会存储个人敏感数据</small>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <div class="container">
             "I believe the strength of softness."
         </div>
     </footer>
+
+    <script>
+        // 访客统计功能
+        class VisitorTracker {
+            constructor() {
+                this.apiEndpoints = [
+                    'https://api.ipify.org?format=json',
+                    'https://ipapi.co/json/',
+                    'https://ipinfo.io/json'
+                ];
+                this.init();
+            }
+
+            async init() {
+                await this.getVisitorInfo();
+                this.updateVisitCount();
+                this.updateTodayVisitors();
+            }
+
+            async getVisitorInfo() {
+                for (let endpoint of this.apiEndpoints) {
+                    try {
+                        const response = await fetch(endpoint);
+                        const data = await response.json();
+                        
+                        if (data.ip) {
+                            this.displayVisitorInfo(data);
+                            this.logVisitor(data);
+                            return;
+                        }
+                    } catch (error) {
+                        console.log(`尝试 ${endpoint} 失败:`, error);
+                        continue;
+                    }
+                }
+                
+                // 如果所有API都失败，显示默认信息
+                document.getElementById('visitor-ip').textContent = '无法获取';
+                document.getElementById('visitor-location').textContent = '无法获取';
+            }
+
+            displayVisitorInfo(data) {
+                const ipElement = document.getElementById('visitor-ip');
+                const locationElement = document.getElementById('visitor-location');
+                
+                if (data.ip) {
+                    ipElement.textContent = data.ip;
+                }
+                
+                let location = '';
+                if (data.country) {
+                    location = data.country;
+                    if (data.region || data.regionName) {
+                        location += `, ${data.region || data.regionName}`;
+                    }
+                    if (data.city) {
+                        location += `, ${data.city}`;
+                    }
+                } else if (data.country_name) {
+                    location = data.country_name;
+                    if (data.region) {
+                        location += `, ${data.region}`;
+                    }
+                    if (data.city) {
+                        location += `, ${data.city}`;
+                    }
+                }
+                
+                locationElement.textContent = location || '未知位置';
+            }
+
+            logVisitor(data) {
+                const now = new Date();
+                const visitorLog = {
+                    ip: data.ip,
+                    location: `${data.country || data.country_name || ''}, ${data.city || ''}`,
+                    timestamp: now.toISOString(),
+                    date: now.toDateString(),
+                    page: 'publications',
+                    userAgent: navigator.userAgent,
+                    referrer: document.referrer || 'direct'
+                };
+
+                // 存储到localStorage
+                let visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
+                visitors.push(visitorLog);
+                
+                // 只保留最近1000条记录
+                if (visitors.length > 1000) {
+                    visitors = visitors.slice(-1000);
+                }
+                
+                localStorage.setItem('visitors', JSON.stringify(visitors));
+                console.log('访客记录已保存:', visitorLog);
+            }
+
+            updateVisitCount() {
+                let count = parseInt(localStorage.getItem('visitCount') || '0');
+                count++;
+                localStorage.setItem('visitCount', count.toString());
+                document.getElementById('visit-count').textContent = count.toLocaleString();
+            }
+
+            updateTodayVisitors() {
+                const today = new Date().toDateString();
+                const visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
+                const todayVisitors = visitors.filter(v => v.date === today);
+                const uniqueIPs = new Set(todayVisitors.map(v => v.ip));
+                
+                document.getElementById('today-visitors').textContent = uniqueIPs.size.toString();
+            }
+        }
+
+        // 页面加载完成后初始化访客追踪
+        document.addEventListener('DOMContentLoaded', () => {
+            new VisitorTracker();
+        });
+
+        // 管理员功能
+        window.getVisitorLogs = function() {
+            const visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
+            console.table(visitors);
+            return visitors;
+        };
+
+        window.clearVisitorLogs = function() {
+            localStorage.removeItem('visitors');
+            localStorage.removeItem('visitCount');
+            console.log('访客记录已清除');
+            location.reload();
+        };
+    </script>
 
 </body>
 </html>
