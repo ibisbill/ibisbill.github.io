@@ -390,13 +390,13 @@
                 </div>
 
                 <div class="avatar-wrapper">
-                    <img src="/components/photos/pic1.png" alt="Maggie Huan">
-                    <img src="/components/photos/profile2.jpeg" alt="Maggie Huan">
-                    <img src="/components/photos/pic4.png" alt="Maggie Huan">
-                    <img src="/components/photos/pic5.png" alt="Maggie Huan">
-                    <img src="/components/photos/pic6.jpg" alt="Maggie Huan">
-                    <img src="/components/photos/pic8.jpg" alt="Maggie Huan">
-                    <img src="/components/photos/pic9.jpg" alt="Maggie Huan">
+                    <img src="components/photos/pic1.png" alt="Maggie Huan">
+                    <img src="components/photos/profile2.jpeg" alt="Maggie Huan">
+                    <img src="components/photos/pic4.png" alt="Maggie Huan">
+                    <img src="components/photos/pic5.png" alt="Maggie Huan">
+                    <img src="components/photos/pic6.jpg" alt="Maggie Huan">
+                    <img src="components/photos/pic8.jpg" alt="Maggie Huan">
+                    <img src="components/photos/pic9.jpg" alt="Maggie Huan">
                 </div>
             </div>
         </section>
@@ -454,10 +454,32 @@
     <script>
         window.addEventListener('load', () => {
             const images = document.querySelectorAll('.avatar-wrapper img');
+            console.log('Total images found:', images.length);
+            
             if(images.length > 0){
-                const seed = Date.now() + Math.random() * 1000;
-                const randomIndex = Math.floor(seed % images.length);
+                // 确保所有图片都开始时是隐藏的
+                images.forEach((img, index) => {
+                    img.classList.remove('active');
+                    console.log(`Image ${index}: ${img.src}`);
+                    
+                    // 添加图片加载错误处理
+                    img.addEventListener('error', () => {
+                        console.error(`Failed to load image: ${img.src}`);
+                    });
+                    
+                    img.addEventListener('load', () => {
+                        console.log(`Successfully loaded image: ${img.src}`);
+                    });
+                });
+                
+                // 生成随机索引并显示图片
+                const randomIndex = Math.floor(Math.random() * images.length);
+                console.log('Selected random index:', randomIndex);
+                
                 images[randomIndex].classList.add('active');
+                console.log('Activated image:', images[randomIndex].src);
+            } else {
+                console.error('No images found in .avatar-wrapper');
             }
         });
     </script>
