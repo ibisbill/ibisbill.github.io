@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>5.3 混合精度与数值稳定</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨如何通过 FP16/BF16 混合精度训练提升效率，并处理随之而来的数值溢出与稳定性挑战。</p>
   <div class="pillrow">
     <span class="pill">模块 5</span>
     <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
@@ -55,53 +55,84 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：混合精度提升吞吐，但会带来溢出/舍入误差。需要掌握 BF16/FP16 的差异与稳定手段。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>BF16：指数位多，抗溢出强；FP16：精度更高但易溢出。</li>
-</ul>
-<ul>
-<li>动态 loss scaling（FP16 常用）。</li>
-</ul>
-<ul>
-<li>关键算子：softmax、layernorm 的稳定实现。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>优先 BF16（若硬件支持）；FP16 必须监控 overflow/NaN。</li>
-</ul>
-<ul>
-<li>日志中记录：grad norm、loss scale、inf/nan 计数。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>认为使用 AMP 就自动安全；实际仍需正确的 loss scaling 与稳定算子。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：FP16 为什么更容易溢出？</div>
-</div>
-<div class="qa">
-<div class="a">A1：指数范围更小，表示不了大数；训练中 logits/梯度可能超范围。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：softmax 为什么要减 max？</div>
-</div>
-<div class="qa">
-<div class="a">A2：避免 exp(大数) 溢出，同时不改变 softmax 结果（等价变换）。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 浮点数格式对比：FP16 vs BF16</h3>
+  <p>在混合精度训练中，我们使用较低精度的浮点数进行计算（前向和反向），以节省显存和带宽，但同时保留一个 FP32 的权重副本用于参数更新。</p>
+  <table>
+    <thead>
+      <tr>
+        <th>格式</th>
+        <th>符号位</th>
+        <th>指数位 (Exponent)</th>
+        <th>尾数位 (Mantissa)</th>
+        <th>特点</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>FP32</strong></td>
+        <td>1</td>
+        <td>8</td>
+        <td>23</td>
+        <td>标准精度，范围大，精度高。</td>
+      </tr>
+      <tr>
+        <td><strong>FP16</strong></td>
+        <td>1</td>
+        <td>5</td>
+        <td>10</td>
+        <td>精度尚可，但范围非常窄（最大值 ~65504），极易溢出。</td>
+      </tr>
+      <tr>
+        <td><strong>BF16</strong></td>
+        <td>1</td>
+        <td>8</td>
+        <td>7</td>
+        <td>范围与 FP32 一致，几乎不溢出，但精度较低。<strong>现代 LLM 首选。</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2. Loss Scaling (损失缩放)</h3>
+  <p>由于 FP16 的范围有限，许多梯度值在训练过程中会变得非常小（Underflow），导致被直接截断为 0。为了解决这个问题，FP16 必须配合 <strong>Loss Scaling</strong>：</p>
+  <ul>
+    <li>训练前，将 Loss 乘以一个很大的系数 $S$（如 $2^{16}$）。</li>
+    <li>这样反向传播得到的梯度也会被放大 $S$ 倍，从而避开 FP16 的极小值区域。</li>
+    <li>在更新权重前，再将梯度除以 $S$ 恢复原始大小。</li>
+  </ul>
+
+  <h3>3. 数值稳定技巧：Softmax Trick</h3>
+  <p>Softmax 计算中包含 $\exp(z_i)$。如果 $z_i$ 很大，$\exp(z_i)$ 会瞬间溢出（NaN）。为了数值稳定，我们使用等价变换：</p>
+  <p>$$\text{Softmax}(z)_i = \frac{\exp(z_i - \max(z))}{\sum_j \exp(z_j - \max(z))}$$</p>
+  <p>通过减去最大值，所有指数项都 $\le 0$，从而保证了 $\exp$ 的结果在 $(0, 1]$ 之间，避免了溢出。</p>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>硬件支持:</strong> BF16 需要 NVIDIA Ampere 架构（如 A100）及以上硬件支持。对于旧硬件，只能使用 FP16。</li>
+    <li><strong>监控信号:</strong> 日志中应记录 <code>loss_scale</code> 的动态变化。如果 <code>loss_scale</code> 频繁减小，说明遇到了严重的梯度溢出。</li>
+    <li><strong>稳定算子:</strong> 在 LayerNorm 和 Softmax 等算子内部，通常会临时提升到 FP32 进行累加计算，然后再降回低精度，以减少舍入误差。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：FP16 为什么比 BF16 更容易产生 NaN？</div>
+    <div class="a">A1：FP16 的指数位只有 5 位，其能表示的最大数值仅为 65504。在深度学习的中间层计算或梯度聚合中，数值很容易超过这个限制，导致溢出产生无穷大（Inf），进而引发后续计算的 NaN。而 BF16 拥有与 FP32 相同的 8 位指数位，范围极广，天生抗溢出。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：Softmax 为什么要减去最大值？</div>
+    <div class="a">A2：为了数值稳定性。减去最大值后，所有输入都变为了非正数。在计算 $\exp$ 时，结果范围被压缩到了 $(0, 1]$，彻底消除了计算过程中产生无穷大溢出的风险，且由于 Softmax 的平移不变性，结果完全等价。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-5-2-优化器与学习率策略.html"><strong>5.2 优化器与学习率策略</strong></a>
       <a href="kp-5-4-分布式训练并行-dp-tp-pp-zero-fsdp.html"><strong>5.4 分布式训练并行（DP/TP/PP/ZeRO/FSDP）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

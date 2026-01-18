@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>6.3 后训练方向：安全风格、工具格式与领域适配</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨在基础 SFT 之后，如何针对特定业务场景进行专项强化，打造安全、好用且专业的模型。</p>
   <div class="pillrow">
     <span class="pill">模块 6</span>
     <span class="pill"><a href="./module-06-指令微调-sft-与后训练-post-training.html">返回模块页</a></span>
@@ -55,55 +55,62 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：Post-training 通常指在 SFT</p>
-<p>之后，进一步强化安全、工具调用、长上下文与领域一致性等产品属性。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>安全风格：拒答策略、风险提示、合规边界。</li>
-</ul>
-<ul>
-<li>工具调用：JSON/schema 严格性、参数填充、错误处理。</li>
-</ul>
-<ul>
-<li>长上下文：长序列指令与检索任务；领域术语与格式。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>分阶段：先指令能力、再偏好/安全、再专项（工具/长上下文/领域）。</li>
-</ul>
-<ul>
-<li>每阶段都做回归评测，避免能力漂移。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把安全/拒答数据与普通指令混在一起无区分地训练，导致过度拒答。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么工具调用需要专项数据？</div>
-</div>
-<div class="qa">
-<div class="a">A1：它要求严格结构化输出与状态机式行为，普通对话数据难以覆盖格式与错误处理细节。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：后训练为什么要分阶段？</div>
-</div>
-<div class="qa">
-<div class="a">A2：不同目标（遵循、偏好、安全、工具）可能冲突；分阶段更易控制权衡并定位回归。</div>
-</div>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 安全风格与价值观对齐</h3>
+  <p>后训练的一个重要目标是确保模型回复的安全性。这包括：</p>
+  <ul>
+    <li><strong>拒答策略:</strong> 识别有害指令（如制作炸弹、骚扰言论）并给出标准化的拒答回复。</li>
+    <li><strong>风险提示:</strong> 对于法律、医疗等专业咨询，增加必要的风险免责声明。</li>
+    <li><strong>避免过度拒答:</strong> 这是一个平衡点。模型如果太敏感，连“如何写一个打仗的游戏”这种无害请求也会拒绝。</li>
+  </ul>
+
+  <h3>2. 工具调用 (Tool Use / Function Calling)</h3>
+  <p>为了让 LLM 能够使用外部 API（如搜索、计算器、数据库查询），必须进行专项格式训练：</p>
+  <ul>
+    <li><strong>JSON 格式约束:</strong> 训练模型能够准确输出符合特定 Schema 的 JSON。</li>
+    <li><strong>思考-行动-观察 (ReAct) 范式:</strong> 训练模型在回答前先思考，输出调用命令，等待外部反馈后继续回答。</li>
+  </ul>
+
+  <h3>3. 领域适配 (Domain Adaptation)</h3>
+  <p>针对特定行业（如金融、法律、医疗）的后训练：</p>
+  <ul>
+    <li><strong>专业术语一致性:</strong> 确保模型在特定上下文下始终使用行业标准术语。</li>
+    <li><strong>业务逻辑对齐:</strong> 训练模型遵循行业特有的逻辑流程或合规要求。</li>
+  </ul>
+
+  <h3>4. 分阶段训练策略</h3>
+  <p>在实际工程中，后训练往往不是一步到位的，而是分阶段进行的：</p>
+  <pre><code>阶段 1: 基础能力 SFT (通用指令遵循)
+阶段 2: 专项强化 (工具调用、长文本、特定领域)
+阶段 3: 偏好与安全对齐 (RLHF / DPO)</code></pre>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>数据比例控制:</strong> 加入安全或工具数据时，要严格控制比例。如果安全数据太多，模型会变得“胆小”且无用；如果工具数据太多，模型的闲聊能力会退化。</li>
+    <li><strong>严格 Schema 校验:</strong> 在训练工具调用时，可以使用自动化的逻辑检查生成的 JSON 是否合法，不合法的样本应直接剔除。</li>
+    <li><strong>回归评测:</strong> 每增加一种新能力，都要回过头去跑一遍 MMLU 或通用对话 Benchmarks，确保“新技能”没有破坏“老本领”。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么工具调用需要专项数据？</div>
+    <div class="a">A1：因为工具调用要求极高的格式精确性（如 JSON 的括号必须闭合）和特定逻辑（如先输出参数，再等待执行结果）。这些特定的行为模式在普通的对话语料中几乎不存在，模型无法仅通过通用训练自发习得这种“严谨性”。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：后训练为什么要分阶段？</div>
+    <div class="a">A2：不同的训练目标往往存在冲突。例如，强化安全性可能会导致模型有用性下降；强化工具格式可能会让回答变得生硬。分阶段训练允许工程师精细化地调整每一步的配比和超参数，更早地发现并定位能力回退（Regression）的原因。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-6-2-sft-训练策略-全参-vs-peft-lora-qlora.html"><strong>6.2 SFT 训练策略：全参 vs PEFT（LoRA/QLoRA）</strong></a>
       <a href="module-07-对齐-alignment-rlhf-dpo-rlvr-等.html"><strong>7 对齐（Alignment）：RLHF / DPO / RLVR 等</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

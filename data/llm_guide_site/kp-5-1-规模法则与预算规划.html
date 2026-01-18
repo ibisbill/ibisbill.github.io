@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -47,7 +51,7 @@
     
 <div class="hero">
   <h1>5.1 规模法则与预算规划</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">理解模型性能、参数量、数据量与计算量之间的幂律关系，科学规划预训练预算。</p>
   <div class="pillrow">
     <span class="pill">模块 5</span>
     <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
@@ -55,53 +59,62 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：预训练通常受计算预算约束。规模法则用于估算在给定算力下参数量/数据量的合理配比。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>参数 N、数据 D、计算 C 的经验关系（用于规划，不是定律）。</li>
-</ul>
-<ul>
-<li>数据不足会早早过拟合；参数不足会欠拟合。</li>
-</ul>
-<ul>
-<li>小规模试跑：验证稳定性与数据管线，再上大规模。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>预算拆分：超参探索/消融/正式训练/续训与对齐。</li>
-</ul>
-<ul>
-<li>建立自动化报表：loss、吞吐、显存、评测集趋势。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>直接用他人规模配置照搬到不同数据/架构上。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么需要小规模试跑？</div>
-</div>
-<div class="qa">
-<div class="a">A1：提前发现数据管线、数值稳定与并行配置问题，避免大规模浪费算力。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：数据不足的典型信号？</div>
-</div>
-<div class="qa">
-<div class="a">A2：训练 loss 继续下降但验证困惑度不再改善或变差，且出现过拟合迹象。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 规模法则 (Scaling Laws)</h3>
+  <p>OpenAI 和 DeepMind 的研究表明，大语言模型的最终性能（Loss）与三个因素呈现幂律关系：模型参数量 ($N$)、训练数据量 ($D$) 和总计算量 ($C$)。</p>
+  <p>$$L(N, D) \approx \left[ \left( \frac{N_c}{N} \right)^{\alpha_N} + \left( \frac{D_c}{D} \right)^{\alpha_D} \right]$$</p>
+  <ul>
+    <li>这意味着只要不断增加投入，Loss 就会持续下降，且下降的速度在对数坐标下是线性的。</li>
+    <li><strong>Chinchilla Scaling Laws:</strong> DeepMind 发现，对于给定的计算预算，模型大小和数据量应该同步增加。大约每增加 1 个参数，需要配合增加 20 个 token 的数据量。</li>
+  </ul>
+
+  <h3>2. 计算量估算 (FLOPs)</h3>
+  <p>对于一个标准的 Transformer 模型（Decoder-only），训练一个 token 所需的计算量大约是参数量的 6 倍：</p>
+  <p>$$C \approx 6 \times N \times D$$</p>
+  <ul>
+    <li><strong>Forward Pass:</strong> 约 $2N$ FLOPs。</li>
+    <li><strong>Backward Pass:</strong> 约 $4N$ FLOPs（因为需要计算相对于输入和权重的梯度）。</li>
+  </ul>
+
+  <h3>3. 预算规划 (Budget Planning)</h3>
+  <p>在开始大规模训练前，必须根据可用算力和时间进行精细规划：</p>
+  <div style="text-align: center; margin: 2rem 0;">
+    <div class="mermaid">
+graph TD
+    Budget[总算力预算] --> Explore[超参探索/消融实验 10%]
+    Budget --> Main[正式预训练 70-80%]
+    Budget --> Post[SFT/对齐/长文本扩展 10-20%]
+    Main --> Hardware[硬件损耗/重试预留]
+    </div>
+  </div>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>小规模试跑 (Small-scale Runs):</strong> 在全规模训练前，先在 10M-100M 级别的小模型上验证数据质量、学习率策略和并行稳定性。</li>
+    <li><strong>Compute-Optimal vs Performance-Optimal:</strong> Chinchilla 给出了算力最优配比，但在实际生产中，为了获得更强的推理效率，往往会进行“过度训练”（Over-training），即模型参数量不变，但喂入数倍于最优比例的数据（如 Llama-3）。</li>
+    <li><strong>报表监控:</strong> 实时观察训练 Loss 曲线是否符合幂律预测。如果出现大幅偏差，说明数据或模型架构可能存在问题。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么需要小规模试跑？</div>
+    <div class="a">A1：因为大规模训练的成本极高（数百万甚至上千万美元），任何数据清洗错误、并行的 Bug 或超参不当都会造成巨大的算力浪费。小规模试跑能以极低的成本提前暴露这些工程问题。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：数据不足的典型信号是什么？</div>
+    <div class="a">A2：典型信号是模型在训练集上的 Loss 持续下降，但验证集上的 Loss（或困惑度）不再改善甚至开始上升。这表明模型已经记住了训练数据，但无法泛化到新分布上。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="module-05-预训练工程与技巧.html"><strong>5 预训练工程与技巧</strong></a>
       <a href="kp-5-2-优化器与学习率策略.html"><strong>5.2 优化器与学习率策略</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

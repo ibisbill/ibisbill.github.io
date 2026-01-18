@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -47,7 +51,7 @@
     
 <div class="hero">
   <h1>4.4 数据格式、packing 与对话模板</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨如何将原始数据高效、规范地转化为模型可接受的训练序列。</p>
   <div class="pillrow">
     <span class="pill">模块 4</span>
     <span class="pill"><a href="./module-04-数据与语料.html">返回模块页</a></span>
@@ -55,55 +59,84 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：数据如何被拼成序列决定了 mask、loss 与训练效率。对话模型尤其依赖一致模板。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>EOD（文档结束）token 的使用与文档边界。</li>
-</ul>
-<ul>
-<li>sequence packing：把多个短样本拼到同一序列减少 padding。</li>
-</ul>
-<ul>
-<li>对话格式：system/user/assistant 角色 token、轮次边界、是否对用户 token 计算 loss。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>packing 要确保 attention mask 正确，不同样本之间不可互相注意（除非设计为连续文档）。</li>
-</ul>
-<ul>
-<li>对话训练常见：只对 assistant 回答计算 loss，提升指令遵循一致性。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>packing 时忘了插入分隔符或 mask，导致样本串扰与训练泄露。</li>
-</ul>
-<p>例题与答案：</p>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<div class="qa">
-<div class="q">Q1：为什么 packing 能显著提升训练吞吐？</div>
-</div>
-<div class="qa">
-<div class="a">A1：减少 padding token 的计算与通信开销，提高有效 token 比例。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：对话训练为什么常只对 assistant 部分算 loss？</div>
-</div>
-<div class="qa">
-<div class="a">A2：目标是学习“如何回答”，若对用户部分也算 loss，可能学到复述用户输入等不良行为。</div>
-</div>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. Sequence Packing (序列打包)</h3>
+  <p>在预训练中，如果每个样本单独占用一个固定长度（如 4096）的序列，而该样本实际长度只有 500 个 token，那么剩余的 3596 个 token 都是 <code>[PAD]</code>，浪费了大量的 GPU 算力。<strong>Packing</strong> 是一种通过将多个短样本拼接成一个完整长序列的技术，目的是将 <code>[PAD]</code> 比例降到最低。</p>
+  <ul>
+    <li><strong>操作方式:</strong> 样本 1 + <code>&lt;|endoftext|&gt;</code> + 样本 2 + <code>&lt;|endoftext|&gt;</code> ...</li>
+    <li><strong>Attention Masking:</strong> 为了防止样本 2 里的 token 注意到样本 1 里的内容，通常需要结合特殊的 Attention Mask 策略（如 FlashAttention 支持的 <code>varlen</code> 注意力），或者在样本之间插入不可逾越的分隔标识。</li>
+  </ul>
+
+  <h3>2. 对话模板 (Chat Templates)</h3>
+  <p>对于经过指令微调（SFT）的模型，数据需要按照特定的模板组织，以便模型区分“系统指令”、“用户提问”和“模型回答”。常见的格式如 ChatML：</p>
+  <pre><code>&lt;|im_start|&gt;system
+你是一个有用的助手。&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+请写一段 Python 代码。&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+...</code></pre>
+
+  <h3>3. 损失掩码 (Loss Masking)</h3>
+  <p>在对话数据训练中，我们通常不希望模型去学习如何生成“用户提问”部分，而只希望它学习如何生成“助手回答”。</p>
+  <ul>
+    <li><strong>操作:</strong> 将 User 部分的标签（Target Labels）设为 <code>-100</code>。</li>
+    <li><strong>原因:</strong> 强制模型只为 Assistant 部分的内容计算交叉熵损失。</li>
+  </ul>
+
+  <h3>数据流与 Packing 示意图</h3>
+  <div style="text-align: center; margin: 2rem 0;">
+    <div class="mermaid">
+graph LR
+    S1[样本 1: 500 tokens] --> Pack[Packing Engine]
+    S2[样本 2: 1200 tokens] --> Pack
+    S3[样本 3: 800 tokens] --> Pack
+    Pack --> Out[长序列: 4096 tokens, PAD 极少]
+    Out -- Attention Mask -- B1[样本 1 区域]
+    Out -- Attention Mask -- B2[样本 2 区域]
+    Out -- Attention Mask -- B3[样本 3 区域]
+    </div>
+  </div>
+
+  <h3>代码示例：简单对话 Loss Masking 实现</h3>
+  <pre><code class="language-python"># 假设 input_ids 包含: [SYSTEM_PROMPT, USER_Q, ASSISTANT_A]
+# labels 初始为 input_ids 的克隆
+
+# 找到 Assistant 开始和结束的索引 (示例逻辑)
+assistant_start_idx = find_token_index(input_ids, "&lt;|im_start|&gt;assistant")
+assistant_end_idx = find_token_index(input_ids, "&lt;|im_end|&gt;")
+
+# 屏蔽非 Assistant 部分的 Loss
+labels[:assistant_start_idx] = -100
+# 只有 assistant 内容保持原值，用于计算 cross entropy
+</code></pre>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>边界 token (EOD):</strong> 每个文档或对话轮次后必须有明确的结束符，否则模型在推理时不知道何时停止。</li>
+    <li><strong>跨样本污染:</strong> Packing 时的 Attention Mask 必须严谨，否则会导致模型在训练中看到不该看的上下文。</li>
+    <li><strong>模板一致性:</strong> 训练模板与推理（Deployment）时的模板必须完全一致，哪怕是一个空格或换行符的差异，都可能导致模型表现大幅下降。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么 packing 能显著提升训练吞吐？</div>
+    <div class="a">A1：因为它大幅减少了 GPU 算力花在无意义 <code>[PAD]</code> token 上的浪费，使每个 Batch 中的有效 token 比例接近 100%，从而在同样的步数内喂给模型更多的有效数据。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：对话训练为什么常只对 assistant 部分算 loss？</div>
+    <div class="a">A2：目标是训练模型生成高质量的回答，而不是模仿用户的提问风格或重复系统提示词。如果对用户输入也算 loss，模型可能会学到复述用户问题等冗余行为，且会摊薄对核心回答能力的学习权重。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-4-3-数据配比-采样温度与课程学习.html"><strong>4.3 数据配比、采样温度与课程学习</strong></a>
       <a href="module-05-预训练工程与技巧.html"><strong>5 预训练工程与技巧</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

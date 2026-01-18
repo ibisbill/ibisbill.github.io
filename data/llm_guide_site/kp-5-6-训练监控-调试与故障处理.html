@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>5.6 训练监控、调试与故障处理</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨在大规模分布式训练中，如何通过多维监控与自动化工具保障任务的稳定性。</p>
   <div class="pillrow">
     <span class="pill">模块 5</span>
     <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
@@ -55,54 +55,65 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：LLM 训练失败成本极高。必须建立从数据到数值到系统的监控与快速定位机制。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>监控：loss、学习率、grad norm、吞吐、显存、通信时间。</li>
-</ul>
-<ul>
-<li>异常：loss spike、NaN/Inf、吞吐突降、OOM。</li>
-</ul>
-<ul>
-<li>定位：坏 batch、数据解码错误、并行死锁、硬件 ECC 错误。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>为每次实验保存：代码版本、配置、数据版本、随机种子、环境信息。</li>
-</ul>
-<ul>
-<li>checkpoint 与断点续训策略：频率、保留窗口、验证一致性。</li>
-</ul>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<p>常见误区：</p>
-<ul>
-<li>只看训练 loss 不看验证与任务评测，导致训练方向偏离目标。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：出现 NaN 的第一批排查项？</div>
-</div>
-<div class="qa">
-<div class="a">A1：学习率/梯度裁剪、混合精度溢出、坏数据（极长样本/异常字符）、softmax/LN 稳定实现。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：吞吐突然下降常见原因？</div>
-</div>
-<div class="qa">
-<div class="a">A2：数据加载瓶颈、通信拥塞、频繁 checkpoint、GPU 频率降档或作业抢占等。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 关键监控指标 (Key Metrics)</h3>
+  <p>为了及时发现潜伏的危机，我们需要监控以下四个维度的指标：</p>
+  <ul>
+    <li><strong>算法维度:</strong> Loss 曲线、学习率 (LR)、梯度范数 (Grad Norm)、各层 Logits 范围。</li>
+    <li><strong>吞吐维度:</strong> 每秒处理的 Token 数 (TGS)、显存占用 (VRAM Usage)、计算与通信占比。</li>
+    <li><strong>数值稳定:</strong> NaN/Inf 出现的频率、Loss Scale 的动态变化。</li>
+    <li><strong>硬件状态:</strong> GPU 温度、功耗、ECC 错误计数、网卡利用率。</li>
+  </ul>
+
+  <h3>2. 异常定位与诊断</h3>
+  <ul>
+    <li><strong>Loss Spike (突刺):</strong> 通常由“毒药 Batch”（包含极端长文本或异常字符的数据）引起。排查时可回溯引起突刺的 Data Iterator 种子。</li>
+    <li><strong>NaN/Inf:</strong> 混合精度训练中的常见问题。第一步应检查是否为 Loss Scale 过大或学习率过高；第二步检查是否由于算子（如 Softmax）在 FP16 下溢出。</li>
+    <li><strong>OOM (显存溢出):</strong> 常见于序列长度突增或并行策略配置不当。</li>
+  </ul>
+
+  <h3>3. Checkpoint 与断点续训</h3>
+  <p>大模型训练动辄数月，硬件故障（如网卡掉线、GPU 故障）是必然发生的。<strong>弹性断点续训</strong>是工程必备：</p>
+  <ul>
+    <li><strong>频率:</strong> 通常每隔几千步保存一次完整状态（包括优化器状态）。</li>
+    <li><strong>一致性:</strong> 续训时必须确保数据读取器的随机种子（Seed）与进度正确恢复，以保证训练的确定性。</li>
+  </ul>
+
+  <h3>4. 监控看板示例</h3>
+  <pre><code>--------------------------------------------------
+Step: 12500 | Loss: 2.3451 | Grad Norm: 0.85
+LR: 3.5e-4 | TGS: 125.4k tokens/s | Scale: 32768
+GPU Usage: 98% | Max Temp: 72C | Errors: 0
+--------------------------------------------------
+</code></pre>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>版本控制:</strong> 严禁修改代码后直接覆盖前序运行。每次训练都应关联唯一的 Git Commit ID 和配置文件快照。</li>
+    <li><strong>自动警报:</strong> 建立 Loss 异常波动或吞吐骤降的实时通知机制（如 Slack/钉钉机器人）。</li>
+    <li><strong>数据溯源:</strong> 当发现 Loss 异常时，能够通过 Step 快速定位到具体的原始语料，以便针对性清洗。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：出现 NaN 的第一批排查项？</div>
+    <div class="a">A1：1. 检查梯度裁剪是否起效；2. 降低学习率或延长 Warmup；3. 检查是否有异常长或全零的 Bad Batch 数据；4. 检查是否在 FP16 模式下由于 Loss Scale 过大导致了溢出。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：吞吐突然下降常见原因？</div>
+    <div class="a">A2：1. 数据读取（DataLoader）成为瓶颈（CPU 处理跟不上）；2. 网络拥塞导致分布式通信变慢；3. GPU 由于过热降频；4. 频繁进行 IO 密集型操作（如频繁保存 Checkpoint）。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-5-5-内存与算子优化-checkpoint-flashattention-fused.html"><strong>5.5 内存与算子优化（checkpoint/FlashAttention/fused）</strong></a>
       <a href="kp-5-7-续训-领域继续预训练与长上下文扩展.html"><strong>5.7 续训、领域继续预训练与长上下文扩展</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

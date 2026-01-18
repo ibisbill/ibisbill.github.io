@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>6.1 SFT 数据：质量、覆盖与模板</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨如何通过高质量的指令数据，将预训练模型转化为能够遵循指令、进行流畅对话的助手。</p>
   <div class="pillrow">
     <span class="pill">模块 6</span>
     <span class="pill"><a href="./module-06-指令微调-sft-与后训练-post-training.html">返回模块页</a></span>
@@ -55,53 +55,58 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：SFT 的目标是让模型更好地遵循指令与对话规范。数据质量与模板一致性通常比规模更重要。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>数据形态：单轮指令-回答、多轮对话、工具调用格式示例。</li>
-</ul>
-<ul>
-<li>模板：system/user/assistant 角色分隔；统一分隔符与停止 token。</li>
-</ul>
-<ul>
-<li>质量：明确目标、可验证答案、避免含糊套话；覆盖边界条件。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>建立数据审查：随机抽样人工复核 + 自动规则（重复、长度、敏感）。</li>
-</ul>
-<ul>
-<li>避免“模板泄露”：把评测提示混入训练会导致过拟合。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把低质量合成数据大量堆入 SFT，导致模型“会说话但不做事”。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：多轮对话数据为什么需要严格模板？</div>
-</div>
-<div class="qa">
-<div class="a">A1：模型会学习格式作为行为线索；模板不一致会导致角色混淆与输出不稳定。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：SFT 中常见的 loss mask 策略？</div>
-</div>
-<div class="qa">
-<div class="a">A2：只对 assistant 输出部分计算 loss，用户输入不计入，以强化回答生成而非复述。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 指令微调 (Supervised Fine-Tuning, SFT)</h3>
+  <p>预训练模型本质上是一个“续写器”。SFT 的目标是通过展示大量的“指令-回答”对，让模型学会理解人类意图并按照特定的对话规范行事。与预训练不同，SFT 极其强调<strong>数据质量</strong>而非规模。</p>
+
+  <h3>2. 数据形态与覆盖</h3>
+  <ul>
+    <li><strong>单轮指令:</strong> “请写一首关于夏天的诗。”</li>
+    <li><strong>多轮对话:</strong> 包含上下文依赖的交互。</li>
+    <li><strong>任务覆盖:</strong> 包含创作、改写、摘要、代码编写、逻辑推理、数学计算、角色扮演等。</li>
+    <li><strong>边界案例:</strong> 包含模型应该拒绝回答的问题（如违法指令），以训练模型的安全性。</li>
+  </ul>
+
+  <h3>3. 对话模板 (Chat Templates)</h3>
+  <p>为了让模型区分不同的发言角色，必须使用一致的模板。常见的如 ChatML：</p>
+  <pre><code>&lt;|im_start|&gt;system
+你是一个人工智能助手。&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+你好。&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+你好！有什么我可以帮你的吗？&lt;|im_end|&gt;</code></pre>
+  <p><strong>注意:</strong> 模板中的特殊 token（如 <code>&lt;|im_start|&gt;</code>）必须被添加到词表中，且在训练和推理时必须保持绝对一致。</p>
+
+  <h3>4. 损失掩码 (Loss Masking)</h3>
+  <p>在 SFT 训练中，我们只对 <code>assistant</code> 的输出部分计算交叉熵损失。对于 <code>system</code> 指令、<code>user</code> 提问以及所有模板标签（如 <code>&lt;|im_start|&gt;</code>），其标签位应设为 <code>-100</code> 从而在 Loss 计算中被忽略。</p>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>少而精:</strong> 1,000 条极高质量的专家编写数据，效果往往好于 100,000 条低质量、有噪声的合成数据。</li>
+    <li><strong>数据审查:</strong> 必须进行人工或强模型（如 GPT-4）的质量打分，剔除逻辑不通、格式错误或含糊其辞的样本。</li>
+    <li><strong>多样性:</strong> 确保指令的动词（Verb）和任务域（Domain）足够多样，避免模型陷入特定回复套路（模式崩塌）。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：多轮对话数据为什么需要严格模板？</div>
+    <div class="a">A1：模型在 SFT 阶段不仅学习内容，还在学习对话的行为模式。严格的模板能帮助模型清晰地界定上文来源、当前轮次以及角色边界。模板不一致（如多了个换行符）会干扰位置编码和语义理解，导致模型产生角色混淆（如开始复读用户输入）。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：SFT 中常用的 loss mask 策略？</div>
+    <div class="a">A2：标准做法是只对 assistant 角色生成的回复部分计算 Loss。这是因为我们的训练目标是“给定背景和问题，生成好的回答”。如果不掩盖用户输入，模型会分出算力去学习如何预测用户的提问，这不仅没有必要，还可能导致模型产生“复读机”倾向。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="module-06-指令微调-sft-与后训练-post-training.html"><strong>6 指令微调（SFT）与后训练（Post-training）</strong></a>
       <a href="kp-6-2-sft-训练策略-全参-vs-peft-lora-qlora.html"><strong>6.2 SFT 训练策略：全参 vs PEFT（LoRA/QLoRA）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

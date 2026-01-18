@@ -46,8 +46,8 @@
   <div class="container">
     
 <div class="hero">
-  <h1>3.4 稳定性与正则化技巧（z-loss/label smoothing 等）</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <h1>3.4 稳定性与正则化技巧</h1>
+  <p class="muted">探讨在大规模预训练中如何通过正则化手段保证训练的数值稳定性与泛化能力。</p>
   <div class="pillrow">
     <span class="pill">模块 3</span>
     <span class="pill"><a href="./module-03-语言建模目标与损失.html">返回模块页</a></span>
@@ -55,55 +55,78 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：大规模训练容易出现 logits 失控、过拟合或不稳定。适当正则与稳定项可显著降低发散风险。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>Label smoothing：把 one-hot 变为平滑分布，降低过拟合。</li>
-</ul>
-<ul>
-<li>z-loss/logit regularization：惩罚 logits 过大，帮助数值稳定。</li>
-</ul>
-<ul>
-<li>MoE 的负载均衡损失：避免路由塌缩。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>正则不是越多越好：对齐/对话任务中过强会损害可控性。</li>
-</ul>
-<ul>
-<li>观察信号：logit 范围、梯度范数、NaN/Inf 频率。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把 NaN 归因于“模型太大”；很多时候是学习率、混合精度或坏数据。</li>
-</ul>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：Label smoothing 可能带来什么副作用？</div>
-</div>
-<div class="qa">
-<div class="a">A1：可能降低概率校准或影响“尖锐分布”任务（如某些分类/抽取），需评估。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：什么是 logit overflow？如何缓解？</div>
-</div>
-<div class="qa">
-<div class="a">A2：logits 过大导致 softmax 溢出/饱和；可用更稳定实现、z-loss、降低 LR、使用 BF16 等。</div>
-</div>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 标签平滑 (Label Smoothing)</h3>
+  <p>标签平滑通过将 one-hot 标签 $y$ 替换为一个混合了均匀分布的平滑分布，来降低模型对预测类别的过度自信（Overconfidence）。</p>
+  <p>$$y_i^{LS} = (1 - \epsilon) y_i + \frac{\epsilon}{V}$$</p>
+  <p>其中 $V$ 是词表大小，$\epsilon$ 是平滑超参数。它能有效地防止模型在训练中为了减小损失而让 Logits 趋向于无穷大，从而缓解过拟合。</p>
+
+  <h3>2. Z-Loss (Logit Regularization)</h3>
+  <p>在大模型（如 PaLM, T5）训练中，Logits 有时会漂移到非常大的数值，导致数值不稳定。Z-Loss 增加了一个正则项来约束 Logits 的对数配分函数 $\log Z$：</p>
+  <p>$$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{CE}} + \alpha \cdot \log^2 Z$$</p>
+  <p>其中 $Z = \sum \exp(z_i)$。这个约束保证了 Logits 处于一个合理的数值范围内，减少了出现 NaN 的概率。</p>
+
+  <h3>3. 权重衰减 (Weight Decay)</h3>
+  <p>权重衰减（通常在 AdamW 优化器中实现）对网络参数的 $L_2$ 范数进行惩罚，防止权重过大。在 LLM 训练中，通常不应对 Embedding 层和 Normalization 层的参数应用 Weight Decay。</p>
+
+  <h3>4. MoE 负载均衡损失 (Auxiliary Loss)</h3>
+  <p>在 Mixture of Experts 模型中，为了防止“路由塌缩”（所有 token 都路由到同一个专家），会引入辅助损失，强制不同专家被均匀激活。</p>
+  <p>$$\mathcal{L}_{\text{aux}} = \alpha \sum_{i=1}^N f_i \cdot P_i$$</p>
+  <p>其中 $f_i$ 是分配给第 $i$ 个专家的 token 比例，$P_i$ 是路由器的平均预测概率。</p>
+
+  <h3>代码示例：Label Smoothing 简单实现</h3>
+  <pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+def label_smoothing_loss(logits, targets, epsilon=0.1):
+    V = logits.size(-1)
+    # 计算原始 log_probs
+    log_probs = F.log_softmax(logits, dim=-1)
+    
+    # 计算原始 cross entropy
+    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(-1)).squeeze(-1)
+    
+    # 计算均匀分布的交叉熵 (即 log_probs 的均值)
+    smooth_loss = -log_probs.mean(dim=-1)
+    
+    # 混合损失
+    loss = (1 - epsilon) * nll_loss + epsilon * smooth_loss
+    return loss.mean()
+
+# 示例
+logits = torch.randn(2, 5) # Batch=2, V=5
+targets = torch.tensor([1, 4])
+loss = label_smoothing_loss(logits, targets)
+print(f"Smooth Loss: {loss.item()}")
+</code></pre>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>数值稳定监控:</strong> 训练时应实时记录 Logits 的 Max/Min/Mean 范数，以及 Gradient Norm。</li>
+    <li><strong>BF16 vs FP16:</strong> BF16 对指数位的支持更宽，天生比 FP16 更不容易产生溢出。</li>
+    <li><strong>Gradient Clipping:</strong> 当梯度范数超过阈值时进行截断，防止梯度爆炸导致的模型崩溃。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：Label smoothing 可能带来什么副作用？</div>
+    <div class="a">A1：它可能模糊模型在处理确定性输出时的概率校准，使模型在需要“绝对确定”输出的任务上表现略差。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：什么是 logit overflow？如何缓解？</div>
+    <div class="a">A2：Logits 过大导致 Softmax 计算中 `exp(z)` 产生无穷大（Inf）。可以通过 Z-loss 约束、更小且平滑的权重初始化、或者使用数值范围更广的 BF16 精度来缓解。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-3-3-seq2seq-条件生成损失.html"><strong>3.3 Seq2Seq 条件生成损失</strong></a>
       <a href="module-04-数据与语料.html"><strong>4 数据与语料</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

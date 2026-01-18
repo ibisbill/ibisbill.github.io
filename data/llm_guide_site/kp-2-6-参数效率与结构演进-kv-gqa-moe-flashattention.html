@@ -51,7 +51,7 @@
     
 <div class="hero">
   <h1>2.6 参数效率与结构演进（KV/GQA/MoE/FlashAttention）</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探索现代 LLM 如何在不改变基本 Transformer 思路下，通过架构优化实现更高的推理效率与模型容量。</p>
   <div class="pillrow">
     <span class="pill">模块 2</span>
     <span class="pill"><a href="./module-02-transformer-核心结构.html">返回模块页</a></span>
@@ -59,65 +59,102 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. KV Cache 机制</h3>
+  <p>在自回归生成（Decoding）时，每生成一个新 token，之前的 token 的 Key 和 Value 向量是不变的。为了避免重复计算，我们将它们缓存起来。</p>
+  <ul>
+    <li><strong>Prefill 阶段:</strong> 计算所有输入 token 的 KV 并存入 cache。</li>
+    <li><strong>Decode 阶段:</strong> 每次只计算当前 token 的 KV，并读取缓存的历史 KV 进行注意力计算。</li>
+    <li><strong>公式:</strong> 在 $t$ 时刻，$\text{Attention}(Q_t, K_{1:t}, V_{1:t}) = \text{softmax}(\frac{Q_t K_{1:t}^T}{\sqrt{d_k}}) V_{1:t}$。</li>
+  </ul>
+
+  <h3>2. MQA (Multi-Query Attention) 与 GQA (Grouped-Query Attention)</h3>
+  <p>为了减少 KV Cache 的显存占用和带宽压力：</p>
+  <ul>
+    <li><strong>MQA:</strong> 所有 Query 头共享同一组 Key 和 Value 头。
+      $$\text{KV 显存减少倍数} = \text{num\_heads}$$
+    </li>
+    <li><strong>GQA:</strong> 将 Query 头分组，每组共享一组 KV 头。平衡了速度与精度，是 Llama-2/3 的选择。
+      $$\text{KV 显存减少倍数} = \frac{\text{num\_heads}}{\text{num\_groups}}$$
+    </li>
+  </ul>
+
+  <h3>3. MoE (Mixture of Experts)</h3>
+  <p>混合专家模型将 FFN 层替换为多个独立的“专家”。</p>
+  <ul>
+    <li><strong>Router (路由器):</strong> 为每个 token 选择最合适的 $k$ 个专家进行计算（通常 $k=1$ 或 $2$）。
+      $$y = \sum_{i=1}^k G(x)_i E_i(x)$$
+      其中 $G(x)$ 是路由器的输出权重，$E_i(x)$ 是第 $i$ 个专家的输出。
+    </li>
+    <li><strong>优点:</strong> 可以在不增加计算量（Active Parameters）的情况下，极大增加模型总参数量（Total Parameters）。</li>
+  </ul>
+
+  <h3>4. FlashAttention</h3>
+  <p>通过分块（Tiling）和重计算（Recomputation），在 GPU 高速 SRAM 中完成注意力计算，避免了频繁读写显存中的 $S \times S$ 注意力矩阵。</p>
+  <ul>
+    <li><strong>核心收益:</strong> 显存占用从 $O(S^2)$ 降低到 $O(S)$（对于中间张量），速度提升 2-4 倍。</li>
+  </ul>
+
+  <h3>代码示例：GQA 逻辑示意</h3>
+  <pre><code class="language-python">import torch
+
+def grouped_query_attention(q, k, v, num_groups):
+    # q: (B, H, S, D)
+    # k, v: (B, G, S, D)  其中 G = H // groups
+    B, H, S, D = q.shape
+    G = k.shape[1]
+    heads_per_group = H // G
+    
+    # 将 q 重塑以匹配组
+    q = q.view(B, G, heads_per_group, S, D)
+    
+    # 扩展 k, v 使得每组内的 query 共享相同的 k, v
+    # (B, G, 1, S, D) -> (B, G, heads_per_group, S, D)
+    k = k.unsqueeze(2).expand(-1, -1, heads_per_group, -1, -1)
+    v = v.unsqueeze(2).expand(-1, -1, heads_per_group, -1, -1)
+    
+    # 计算 Attention
+    # ...
+    return # 拼接后的结果
+</code></pre>
+
+  <h3>结构演进对比图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph TD
+    subgraph Attention 优化
+    A1[MHA: 多头 K/V] --> A2[GQA: 分组 K/V]
+    A2 --> A3[MQA: 单组 K/V]
+    A1 --> FA[FlashAttention: IO 优化]
+    end
+    subgraph 稀疏化
+    FFN[标准 FFN] --> MoE[MoE: 专家混合]
+    end
+    subgraph 显存优化
+    KV[重复计算] --> KVC[KV Cache]
+    end
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
   <p>概述：现代 LLM 在不改变基本 Transformer 思路下，通过注意力实现与稀疏/共享策略获得更高效率。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>KV cache：推理阶段缓存历史 K/V，避免重复计算。</li>
-</ul>
-<ul>
-<li>GQA/MQA：减少 K/V 头数，降低 KV cache 成本。</li>
-</ul>
-<ul>
-<li>FlashAttention：分块计算减少中间张量与 IO。</li>
-</ul>
-<ul>
-<li>MoE：稀疏激活专家网络，提升参数规模而控制计算。</li>
-</ul>
-<p>工程提示：</p>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<ul>
-<li>MoE 关键：router 负载均衡、通信（all-to-all）、专家并行。</li>
-</ul>
-<ul>
-<li>FlashAttention/GQA 会改变性能瓶颈分布，需要整体 profiling。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把 MoE 当作“无成本变大模型”；实际上训练复杂、路由不稳会明显降质。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：KV cache 为什么能显著降低 decode 阶段复杂度？</div>
-</div>
-<div class="qa">
-<div class="a">A1：decode 时只需为新 token 计算 Q，并与缓存 K/V 做注意力；无需重复生成历史 K/V。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：MoE 的主要风险是什么？</div>
-</div>
-<div class="qa">
-<div class="a">A2：路由崩塌（只用少数专家）、负载不均导致通信与显存问题，以及训练不稳定。</div>
-</div>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-</div>
-
-<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
-<h3>结构演进速览：MHA → MQA/GQA、FlashAttention、MoE</h3>
-<ul>
-  <li><b>MQA/GQA</b>：减少 K/V 的 head 数（共享/分组），降低 KV cache 显存与带宽压力。</li>
-  <li><b>FlashAttention</b>：通过分块与 IO-aware 的实现，把注意力计算做成更少显存读写、更快的 kernel。</li>
-  <li><b>MoE</b>：用路由器选择少量专家前馈网络，提升参数规模而控制计算量。</li>
-</ul>
-
-<h3>原论文与典型代码库</h3>
-<ul>
-  <li>FlashAttention：Dao et al., 2022 <a href="https://arxiv.org/abs/2205.14135">FlashAttention</a>；代码：<a href="https://github.com/Dao-AILab/flash-attention">Dao-AILab/flash-attention</a></li>
-  <li>MQA：Shazeer, 2019 <a href="https://arxiv.org/abs/1911.02150">Fast Transformer Decoding</a></li>
-  <li>GQA：Ainslie et al., 2023 <a href="https://arxiv.org/abs/2305.13245">GQA</a></li>
-  <li>MoE：Fedus et al., 2021 <a href="https://arxiv.org/abs/2101.03961">Switch Transformers</a></li>
-  <li>工程实现：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（GQA/RoPE/MoE 等多种变体）</li>
-</ul>
+  <p>工程提示：</p>
+  <ul>
+    <li>MoE 关键：router 负载均衡、通信（all-to-all）、专家并行。</li>
+    <li>FlashAttention/GQA 会改变性能瓶颈分布，需要整体 profiling。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：KV cache 为什么能显著降低 decode 阶段复杂度？</div>
+    <div class="a">A1：decode 时只需为新 token 计算 Q，并与缓存 K/V 做注意力；无需重复生成历史 K/V。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：MoE 的主要风险是什么？</div>
+    <div class="a">A2：路由崩塌（只用少数专家）、负载不均导致通信与显存问题，以及训练不稳定。</div>
+  </div>
 </div>
 
     <div class="pager">
@@ -125,8 +162,7 @@
       <a href="module-03-语言建模目标与损失.html"><strong>3 语言建模目标与损失</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

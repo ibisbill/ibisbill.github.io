@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>5.7 续训、领域继续预训练与长上下文扩展</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨在通用基座模型基础上，如何通过增量训练注入领域知识或提升长序列处理能力。</p>
   <div class="pillrow">
     <span class="pill">模块 5</span>
     <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
@@ -55,54 +55,50 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：预训练不是一次性工程。常见需求包括继续预训练、迁移到新域、扩展上下文长度。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>DAPT/TAPT：领域/任务继续预训练。</li>
-</ul>
-<ul>
-<li>长上下文：位置编码缩放 + 长序列数据继续训练。</li>
-</ul>
-<ul>
-<li>能力回归：续训后需要回归评测（通用能力、对齐表现）。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>续训数据要有台账与可解释目标；避免把模型带偏。</li>
-</ul>
-<ul>
-<li>长上下文扩展必须做“长序列任务”训练与评测。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>只增加最大长度配置而不训，期望模型自动具备长上下文能力。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：DAPT 与 TAPT 的差异？</div>
-</div>
-<div class="qa">
-<div class="a">A1：DAPT 面向领域数据（如金融/医疗），TAPT 面向特定任务数据分布（如客服对话）。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：为什么长上下文扩展要回归评测？</div>
-</div>
-<div class="qa">
-<div class="a">A2：位置与训练分布改变可能导致短上下文与对齐能力回退。</div>
-</div>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 领域继续预训练 (DAPT / Continuous Pre-training)</h3>
+  <p>通用模型虽然博学，但在特定垂直领域（如医疗、法律、金融）的表现往往不如人意。<strong>DAPT (Domain-Adaptive Pre-training)</strong> 通过在领域语料上继续进行自回归训练，让模型习得专业术语、知识逻辑和特定风格。</p>
+  <ul>
+    <li><strong>数据配比:</strong> 在续训时，通常需要混入 10%-20% 的通用预训练数据，以防止模型产生“灾难性遗忘”（即学会了法律知识但忘了如何写通顺的句子）。</li>
+  </ul>
+
+  <h3>2. 任务继续预训练 (TAPT)</h3>
+  <p><strong>TAPT (Task-Adaptive Pre-training)</strong> 则是针对特定任务的数据分布进行微量预训练（如大量的客服对话记录）。它比 DAPT 规模更小，但对最终任务的提升往往非常直接。</p>
+
+  <h3>3. 长上下文窗口扩展 (Context Window Extension)</h3>
+  <p>如果原始模型只在 4k 长度下训练，直接输入 32k 长度的文本会导致位置编码失效，表现大幅下降。</p>
+  <ul>
+    <li><strong>位置编码缩放 (RoPE Scaling):</strong> 如线性插值（Linear Interpolation）或 NTK-aware 缩放，通过修改位置编码的底数或频率，让模型“适应”更远的距离。</li>
+    <li><strong>长序列续训:</strong> 仅改公式不够，还需要在大量长文本数据上进行增量训练。为了效率，通常采用分阶段扩展（如先扩到 16k，再扩到 128k）。</li>
+  </ul>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>学习率策略:</strong> 续训时的学习率通常设为预训练末期学习率的 1/10 到 1/2，并配合短时间的 Warmup。</li>
+    <li><strong>回归测试:</strong> 每次续训完成后，必须在通用 Benchmarks (如 MMLU) 上运行测试。如果通用得分大幅下降，说明续训过程中的“锚定数据”不足或学习率过大。</li>
+    <li><strong>长序列评测:</strong> 使用“大海捞针”(Needle In A Haystack) 测试来验证模型在长文本中定位关键信息的能力。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：DAPT 与 TAPT 的主要差异？</div>
+    <div class="a">A1：DAPT 是面向广义的“领域知识”（如让模型通晓金融常识），通常使用海量文档；而 TAPT 是面向具体的“任务分布”（如让模型习惯客服对话的语气和格式），数据量更精简。两者通常是互补关系。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：为什么长上下文扩展要回归评测？</div>
+    <div class="a">A2：因为扩展上下文往往涉及到对位置编码的修改和长序列分布的学习。这些改动可能会破坏模型在短上下文任务（即预训练的主流分布）中的精准度，或者导致模型在 SFT 后习得的指令遵循能力发生偏移。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-5-6-训练监控-调试与故障处理.html"><strong>5.6 训练监控、调试与故障处理</strong></a>
       <a href="module-06-指令微调-sft-与后训练-post-training.html"><strong>6 指令微调（SFT）与后训练（Post-training）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

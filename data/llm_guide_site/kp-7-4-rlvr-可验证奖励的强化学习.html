@@ -55,45 +55,114 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：RLVR 把奖励建立在可自动验证的信号上（如单元测试、数学答案检查），特别适合代码/数学</p>
-<p>等可验证任务。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>奖励来自：测试通过率、编译成功、答案匹配、约束满足等。</li>
-</ul>
-<ul>
-<li>优势：减少主观标注、降低奖励噪声。</li>
-</ul>
-<ul>
-<li>难点：指标覆盖面有限，可能“教会应试”。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>用多样化测试与对抗样例减少投机取巧。</li>
-</ul>
-<ul>
-<li>结合偏好/安全约束，避免只追求可测指标导致行为退化。</li>
-</ul>
-<p>常见误区：</p>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<ul>
-<li>只优化可测指标，导致输出可读性差或泛化差。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么 RLVR 在代码领域有效？</div>
+  <h2>公式 / 代码 / 交互补充（重点）</h2>
+
+  <h3>1. RLVR 的核心理念</h3>
+  <p>
+    RLVR (Reinforcement Learning from Verifiable Rewards) 是一种将强化学习的奖励信号建立在<b>客观、可验证</b>规则上的方法。与传统的 RLHF（依赖人类主观偏好）不同，RLVR 特别适用于有明确“正确答案”或“运行规则”的任务，如数学、编程和形式逻辑。
+  </p>
+  <ul>
+    <li><b>传统 RLHF:</b> $R(x, y)$ 是一个由人类标注训练出的奖励模型（Reward Model）。</li>
+    <li><b>RLVR:</b> $R(x, y) = \text{Verify}(x, y)$，其中 $\text{Verify}$ 是一个外部编译器、解释器或数学检查器。</li>
+  </ul>
+
+  <h3>2. 奖励函数设计</h3>
+  <p>在 RLVR 中，奖励函数通常由多个组件组成，以确保模型既能解决问题，又不会产生不自然的输出（如代码冗余）。</p>
+  <p>一个典型的奖励函数公式为：</p>
+  <p>
+    $$R = w_{verif} \cdot \mathbb{I}(\text{Pass}) - \beta \cdot \text{KL}(\pi_{\theta} || \pi_{ref})$$
+  </p>
+  <ul>
+    <li>$\mathbb{I}(\text{Pass})$: 指示函数，如果通过验证（如通过测试用例）则为 1，否则为 0。</li>
+    <li>$w_{verif}$: 验证成功的权重。</li>
+    <li>$\text{KL}(\pi_{\theta} || \pi_{ref})$: KL 散度惩罚，防止模型偏离原始策略太远，避免输出退化。</li>
+  </ul>
+
+  <h3>3. 代码示例：基于单元测试的奖励计算</h3>
+  <p>以下 Python 伪代码展示了如何在代码生成任务中实现一个简单的 RLVR 奖励计算器：</p>
+  <pre><code class="language-python">import subprocess
+
+def verify_code_reward(generated_code, test_cases):
+    """
+    通过运行生成的 Python 代码并检查测试用例来计算奖励
+    """
+    passed_count = 0
+    total_tests = len(test_cases)
+    
+    # 将代码写入临时文件并运行测试
+    with open("temp_solution.py", "w") as f:
+        f.write(generated_code)
+    
+    for test in test_cases:
+        try:
+            # 运行脚本并检查输出 (简单示例)
+            result = subprocess.run(
+                ["python3", "temp_solution.py"], 
+                input=test['input'], 
+                text=True, 
+                capture_output=True, 
+                timeout=2
+            )
+            if result.stdout.strip() == test['expected_output']:
+                passed_count += 1
+        except Exception:
+            continue
+            
+    # 计算奖励: 基础奖励 = 通过率
+    accuracy = passed_count / total_tests if total_tests > 0 else 0
+    
+    # 结合惩罚项 (例如长度惩罚)
+    length_penalty = 0.01 * len(generated_code) / 1000
+    
+    return accuracy - length_penalty
+
+# 示例输出
+# code = "def add(a, b): return a + b"
+# tests = [{'input': "1 2", 'expected_output': "3"}]
+# print(verify_code_reward(code, tests))
+</code></pre>
+
+  <h3>4. RLVR 工作流程图</h3>
+  <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <pre class="mermaid">
+    graph TD
+        A[输入问题/需求] --> B(LLM 生成响应)
+        B --> C{可验证器 Verifier}
+        C -- 代码任务 --> D[编译器/测试运行]
+        C -- 数学任务 --> E[等式平衡/符号计算]
+        D --> F[奖励信号 Reward]
+        E --> F
+        F --> G[PPO/GRPO 策略更新]
+        G --> B
+    </pre>
+  </div>
+
+  <h3>5. 典型应用与工程挑战</h3>
+  <ul>
+    <li><b>应用案例：</b> DeepSeek-R1 利用 RLVR 进行大规模强化学习，通过数学答案验证和 LeetCode 编译器反馈，使模型在没有监督数据的情况下通过纯 RL 涌现出了思维链（CoT）能力。</li>
+    <li><b>奖励破解（Reward Hacking）：</b> 模型可能会学会针对测试样例进行硬编码（如 <code>if input == '1': print('3')</code>）。
+      <ul>
+        <li><b>对策：</b> 在训练中使用动态、不可见的私有测试用例，并引入 KL 惩罚。</li>
+      </ul>
+    </li>
+    <li><b>稀疏奖励：</b> 如果模型很难随机生成能通过验证的代码，初始阶段可能完全收敛不了。
+      <ul>
+        <li><b>对策：</b> 使用冷启动（Cold Start）数据进行少量 SFT，或设计分段奖励（如语法检查通过、部分用例通过）。</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>6. 论文与代码库引用</h3>
+  <ul>
+    <li><b>DeepSeek-R1:</b> <a href="https://github.com/deepseek-ai/DeepSeek-R1" target="_blank">DeepSeek-R1 论文与代码</a> - 展示了大规模 RLVR 在推理任务中的巨大威力。</li>
+    <li><b>AlphaCode (DeepMind):</b> <a href="https://www.nature.com/articles/s41586-022-05420-y" target="_blank">Competition-level code generation</a> - 早期将验证器引入评估和过滤的代表作。</li>
+  </ul>
 </div>
-<div class="qa">
-<div class="a">A1：代码可以通过编译/测试自动验证，奖励信号相对客观且可规模化。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：如何缓解“应试”风险？</div>
-</div>
-<div class="qa">
-<div class="a">A2：增加隐藏测试、多分布测试、对抗生成，并评估分布外任务表现。</div>
-</div>
-</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.module.js';
+  mermaid.initialize({ startOnLoad: true });
+</script>
 
 
 
@@ -102,8 +171,7 @@
       <a href="kp-7-5-rlaif-constitutional-ai-模型辅助对齐.html"><strong>7.5 RLAIF / Constitutional AI（模型辅助对齐）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

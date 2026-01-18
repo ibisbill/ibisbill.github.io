@@ -47,51 +47,51 @@
     
 <div class="hero">
   <h1>5 预训练工程与技巧</h1>
-  <p class="muted">本页是模块汇总（来自 PDF 原文），并链接到本模块的重要知识点页。</p>
+  <p class="muted">本模块深入探讨了大规模预训练中的各项工程挑战：从计算预算规划、优化器配置，到复杂并行策略与显存优化技术。</p>
 </div>
 
 <div class="grid">
   
 <div class="card third">
   <h2><a href="./kp-5-1-规模法则与预算规划.html">5.1 规模法则与预算规划</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">利用 Scaling Laws 科学估算算力需求与数据配比。</p>
 </div>
 
 <div class="card third">
   <h2><a href="./kp-5-2-优化器与学习率策略.html">5.2 优化器与学习率策略</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">掌握 AdamW、Warmup 与 Cosine Decay 的工业界标准配置。</p>
 </div>
 
 <div class="card third">
   <h2><a href="./kp-5-3-混合精度与数值稳定.html">5.3 混合精度与数值稳定</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">处理 FP16/BF16 训练中的溢出与 Softmax 稳定性问题。</p>
 </div>
 
 <div class="card third">
-  <h2><a href="./kp-5-4-分布式训练并行-dp-tp-pp-zero-fsdp.html">5.4 分布式训练并行（DP/TP/PP/ZeRO/FSDP）</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <h2><a href="./kp-5-4-分布式训练并行-dp-tp-pp-zero-fsdp.html">5.4 分布式训练并行</a></h2>
+  <p class="muted">TP、PP、DP 与 ZeRO：让万亿模型在 GPU 集群上高效跑起来。</p>
 </div>
 
 <div class="card third">
-  <h2><a href="./kp-5-5-内存与算子优化-checkpoint-flashattention-fused.html">5.5 内存与算子优化（checkpoint/FlashAttention/fused）</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <h2><a href="./kp-5-5-内存与算子优化-checkpoint-flashattention-fused.html">5.5 内存与算子优化</a></h2>
+  <p class="muted">利用 FlashAttention 与激活重计算突破硬件显存瓶颈。</p>
 </div>
 
 <div class="card third">
   <h2><a href="./kp-5-6-训练监控-调试与故障处理.html">5.6 训练监控、调试与故障处理</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">建立完善的监控看板，快速定位并处理 NaN 与 OOM。</p>
 </div>
 
 <div class="card third">
   <h2><a href="./kp-5-7-续训-领域继续预训练与长上下文扩展.html">5.7 续训、领域继续预训练与长上下文扩展</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">在通用模型基础上注入行业知识并扩展处理长度。</p>
 </div>
 
 </div>
 
 <div class="section">
-  <h2>手册原文（整理版）</h2>
-  <p>学习目标：理解本模块关键概念，能用自己的话解释，并能完成后续例题。</p>
+  <h2>模块概述</h2>
+  <p>预训练是大模型研发中最耗资源的阶段，其工程实现的精细程度直接决定了最终模型的质量与研发成本。在本模块中，我们将从宏观的预算规划深入到微观的算子优化，全面掌握现代 LLM 训练的核心工程栈。理解这些技术不仅能帮你省钱，更能确保你在面临复杂的数值崩溃或性能瓶颈时，有理可循，有策可依。</p>
 </div>
 
     <div class="pager">
@@ -99,8 +99,7 @@
       <a href="kp-5-1-规模法则与预算规划.html"><strong>5.1 规模法则与预算规划</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

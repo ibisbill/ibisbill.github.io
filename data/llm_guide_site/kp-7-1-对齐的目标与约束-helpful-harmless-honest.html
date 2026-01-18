@@ -46,8 +46,8 @@
   <div class="container">
     
 <div class="hero">
-  <h1>7.1 对齐的目标与约束（Helpful/Harmless/Honest）</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <h1>7.1 对齐的目标与约束</h1>
+  <p class="muted">探讨如何将模型的行为与人类价值观对齐，遵循“有用、无害、诚实”的核心准则。</p>
   <div class="pillrow">
     <span class="pill">模块 7</span>
     <span class="pill"><a href="./module-07-对齐-alignment-rlhf-dpo-rlvr-等.html">返回模块页</a></span>
@@ -55,53 +55,53 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：对齐的本质是在多目标之间做权衡：有用、无害、诚实，并遵守指令层级与合规要求。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>指令层级：system &gt; developer &gt; user；冲突时遵从高优先级。</li>
-</ul>
-<ul>
-<li>诚实：不确定时表达不确定、避免编造；可引用依据。</li>
-</ul>
-<ul>
-<li>无害：拒绝违法/危险请求，提供安全替代方案。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>对齐评测要覆盖：正常任务、边界任务、对抗越狱、提示注入。</li>
-</ul>
-<ul>
-<li>注意 over-refusal：过度拒答会损害可用性。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把“对齐=拒答”，导致模型在安全与可用性上失衡。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：什么是 instruction hierarchy？</div>
-</div>
-<div class="qa">
-<div class="a">A1：系统指令优先级最高，其次开发者，再次用户；模型应在冲突时遵守高优先级。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：诚实对齐的一个可操作准则？</div>
-</div>
-<div class="qa">
-<div class="a">A2：对无法确定的事实明确说明不确定性，并建议可验证途径（检索、咨询专家等）。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. HHH 准则</h3>
+  <p>对齐的核心目标是让模型在交互中遵循以下三个核心约束：</p>
+  <ul>
+    <li><strong>Helpful (有用性):</strong> 模型应该尽可能地帮助用户完成任务，提供清晰、连贯且相关的回答。</li>
+    <li><strong>Harmless (无害性):</strong> 模型不应生成仇恨言论、暴力、色情内容，或协助用户进行非法活动。对于危险请求，模型应采取“安全拒答”策略。</li>
+    <li><strong>Honest (诚实性):</strong> 模型应提供真实准确的信息。如果模型不确定某个事实，应明确表达不确定性，而不是编造事实（幻觉）。</li>
+  </ul>
+
+  <h3>2. 指令层级 (Instruction Hierarchy)</h3>
+  <p>在复杂的对话场景中，不同来源的指令可能存在冲突：</p>
+  <ul>
+    <li><strong>System Prompt (系统提示):</strong> 优先级最高。定义了模型的角色和核心行为准则。</li>
+    <li><strong>Developer Pre-prompt (开发者预设):</strong> 针对特定应用场景的约束。</li>
+    <li><strong>User Input (用户输入):</strong> 用户的即时指令。如果用户试图诱导模型违反系统提示（如提示词注入），模型应始终遵循系统提示。</li>
+  </ul>
+
+  <h3>3. 安全拒答与过度拒答 (Over-refusal)</h3>
+  <p>一个关键的权衡点是：模型既要能拒绝真正的有害请求，又不能因为过于敏感而拒绝合理的提问（如拒绝解释什么是“炸弹”的科学原理）。过度的安全对齐会导致模型变得枯燥且难以使用。</p>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>对抗性评测 (Red Teaming):</strong> 模拟黑客或恶意用户，通过各种诱导手段测试模型的安全防线（越狱测试）。</li>
+    <li><strong>对齐税 (Alignment Tax):</strong> 过于严格的对齐往往会导致模型在通用智力任务（如推理、编程）上的性能略微下降。优化的目标是尽量减小这种副作用。</li>
+    <li><strong>价值观的一致性:</strong> 模型不仅要遵守法律，还要在多文化背景下保持价值中立或符合特定社会的伦理预期。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：什么是 instruction hierarchy？</div>
+    <div class="a">A1：这是一种定义不同级别指令优先权的概念。通常系统提示（System Prompt）拥有最高权限，用户输入最低。对齐良好的模型应当能够识别并抵御用户通过输入手段试图篡改系统级安全设置的行为（即防御提示词注入）。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：诚实对齐的一个可操作准则？</div>
+    <div class="a">A2：当模型面临它在训练语料中未覆盖或不确定的事实时，应训练它主动说“我不知道”或“根据我目前掌握的信息，我无法确定”，并给出查证建议，而不是试图为了“有用性”而编造一个听起来合理的答案。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="module-07-对齐-alignment-rlhf-dpo-rlvr-等.html"><strong>7 对齐（Alignment）：RLHF / DPO / RLVR 等</strong></a>
       <a href="kp-7-2-rlhf-三阶段与-ppo-关键点.html"><strong>7.2 RLHF：三阶段与 PPO 关键点</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

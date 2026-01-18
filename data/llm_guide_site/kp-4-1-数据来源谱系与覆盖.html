@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -47,7 +51,7 @@
     
 <div class="hero">
   <h1>4.1 数据来源谱系与覆盖</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">数据是 LLM 的燃料。了解数据的来源、分布及其对模型能力的影响。</p>
   <div class="pillrow">
     <span class="pill">模块 4</span>
     <span class="pill"><a href="./module-04-数据与语料.html">返回模块页</a></span>
@@ -55,53 +59,66 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：预训练能力上限很大程度由数据决定：覆盖的领域越多、质量越高，模型越“通用”。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>Web、书籍、论文、代码、对话、百科等来源的差异与偏置。</li>
-</ul>
-<ul>
-<li>私域数据：企业知识、工单、FAQ；必须考虑权限与合规。</li>
-</ul>
-<ul>
-<li>多语种：语言比例与采样策略会影响跨语能力。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>建立数据台账（来源、许可、时间、处理流程），便于审计audit 与回溯。</li>
-</ul>
-<ul>
-<li>把数据按域分桶，便于做配比与质量诊断。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>只追求“量”，忽视高质量数据对收敛与能力的边际收益。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么代码数据会显著影响模型的推理/结构化能力？</div>
-</div>
-<div class="qa">
-<div class="a">A1：代码包含严格语法、长程依赖与可验证反馈，能强化结构化生成与部分逻辑能力。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：私域数据加入预训练前必须先做什么？</div>
-</div>
-<div class="qa">
-<div class="a">A2：权限与合规评估（许可/PII/敏感信息）、脱敏处理与可追溯记录。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 数据来源谱系 (Data Pedigree)</h3>
+  <p>现代大语言模型（如 GPT-4, Llama-3）的训练数据通常包含数万亿个 token，涵盖了人类知识的方方面面。主要来源包括：</p>
+  <ul>
+    <li><strong>Web 网页:</strong> 如 Common Crawl，提供极高的规模与多样性，但噪声大。</li>
+    <li><strong>代码 (Code):</strong> 如 GitHub，是逻辑推理能力的关键来源。代码的严格语法和可验证性对模型很有帮助。</li>
+    <li><strong>书籍 (Books):</strong> 如 BookCorpus，提供长文本建模能力、丰富的叙事和深度的知识。</li>
+    <li><strong>百科 (Wikipedia):</strong> 高质量、事实性强的权威数据。</li>
+    <li><strong>学术论文:</strong> 如 ArXiv, PubMed，涵盖科学前沿知识。</li>
+    <li><strong>数学数据:</strong> 包含公式、逻辑推导过程。</li>
+  </ul>
+
+  <h3>2. 数据来源对模型能力的影响</h3>
+  <div style="text-align: center; margin: 2rem 0;">
+    <div class="mermaid">
+graph TD
+    Data[训练数据] --> Web[Web 网页]
+    Data --> Code[代码]
+    Data --> Academic[学术/书籍]
+    Web --> Knowledge[通用知识 & 多样性]
+    Code --> Reasoning[逻辑推理 & 结构化]
+    Academic --> Professional[专业深度 & 长文本]
+    </div>
+  </div>
+
+  <h3>3. 私域数据与合规性</h3>
+  <p>在企业级应用中，往往需要加入私域数据（如内部文档、工单、FAQ）。</p>
+  <ul>
+    <li><strong>PII (个人身份信息) 脱敏:</strong> 必须剔除姓名、地址、电话等敏感信息。</li>
+    <li><strong>权限审计:</strong> 确保模型训练使用的文档不违反企业保密协议。</li>
+    <li><strong>合规记录:</strong> 建立数据台账，记录数据的来源、处理时间、清洗规则等，以便审计。</li>
+  </ul>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>数据分桶 (Bucketing):</strong> 将数据按领域（代码、文学、科学等）和质量分桶，便于后续动态调整采样权重。</li>
+    <li><strong>多语种配比:</strong> 英语通常占主导，但加入适量其他语种（如中文、德语）能显著提升模型的跨语言泛化能力。</li>
+    <li><strong>质量高于数量:</strong> 随着研究深入，业界发现使用更高质量的小规模数据（如经过精选的教科书数据）训练出的模型，性能可能优于使用低质量海量数据训练出的模型（如 Phi 系列）。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么代码数据会显著影响模型的推理/结构化能力？</div>
+    <div class="a">A1：代码包含严格的逻辑结构、复杂的嵌套关系以及明确的输入输出反馈。学习代码有助于模型理解长距离依赖和执行逻辑，从而提升非代码任务（如复杂推理）的表现。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：私域数据加入预训练前必须先做什么？</div>
+    <div class="a">A2：必须进行严格的合规性评估（PII 脱敏、版权确认、密级审查），并建立完整的数据处理流水线记录。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="module-04-数据与语料.html"><strong>4 数据与语料</strong></a>
       <a href="kp-4-2-清洗-去重与质量过滤.html"><strong>4.2 清洗、去重与质量过滤</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

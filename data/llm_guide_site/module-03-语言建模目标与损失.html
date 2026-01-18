@@ -47,36 +47,36 @@
     
 <div class="hero">
   <h1>3 语言建模目标与损失</h1>
-  <p class="muted">本页是模块汇总（来自 PDF 原文），并链接到本模块的重要知识点页。</p>
+  <p class="muted">本模块涵盖了大语言模型训练中最核心的目标函数、损失计算以及保证训练稳定性的正则化技巧。</p>
 </div>
 
 <div class="grid">
   
 <div class="card third">
   <h2><a href="./kp-3-1-自回归语言建模-causal-lm.html">3.1 自回归语言建模（Causal LM）</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">大模型的主流预训练方式，基于上文预测下一个 token。</p>
 </div>
 
 <div class="card third">
   <h2><a href="./kp-3-2-masked-lm-denoising-目标.html">3.2 Masked LM / Denoising 目标</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">双向上下文建模，常见于 Encoder-only 与去噪预训练模型。</p>
 </div>
 
 <div class="card third">
   <h2><a href="./kp-3-3-seq2seq-条件生成损失.html">3.3 Seq2Seq 条件生成损失</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <p class="muted">给定输入序列生成输出序列的条件概率建模。</p>
 </div>
 
 <div class="card third">
-  <h2><a href="./kp-3-4-稳定性与正则化技巧-z-loss-label-smoothing-等.html">3.4 稳定性与正则化技巧（z-loss/label smoothing 等）</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+  <h2><a href="./kp-3-4-稳定性与正则化技巧-z-loss-label-smoothing-等.html">3.4 稳定性与正则化技巧</a></h2>
+  <p class="muted">标签平滑、Z-Loss 等保证大规模训练不发散的技巧。</p>
 </div>
 
 </div>
 
 <div class="section">
-  <h2>手册原文（整理版）</h2>
-  <p>学习目标：理解本模块关键概念，能用自己的话解释，并能完成后续例题。</p>
+  <h2>模块概述</h2>
+  <p>理解语言建模目标是深入掌握 LLM 的基础。自回归目标决定了 GPT 系列的生成特性，而掩码目标则支撑了 BERT 系列的理解能力。在工程实践中，如何通过设计合理的损失函数与正则化项来保证训练过程的稳定性（如防止 Logits 溢出）至关重要。</p>
 </div>
 
     <div class="pager">
@@ -84,8 +84,7 @@
       <a href="kp-3-1-自回归语言建模-causal-lm.html"><strong>3.1 自回归语言建模（Causal LM）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>4.2 清洗、去重与质量过滤</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨如何在大规模原始语料中筛选出高质量、低噪声的数据，以提升训练效率。</p>
   <div class="pillrow">
     <span class="pill">模块 4</span>
     <span class="pill"><a href="./module-04-数据与语料.html">返回模块页</a></span>
@@ -55,54 +55,85 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：去重与清洗的目标是提高“有效 token”，减少训练把算力花在重复/垃圾样本上。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>去重：exact 与 near-duplicate（MinHash/SimHash 等）。</li>
-</ul>
-<ul>
-<li>质量过滤：语言识别、困惑度过滤、启发式规则（重复度/标点/长度）。</li>
-</ul>
-<ul>
-<li>有害内容与 PII：检测、掩码、删除与审计。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>去重粒度：文档级/段落级/行级；代码与自然语言策略不同。</li>
-</ul>
-<ul>
-<li>过滤阈值需做 A/B：过强会丢分布、过弱会引入噪声。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把困惑度过滤当作万能质量标准；它会偏好“像训练分布”的文本，可能丢掉新域。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：near-duplicate 去重为什么重要？</div>
-</div>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<div class="qa">
-<div class="a">A1：重复样本会让模型过拟合常见片段，浪费计算，并增加记忆与版权风险。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：PII 处理的基本原则？</div>
-</div>
-<div class="qa">
-<div class="a">A2：最小化收集与保留；能删除就删除，必要时脱敏，并记录处理链路以便审计。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 数据去重 (Deduplication)</h3>
+  <p>海量的网页数据中存在大量重复或近乎重复的内容（如镜像站、转载等）。重复数据会导致模型过拟合某些特定表达，浪费算力，并增加隐私风险。</p>
+  <ul>
+    <li><strong>Exact Deduplication:</strong> 使用 MD5/SHA256 等哈希算法匹配完全一致的文档。</li>
+    <li><strong>Fuzzy Deduplication (模糊去重):</strong> 使用 MinHash/SimHash 等局部敏感哈希 (LSH) 算法检测相似度极高的文档。</li>
+    <li><strong>MinHash 相似度计算:</strong> 
+      $$J(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
+      通过 MinHash 签名，我们可以高效地估算两个集合（文档的 n-gram 集合）的 Jaccard 相似度。
+    </li>
+  </ul>
+
+  <h3>2. 质量过滤 (Quality Filtering)</h3>
+  <p>过滤掉低质量、无意义或有害的内容：</p>
+  <ul>
+    <li><strong>语言过滤:</strong> 使用 fastText 等分类器识别并保留目标语种。</li>
+    <li><strong>启发式规则:</strong> 剔除过短、字符重复率过高（如 <code>aaaaa...</code>）、标点比例异常、或者包含过多垃圾词汇的页面。</li>
+    <li><strong>分类器过滤:</strong> 训练一个二分类模型（通常是基于 BERT 或 FastText），预测文档是否属于“高质量”类别（如维基百科、学术文章等）。</li>
+    <li><strong>困惑度 (PPL) 过滤:</strong> 使用一个预训练的小模型计算文本的 PPL。过高的 PPL 通常意味着文本是随机字符或严重语法错误，而过低的 PPL 可能是极度模板化的重复内容。</li>
+  </ul>
+
+  <h3>3. 安全与合规性处理</h3>
+  <ul>
+    <li><strong>有害内容屏蔽:</strong> 使用关键词过滤或模型分类剔除色情、暴力等内容。</li>
+    <li><strong>PII (个人身份信息) 清洗:</strong> 识别并屏蔽电话、邮箱、信用卡号等。</li>
+  </ul>
+
+  <h3>代码示例：基于 MinHash 的模糊去重逻辑 (伪代码)</h3>
+  <pre><code class="language-python">import hashlib
+
+def get_minhash(text, num_hashes=128):
+    # 将文本切分为 shingle (n-gram)
+    shingles = set(text[i:i+5] for i in range(len(text)-4))
+    
+    signatures = []
+    for i in range(num_hashes):
+        min_h = float('inf')
+        for s in shingles:
+            # 使用不同的 salt 来模拟多个哈希函数
+            h = int(hashlib.md5((s + str(i)).encode()).hexdigest(), 16)
+            if h < min_h:
+                min_h = h
+        signatures.append(min_h)
+    return signatures
+
+# 比较两个签名的相似度
+def jaccard_similarity(sig1, sig2):
+    match = sum(1 for a, b in zip(sig1, sig2) if a == b)
+    return match / len(sig1)
+
+# 示例
+sig1 = get_minhash("这是一个关于大模型的教程。")
+sig2 = get_minhash("这是一个关于大语言模型的教程。")
+print(f"Estimated Jaccard Similarity: {jaccard_similarity(sig1, sig2)}")
+</code></pre>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>处理层级:</strong> 去重可以在文档级、段落级甚至行级进行。对于代码，通常进行行级或函数级去重。</li>
+    <li><strong>阈值调整:</strong> 过严的过滤（如过高的相似度阈值或过窄的 PPL 范围）会导致数据多样性缺失；过松则会引入噪声。</li>
+    <li><strong>A/B 测试:</strong> 最终的过滤方案应通过训练小模型来验证对下游任务性能的影响。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么 near-duplicate 去重比完全一致去重更重要？</div>
+    <div class="a">A1：因为互联网上充满了大量的“伪原创”和不同格式的转载。完全一致去重只能覆盖很少一部分重复，而 near-duplicate 能识别出内容主体相同但细微处有差异的文档，能更有效地减少训练冗余。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-4-1-数据来源谱系与覆盖.html"><strong>4.1 数据来源谱系与覆盖</strong></a>
       <a href="kp-4-3-数据配比-采样温度与课程学习.html"><strong>4.3 数据配比、采样温度与课程学习</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

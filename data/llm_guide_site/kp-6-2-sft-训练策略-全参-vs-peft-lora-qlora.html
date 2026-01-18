@@ -46,8 +46,8 @@
   <div class="container">
     
 <div class="hero">
-  <h1>6.2 SFT 训练策略：全参 vs PEFT（LoRA/QLoRA）</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <h1>6.2 SFT 训练策略：全参 vs PEFT</h1>
+  <p class="muted">探讨在大模型微调中，如何权衡效果、显存与计算成本，选择最适合的训练方案。</p>
   <div class="pillrow">
     <span class="pill">模块 6</span>
     <span class="pill"><a href="./module-06-指令微调-sft-与后训练-post-training.html">返回模块页</a></span>
@@ -55,58 +55,74 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：SFT</p>
-<p>资源成本低于预训练，但仍需控制过拟合与遗忘。参数高效微调可在有限算力下快速迭代。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>全参微调：效果强但成本高、易遗忘；需小 LR 与稳定 schedule。</li>
-</ul>
-<ul>
-<li>LoRA：在部分线性层插入低秩适配；可合并权重部署。</li>
-</ul>
-<ul>
-<li>QLoRA：4-bit 权重量化 + LoRA，显著降显存。</li>
-</ul>
-<ul>
-<li>层选择：注意力投影/MLP 等模块的取舍。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>PEFT 适合快速试验与多租户定制；最终可视需求做全参收敛。</li>
-</ul>
-<ul>
-<li>避免过拟合：早停、混入少量通用数据、正则与数据增广。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把 LoRA rank 设得很大当作“更强”；会增加训练不稳与部署成本。</li>
-</ul>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：LoRA 的核心思想？</div>
-</div>
-<div class="qa">
-<div class="a">A1：冻结原权重 W，仅训练低秩更新 ΔW=AB（rank r），以较小参数实现适配。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：QLoRA 的关键工程收益？</div>
-</div>
-<div class="qa">
-<div class="a">A2：把基座权重以 4-bit 存储并在计算中解量化，显著降低显存，使单卡可微调更大模型。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 全参数微调 (Full Fine-tuning)</h3>
+  <p>在 SFT 时更新模型的所有参数。这是最直接的方法，能最大程度地调整模型以适应新数据分布。</p>
+  <ul>
+    <li><strong>优点:</strong> 上限最高，能学习复杂的指令遵循逻辑。</li>
+    <li><strong>缺点:</strong> 显存压力极大（需要存储参数、梯度和优化器状态），且容易产生“灾难性遗忘”。</li>
+  </ul>
+
+  <h3>2. LoRA (Low-Rank Adaptation)</h3>
+  <p>LoRA 的核心思想是冻结原始权重 $W$，而是在侧边训练一个低秩的矩阵乘积 $\Delta W = A \times B$。</p>
+  <p>$$h = Wx + \Delta Wx = Wx + BAx$$</p>
+  <ul>
+    <li>其中 $A \in \mathbb{R}^{r \times d}$, $B \in \mathbb{R}^{k \times r}$，$r \ll \min(d, k)$ 是秩（Rank）。</li>
+    <li><strong>优点:</strong> 训练参数量极少（通常小于全参的 1%），显著降低显存，且训练好的旁路可以合并回主权重中，实现推理零开销。</li>
+  </ul>
+
+  <h3>3. QLoRA (Quantized LoRA)</h3>
+  <p>QLoRA 进一步将基座模型量化为 4-bit（使用 NormalFloat4 格式），同时配合分页优化器（Paged Optimizers）处理显存峰值。</p>
+  <ul>
+    <li><strong>核心收益:</strong> 极大降低了微调的显存门槛。例如，使用单张 24GB 的 RTX 3090/4090 即可微调 70B 参数规模的模型。</li>
+  </ul>
+
+  <h3>代码示例：使用 PEFT 库配置 LoRA</h3>
+  <pre><code class="language-python">from peft import LoraConfig, get_peft_model
+
+# 配置 LoRA 参数
+config = LoraConfig(
+    r=8, # 秩
+    lora_alpha=32, # 缩放系数
+    target_modules=["q_proj", "v_proj"], # 作用在哪些层
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM"
+)
+
+# 包装原始模型
+model = get_peft_model(base_model, config)
+model.print_trainable_parameters()
+# 输出将显示可训练参数占比通常极低
+</code></pre>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>Rank 的选择:</strong> 并非 $r$ 越大越好。在指令微调中，$r=8$ 或 $16$ 通常已经足够。过大的 $r$ 会增加过拟合风险并降低训练稳定性。</li>
+    <li><strong>可变性:</strong> 全参微调适合基础能力的深度对齐；LoRA 适合多租户模型部署（只需切换轻量的适配器文件）。</li>
+    <li><strong>灾难性遗忘防护:</strong> 微调时应混入 5%-10% 的原始预训练数据作为锚定，防止模型在习得新能力的同时丧失通用常识。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：LoRA 的核心思想？</div>
+    <div class="a">A1：LoRA 假设权重的更新（$\Delta W$）具有很低的“内在维度”。因此，它冻结了原始的高维权重矩阵 $W$，改为训练两个极小的低秩矩阵 $A$ 和 $B$ 的乘积来近似这个更新。这极大地减少了需要更新的参数量和显存需求。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：QLoRA 的关键工程收益？</div>
+    <div class="a">A2：QLoRA 通过 4-bit 量化极大压缩了模型权重的显存占用，并引入了“双量化”和“分页优化器”技术来进一步压榨显存。这使得开发者能够在消费级显卡上微调原本只有企业级服务器才能跑动的超大模型，极大地降低了 LLM 研究的门槛。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-6-1-sft-数据-质量-覆盖与模板.html"><strong>6.1 SFT 数据：质量、覆盖与模板</strong></a>
       <a href="kp-6-3-后训练方向-安全风格-工具格式与领域适配.html"><strong>6.3 后训练方向：安全风格、工具格式与领域适配</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

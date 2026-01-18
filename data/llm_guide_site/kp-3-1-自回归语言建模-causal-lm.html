@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>3.1 自回归语言建模（Causal LM）</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨大语言模型最主流的预训练目标：基于上文预测下一个 token。</p>
   <div class="pillrow">
     <span class="pill">模块 3</span>
     <span class="pill"><a href="./module-03-语言建模目标与损失.html">返回模块页</a></span>
@@ -55,63 +55,67 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：LLM 的主流目标：最大化序列概率 p(x)=∏ p(x_t|x_&lt;t)。训练用 teacher</p>
-<p>forcing，推理用逐步生成。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>损失：token-level 交叉熵；常用忽略 padding 的 mask。</li>
-</ul>
-<ul>
-<li>指标：Perplexity；但跨 tokenizer 比较要谨慎。</li>
-</ul>
-<ul>
-<li>Exposure bias：训练见到真实前缀，推理见到模型前缀。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>训练时常做 sequence packing 减少 padding，提高吞吐。</li>
-</ul>
-<ul>
-<li>对话训练要注意系统/用户/助手的 loss mask（是否对用户部分计算 loss）。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把困惑度当作对话质量的充分指标；对话更依赖指令遵循与偏好。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：给定 logits z，softmax 概率 p，真实 token y 的交叉熵是什么？</div>
-</div>
-<div class="qa">
-<div class="a">A1：L = -log p_y（对每个位置求和/平均）。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：为什么推理时错误会“滚雪球”？</div>
-</div>
-<div class="qa">
-<div class="a">A2：推理输入包含模型先前输出，若前面偏离，后续条件分布改变，误差逐步累积。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 自回归建模 (Causal Language Modeling)</h3>
+  <p>自回归建模的目标是根据序列中先前出现的 token 来预测下一个 token。给定一个长度为 $T$ 的 token 序列 $x_{1:T}$，其联合概率可以分解为条件概率的乘积：</p>
+  <p>$$p(x_{1:T}) = \prod_{t=1}^T p(x_t | x_1, x_2, \dots, x_{t-1})$$</p>
+  <p>在训练过程中，模型被训练去最大化这个联合概率，或者等价地，最小化负对数似然（Negative Log-Likelihood, NLL）：</p>
+  <p>$$\mathcal{L} = - \sum_{t=1}^T \log p(x_t | x_{<t})$$</p>
+
+  <h3>2. 损失函数：交叉熵 (Cross Entropy)</h3>
+  <p>在每一时间步 $t$，模型输出一个维度等于词表大小 $V$ 的向量（Logits）$z_t$。通过 Softmax 函数将其转化为概率分布：</p>
+  <p>$$p(x_t | x_{<t}) = \text{Softmax}(z_t) = \frac{\exp(z_{t, x_t})}{\sum_{j=1}^V \exp(z_{t, j})}$$</p>
+  <p>交叉熵损失度量了预测分布与真实分布（One-hot 编码）之间的差异。对于单个 token，$L = -\log p(x_t | x_{<t})$。</p>
+
+  <h3>3. 困惑度 (Perplexity, PPL)</h3>
+  <p>困惑度是语言模型最常用的评估指标，它是交叉熵损失的指数形式：</p>
+  <p>$$\text{PPL} = \exp(H(p, q)) = \exp\left( - \frac{1}{T} \sum_{t=1}^T \log q(x_t | x_{<t}) \right)$$</p>
+  <p>直观上，困惑度代表了模型在每一步预测时，平均“感到困惑”的选择分支数。PPL 越低，模型预测越准。注意：PPL 与分词器（Tokenizer）强相关，不同分词器的模型不能直接通过 PPL 比较。</p>
+
+  <h3>4. 曝光偏差 (Exposure Bias)</h3>
+  <ul>
+    <li><strong>训练阶段 (Teacher Forcing):</strong> 模型输入的是来自训练集的真实 token（Ground Truth）。</li>
+    <li><strong>推理阶段:</strong> 模型输入的是上一时刻自己生成的 token。如果模型在某一步生成错误，这个错误会累积到下一步，导致生成的序列逐渐偏离分布。这就是“曝光偏差”。</li>
+  </ul>
+
+  <h3>代码示例：交叉熵损失计算 (PyTorch 风格)</h3>
+  <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# 假设词表大小 V=10，序列长度 S=5，Batch 大小 B=2
+B, S, V = 2, 5, 10
+logits = torch.randn(B, S, V) # 模型输出
+targets = torch.randint(0, V, (B, S)) # 真实标签 (Next Tokens)
+
+# 在 Causal LM 中，通常需要对 logits 和 targets 进行错位对齐
+# 输入位置 t 的输出应该预测 t+1 位置的 target
+# shift_logits = logits[:, :-1, :].contiguous()
+# shift_labels = targets[:, 1:].contiguous()
+
+# 计算交叉熵
+loss_fct = nn.CrossEntropyLoss()
+loss = loss_fct(logits.view(-1, V), targets.view(-1))
+
+print(f"Loss: {loss.item()}")
+print(f"Perplexity: {torch.exp(loss).item()}")
+</code></pre>
 </div>
 
-<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
-<h3>Causal LM（自回归语言建模）目标</h3>
-<p>给定 token 序列 $x_{1:T}$，最大似然训练等价于最小化负对数似然：</p>
-<p>$$\mathcal{L}_{\mathrm{CLM}}(\theta) = -\sum_{t=1}^{T}\log p_\theta(x_t\mid x_{&lt;t})$$</p>
-<p class="muted">实现里通常是 token-level cross entropy：对每个位置的 logits 做 softmax，再取真实 token 的 $-\log p$，最后对有效位置求均值。</p>
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>Sequence Packing:</strong> 为了提高 GPU 利用率，通常会将多条短文本拼接成一个长序列（使用 EOS token 分隔），减少 Padding。</li>
+    <li><strong>Loss Masking:</strong> 在对话微调（SFT）中，通常只对“助手”的回答部分计算 Loss，而忽略“系统提示”和“用户问题”部分的 Loss。</li>
+    <li><strong>数值稳定性:</strong> 计算 Softmax 时减去最大值以防止溢出，或者直接使用 `log_softmax`。</li>
+  </ul>
 
-<h3>困惑度（Perplexity）与 bits-per-token</h3>
-<p>若平均交叉熵为 $H$（单位 nat），则：</p>
-<p>$$\mathrm{PPL}=\exp(H)$$</p>
-<p>若用 bit 表示：$\mathrm{bpt}=H/\ln 2$。</p>
-<p class="muted">注意：不同 tokenizer 的 PPL 不能直接横比（手册里也提醒了这一点）。</p>
-
-<h3>原论文与典型代码库</h3>
-<ul>
-  <li>GPT 系列（自回归 LM）：Radford et al., 2018/2019；Brown et al., 2020 <a href="https://arxiv.org/abs/2005.14165">Language Models are Few-Shot Learners</a></li>
-  <li>代码：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（`CausalLMOutputWithCrossAttentions` 与 loss 计算）</li>
-  <li>教学代码：<a href="https://github.com/karpathy/nanoGPT">karpathy/nanoGPT</a>（最清晰的 CE loss + next-token shift）</li>
-</ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么推理时错误会“滚雪球”？</div>
+    <div class="a">A1：推理输入包含模型先前输出，若前面偏离真实分布，后续条件分布也会随之改变，导致误差逐步累积（即曝光偏差）。</div>
+  </div>
 </div>
 
     <div class="pager">
@@ -119,8 +123,7 @@
       <a href="kp-3-2-masked-lm-denoising-目标.html"><strong>3.2 Masked LM / Denoising 目标</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

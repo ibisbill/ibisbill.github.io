@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>3.2 Masked LM / Denoising 目标</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨利用双向上下文信息的预训练目标：遮掩与去噪。</p>
   <div class="pillrow">
     <span class="pill">模块 3</span>
     <span class="pill"><a href="./module-03-语言建模目标与损失.html">返回模块页</a></span>
@@ -55,54 +55,123 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：MLM 与去噪目标用遮盖/扰动学习双向上下文，常用于理解或 Seq2Seq 预训练。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>MLM：随机 mask token 预测；需要 special [MASK] 或替换策略。</li>
-</ul>
-<ul>
-<li>Span corruption：遮盖连续片段并生成（T5）。</li>
-</ul>
-<ul>
-<li>去噪自编码：删除/打乱/替换等噪声。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>MLM 与生成任务存在目标差异；要生成通常需要改结构或再训练。</li>
-</ul>
-<ul>
-<li>Span corruption 更接近生成，迁移到生成任务更自然。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>认为 MLM 预训练的模型直接就能像 GPT 那样顺畅长文本生成。</li>
-</ul>
-<p>例题与答案：</p>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<div class="qa">
-<div class="q">Q1：MLM 与 Causal LM 的最大差异？</div>
-</div>
-<div class="qa">
-<div class="a">A1：MLM 允许双向上下文预测被 mask 的位置；Causal LM 只能用左侧上下文自回归预测。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：为什么 T5 的 span corruption 更适合 Seq2Seq？</div>
-</div>
-<div class="qa">
-<div class="a">A2：输入是被遮盖的序列，输出是被遮盖片段的生成，天然是条件生成形式。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 掩码语言建模 (Masked Language Modeling, MLM)</h3>
+  <p>MLM 是 BERT (Encoder-only) 架构的核心目标。不同于自回归建模，MLM 允许模型同时利用左侧和右侧的上下文。其基本流程如下：</p>
+  <ul>
+    <li>随机选择输入序列中 15% 的 token。</li>
+    <li>在被选中的 token 中：
+      <ul>
+        <li>80% 替换为特殊的 <code>[MASK]</code> token。</li>
+        <li>10% 替换为一个随机 token。</li>
+        <li>10% 保持不变。</li>
+      </ul>
+    </li>
+    <li>模型被训练去预测这些被遮掩或修改位置的原始 token。</li>
+  </ul>
+  <p><strong>损失函数:</strong> 只对被遮掩位置计算交叉熵损失。</p>
+  <p>$$\mathcal{L}_{\text{MLM}} = - \sum_{i \in \text{Masked}} \log p(x_i | x_{\setminus \text{Masked}})$$</p>
+
+  <h3>2. Span Corruption (片段破坏/填充)</h3>
+  <p>Span Corruption 是 T5 等 Encoder-Decoder 架构常用的预训练目标。它不遮掩单个 token，而是遮掩连续的片段。</p>
+  <ul>
+    <li><strong>输入:</strong> 原序列中某些片段被替换为特殊的哨兵 token (如 <code>&lt;X&gt;</code>, <code>&lt;Y&gt;</code>)。</li>
+    <li><strong>目标:</strong> Decoder 负责生成被遮掩的片段，形式为 <code>&lt;X&gt; 片段1 &lt;Y&gt; 片段2 ...</code>。</li>
+  </ul>
+
+  <h3>3. Denoising Autoencoder (去噪自编码)</h3>
+  <p>除了遮盖，还有其他扰动方式：</p>
+  <ul>
+    <li><strong>Token Deletion (删除):</strong> 随机删除 token。</li>
+    <li><strong>Token Permutation (乱序):</strong> 随机打乱序列顺序。</li>
+    <li><strong>Infilling (填充):</strong> 类似于 Span Corruption，但更侧重于恢复任意长度的空缺。</li>
+  </ul>
+
+  <h3>代码示例：简单 MLM Mask 逻辑 (Python)</h3>
+  <pre><code class="language-python">import torch
+
+def create_mlm_mask(input_ids, mask_token_id, mask_prob=0.15):
+    """
+    为输入 ID 创建 MLM 遮罩
+    """
+    # 随机生成概率矩阵
+    probability_matrix = torch.full(input_ids.shape, mask_prob)
+    
+    # 特殊 token (如 [CLS], [SEP]) 不参与遮掩
+    # probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
+    
+    masked_indices = torch.bernoulli(probability_matrix).bool()
+    
+    # 准备目标标签 (非遮掩位置设为 -100，PyTorch CrossEntropy 会忽略 -100)
+    labels = input_ids.clone()
+    labels[~masked_indices] = -100
+    
+    # 80% 替换为 [MASK]
+    indices_replaced = torch.bernoulli(torch.full(input_ids.shape, 0.8)).bool() & masked_indices
+    input_ids[indices_replaced] = mask_token_id
+    
+    # 其余 20% 中，一半替换为随机 token，一半保持不变 (此处简化处理)
+    # ...
+    
+    return input_ids, labels
+
+# 示例
+input_ids = torch.tensor([[101, 200, 300, 400, 102]])
+mask_token_id = 103
+masked_input, labels = create_mlm_mask(input_ids, mask_token_id)
+
+print(f"Masked Input: {masked_input}")
+print(f"Labels for Loss: {labels}")
+</code></pre>
 </div>
 
+<div class="section">
+  <h2>对比总结</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>特性</th>
+        <th>Causal LM (GPT)</th>
+        <th>Masked LM (BERT)</th>
+        <th>Span Corruption (T5)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>上下文</strong></td>
+        <td>单向 (仅左侧)</td>
+        <td>双向 (左右两侧)</td>
+        <td>双向 (Encoder) + 单向 (Decoder)</td>
+      </tr>
+      <tr>
+        <td><strong>主要用途</strong></td>
+        <td>文本生成、对话</td>
+        <td>分类、理解、抽取</td>
+        <td>摘要、翻译、综合生成</td>
+      </tr>
+      <tr>
+        <td><strong>训练效率</strong></td>
+        <td>高 (所有 token 算 loss)</td>
+        <td>中 (仅 15% 算 loss)</td>
+        <td>中 (生成部分算 loss)</td>
+      </tr>
+    </tbody>
+  </table>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么 MLM 训练的模型通常不适合直接做长文本生成？</div>
+    <div class="a">A1：MLM 预训练时模型习惯于利用双向信息来填空，而生成任务是单向自回归的。此外，MLM 往往不需要学习生成 EOS token，也缺乏对长序列依赖的生成经验。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-3-1-自回归语言建模-causal-lm.html"><strong>3.1 自回归语言建模（Causal LM）</strong></a>
       <a href="kp-3-3-seq2seq-条件生成损失.html"><strong>3.3 Seq2Seq 条件生成损失</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

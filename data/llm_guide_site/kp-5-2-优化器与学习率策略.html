@@ -47,7 +47,7 @@
     
 <div class="hero">
   <h1>5.2 优化器与学习率策略</h1>
-  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <p class="muted">探讨大模型训练中最常用的 AdamW 优化器、Warmup 机制以及学习率衰减策略。</p>
   <div class="pillrow">
     <span class="pill">模块 5</span>
     <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
@@ -55,54 +55,77 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：LLM 训练对学习率非常敏感。warmup + 衰减是标准做法，配合梯度裁剪与累积保证稳定。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>AdamW：beta、epsilon、weight decay 的作用。</li>
-</ul>
-<ul>
-<li>LR schedule：warmup + cosine/linear decay。</li>
-</ul>
-<ul>
-<li>梯度裁剪、梯度累积、batch size 与有效学习率。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>warmup 不足常导致早期发散；过长会浪费训练。</li>
-</ul>
-<ul>
-<li>大 batch 常需要更大的 LR，但需验证；不要机械套用线性缩放。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把 loss spike 当作正常波动；很多 spike 是坏 batch 或溢出前兆。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么要 warmup？</div>
-</div>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<div class="qa">
-<div class="a">A1：初期参数未稳定，梯度大且方差高，warmup 逐步提高 LR 可避免发散。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：梯度裁剪有什么作用？</div>
-</div>
-<div class="qa">
-<div class="a">A2：限制梯度范数，防止个别 batch 触发梯度爆炸导致数值崩溃。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. AdamW 优化器</h3>
+  <p>AdamW 是 Adam 优化器的变体，通过解耦权重衰减（Weight Decay）与梯度更新，使正则化效果更符合直觉。其更新公式如下：</p>
+  <p>$$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$$</p>
+  <p>$$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2$$</p>
+  <p>$$\theta_t = \theta_{t-1} - \eta_t \left( \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} + \lambda \theta_{t-1} \right)$$</p>
+  <ul>
+    <li>其中 $m_t$ 是动量，$v_t$ 是二阶矩的估计。</li>
+    <li>$\lambda$ 是权重衰减系数。在 AdamW 中，$\lambda$ 直接作用于参数 $\theta$，而不是像 Adam 那样混入梯度计算中。</li>
+  </ul>
+
+  <h3>2. 学习率调度策略 (LR Schedule)</h3>
+  <p>LLM 训练对学习率极其敏感。典型的调度器包含两个阶段：</p>
+  <ul>
+    <li><strong>Linear Warmup:</strong> 在训练的前 0.1% 到 1% 的步数中，学习率从 0 线性增长到预设的最大值 $\eta_{max}$。这能防止训练初期由于梯度过大导致的模型崩溃。</li>
+    <li><strong>Decay Phase (衰减阶段):</strong>
+      <ul>
+        <li><strong>Cosine Decay:</strong> 学习率按余弦曲线缓慢下降到 $\eta_{min}$。这是目前最主流的做法，能帮助模型在训练末期更好地收敛。</li>
+        <li><strong>Linear Decay:</strong> 学习率线性下降。</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>3. 梯度裁剪 (Gradient Clipping)</h3>
+  <p>为了进一步保证稳定性，当梯度的全局范数（Global Norm）超过阈值（通常设为 1.0）时，会进行缩放：</p>
+  <p>$$g \leftarrow g \times \min(1, \frac{\text{threshold}}{\|g\|})$$</p>
+
+  <h3>代码示例：PyTorch 中的 AdamW 与 Warmup</h3>
+  <pre><code class="language-python">from torch.optim import AdamW
+from torch.optim.lr_scheduler import LambdaLR
+
+# 优化器配置
+optimizer = AdamW(model.parameters(), lr=6e-4, betas=(0.9, 0.95), weight_decay=0.1)
+
+# 带有 Warmup 的 Cosine 调度器
+def lr_lambda(current_step):
+    if current_step < num_warmup_steps:
+        return float(current_step) / float(max(1, num_warmup_steps))
+    progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+    return 0.5 * (1.0 + math.cos(math.pi * progress))
+
+scheduler = LambdaLR(optimizer, lr_lambda)
+</code></pre>
 </div>
 
+<div class="section">
+  <h2>工程要点总结</h2>
+  <ul>
+    <li><strong>有效学习率:</strong> 如果使用了梯度累积（Gradient Accumulation），实际的“有效 Batch Size”会变大。根据经验法则，Batch Size 翻倍时，学习率不一定要线性翻倍，通常需要微调。</li>
+    <li><strong>Beta 参数:</strong> 对于大模型，$\beta_2$ 常设为 0.95（而非默认的 0.999），这能让模型更快地适应变化的梯度统计。</li>
+    <li><strong>Loss Spike:</strong> 训练中偶尔出现的 Loss 突刺可能是因为遇到了异常糟糕的数据 batch。此时梯度裁剪能起到救命作用。</li>
+  </ul>
 
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么要 warmup？</div>
+    <div class="a">A1：训练初期，模型权重是随机初始化的，梯度方向极不稳定。Warmup 通过极低的学习率让模型先在一个较小的范围内寻找大致的优化方向，随着权重逐渐稳定后再增加步长，有效防止了训练初期的数值崩溃。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：梯度裁剪有什么作用？</div>
+    <div class="a">A2：它限制了参数更新的最大幅度。当遇到非常陡峭的损失平面时，它能防止参数由于梯度过大而被抛出合理的参数空间（导致产生 NaN），是保证深层网络训练稳定的最后一道防线。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-5-1-规模法则与预算规划.html"><strong>5.1 规模法则与预算规划</strong></a>
       <a href="kp-5-3-混合精度与数值稳定.html"><strong>5.3 混合精度与数值稳定</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>
