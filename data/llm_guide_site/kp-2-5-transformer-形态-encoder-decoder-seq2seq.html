@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -55,54 +59,97 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：不同结构对应不同任务：理解类任务偏 encoder，生成类任务偏 decoder；Seq2Seq</p>
-<p>用于条件生成。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>Encoder-only：双向注意力（如 BERT），适合分类/抽取。</li>
-</ul>
-<ul>
-<li>Decoder-only：因果注意力（GPT），LLM 主流。</li>
-</ul>
-<ul>
-<li>Encoder-Decoder：输入编码+输出解码（T5），翻译/摘要强。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>选择结构时看任务：是否需要条件输入、是否需要开放式生成。</li>
-</ul>
-<ul>
-<li>同一数据格式在不同结构下的 mask 设计不同。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把 BERT 目标直接用于对话生成而不改结构/目标，导致生成能力差。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么 decoder-only 更适合开放式生成？</div>
-</div>
-<div class="qa">
-<div class="a">A1：它直接优化 p(x_t|x_{&lt;t}) 的自回归目标，训练与推理一致。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：Seq2Seq 的优势场景？</div>
-</div>
-<div class="qa">
-<div class="a">A2：输入与输出分离的条件生成，如翻译、摘要、信息抽取到结构化输出。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 三种基本形态</h3>
+  <p>根据注意力机制的连接方式，Transformer 演化出了三种主要形态：</p>
+
+  <table class="minimal-table">
+    <thead>
+      <tr>
+        <th>形态</th>
+        <th>注意力类型</th>
+        <th>典型代表</th>
+        <th>擅长任务</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Encoder-only</strong></td>
+        <td>双向 (Bidirectional)</td>
+        <td>BERT, RoBERTa</td>
+        <td>文本分类、命名实体识别、抽取式问答</td>
+      </tr>
+      <tr>
+        <td><strong>Decoder-only</strong></td>
+        <td>因果 (Causal)</td>
+        <td>GPT 系列, Llama</td>
+        <td>开放式文本生成、对话、代码编写</td>
+      </tr>
+      <tr>
+        <td><strong>Encoder-Decoder</strong></td>
+        <td>双向 + 因果 + 交叉</td>
+        <td>T5, BART</td>
+        <td>机器翻译、文本摘要、重写</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2. 因果注意力 (Causal Attention)</h3>
+  <p>在 Decoder-only 结构中，为了保证模型在预测下一个词时不能“偷看”后面的词，我们使用下三角矩阵作为掩码（Causal Mask）。</p>
+  <p>$$M_{ij} = \begin{cases} 0 & i \ge j \\ -\infty & i < j \end{cases}$$</p>
+
+  <h3>3. 交叉注意力 (Cross-Attention)</h3>
+  <p>在 Encoder-Decoder 结构中，Decoder 的每一层都会通过交叉注意力去“看” Encoder 的输出。</p>
+  <ul>
+    <li><strong>Query:</strong> 来自 Decoder 上一层的输出。</li>
+    <li><strong>Key & Value:</strong> 来自 Encoder 的最终输出。</li>
+  </ul>
+
+  <h3>结构对比示意图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph LR
+    subgraph Encoder-only
+    E1[Input] --> E2[Full Attention] --> E3[Output]
+    end
+    subgraph Decoder-only
+    D1[Input] --> D2[Causal Attention] --> D3[Output]
+    end
+    subgraph Encoder-Decoder
+    S1[Input] --> S2[Encoder]
+    S2 -- Cross-Attention --> S3[Decoder]
+    S3 --> S4[Output]
+    end
+    </div>
+  </div>
 </div>
 
-
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
+  <p>概述：不同结构对应不同任务：理解类任务偏 encoder，生成类任务偏 decoder；Seq2Seq 用于条件生成。</p>
+  <p>工程提示：</p>
+  <ul>
+    <li>选择结构时看任务：是否需要条件输入、是否需要开放式生成。</li>
+    <li>同一数据格式在不同结构下的 mask 设计不同。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么 decoder-only 更适合开放式生成？</div>
+    <div class="a">A1：它直接优化 p(x_t|x_{&lt;t}) 的自回归目标，训练与推理一致。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：Seq2Seq 的优势场景？</div>
+    <div class="a">A2：输入与输出分离的条件生成，如翻译、摘要、信息抽取到结构化输出。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-2-4-残差-归一化与结构变体.html"><strong>2.4 残差、归一化与结构变体</strong></a>
       <a href="kp-2-6-参数效率与结构演进-kv-gqa-moe-flashattention.html"><strong>2.6 参数效率与结构演进（KV/GQA/MoE/FlashAttention）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

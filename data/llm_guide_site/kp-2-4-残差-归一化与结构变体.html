@@ -16,7 +16,11 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -55,54 +59,93 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 残差连接 (Residual Connections)</h3>
+  <p>在每个子层（Attention 或 FFN）周围添加：$x_{out} = x_{in} + \text{SubLayer}(x_{in})$。</p>
+  <ul>
+    <li><strong>直觉:</strong> 为梯度提供了一条“高速公路”，使其能绕过复杂的非线性层，直接传向底层，缓解梯度消失问题。</li>
+    <li>它强制子层只学习“残差”（输入与输出之间的细微差异），而非完整的映射。</li>
+  </ul>
+
+  <h3>2. 归一化位置：Pre-LN vs Post-LN</h3>
+  <p>这是影响模型训练稳定性的关键设计。</p>
+  <ul>
+    <li><strong>Post-LN (原始 Transformer):</strong> $\text{LayerNorm}(x + \text{SubLayer}(x))$。梯度在深层会变大，训练不稳定，需要严格的 Warmup。</li>
+    <li><strong>Pre-LN (主流 LLM):</strong> $x + \text{SubLayer}(\text{LayerNorm}(x))$。梯度更稳定，可以支持非常深的网络（如 GPT-3）。</li>
+  </ul>
+
+  <h3>3. 归一化算子：LN vs RMSNorm</h3>
+  <ul>
+    <li><strong>LayerNorm:</strong> 减均值、除方差。$y = \frac{x - \mu}{\sigma} \gamma + \beta$。</li>
+    <li><strong>RMSNorm:</strong> 只除以均方根。$y = \frac{x}{\sqrt{\text{Mean}(x^2)}} \gamma$。
+      <ul>
+        <li><strong>优势:</strong> 计算更简单，舍弃了均值平移（Bias）部分，在现代 LLM 中几乎是标配。</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>代码示例：带残差与 RMSNorm 的 Transformer 块</h3>
+  <pre><code class="language-python">import torch
+import torch.nn as nn
+
+class TransformerBlock(nn.Module):
+    def __init__(self, d_model):
+        super().__init__()
+        self.norm1 = RMSNorm(d_model) # 见 0.2 节代码
+        self.attn = MultiHeadAttention(d_model, 8)
+        self.norm2 = RMSNorm(d_model)
+        self.ffn = SwiGLU(d_model, 4 * d_model)
+
+    def forward(self, x):
+        # Pre-LN 结构
+        # 1. Attention + Residual
+        x = x + self.attn(self.norm1(x))
+        # 2. FFN + Residual
+        x = x + self.ffn(self.norm2(x))
+        return x
+</code></pre>
+
+  <h3>梯度流动示意图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph LR
+    A[输入] --> B[LayerNorm]
+    B --> C[子层]
+    C --> D[+]
+    A -- 残差路径 --> D
+    D --> E[输出]
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#77f,stroke:#333,stroke-width:2px
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
   <p>概述：残差连接保证梯度流动，归一化控制数值尺度。Pre-LN 结构是现代深层 LLM 的默认选择之一。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>Residual：y = x + f(LN(x))（Pre-LN 典型形式）。</li>
-</ul>
-<ul>
-<li>LayerNorm vs RMSNorm：RMSNorm 省去均值项，常更快。</li>
-</ul>
-<ul>
-<li>Dropout：大模型常降低甚至关闭，取决于数据与过拟合风险。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>深层训练不稳优先检查：是否 Pre-LN、是否有足够 warmup、norm/softmax 的数值稳定。</li>
-</ul>
-<ul>
-<li>RMSNorm 与权重初始化/学习率有耦合，迁移配置需小心。</li>
-</ul>
-<p>常见误区：</p>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<ul>
-<li>把 Post-LN 直接套在深层 decoder-only 上，导致训练发散。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：Residual 的直接收益是什么？</div>
+  <p>工程提示：</p>
+  <ul>
+    <li>深层训练不稳优先检查：是否 Pre-LN、是否有足够 warmup、norm/softmax 的数值稳定。</li>
+    <li>RMSNorm 与权重初始化/学习率有耦合，迁移配置需小心。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：Residual 的直接收益是什么？</div>
+    <div class="a">A1：让梯度能绕过子层直接传播，减轻深层网络优化困难。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：RMSNorm 与 LayerNorm 的主要差异？</div>
+    <div class="a">A2：RMSNorm 只按均方根缩放，不减去均值；LayerNorm 既减均值又按方差缩放。</div>
+  </div>
 </div>
-<div class="qa">
-<div class="a">A1：让梯度能绕过子层直接传播，减轻深层网络优化困难。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：RMSNorm 与 LayerNorm 的主要差异？</div>
-</div>
-<div class="qa">
-<div class="a">A2：RMSNorm 只按均方根缩放，不减去均值；LayerNorm 既减均值又按方差缩放。</div>
-</div>
-</div>
-
-
 
     <div class="pager">
       <a href="kp-2-3-前馈网络-mlp-ffn.html"><strong>2.3 前馈网络（MLP/FFN）</strong></a>
       <a href="kp-2-5-transformer-形态-encoder-decoder-seq2seq.html"><strong>2.5 Transformer 形态：Encoder/Decoder/Seq2Seq</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

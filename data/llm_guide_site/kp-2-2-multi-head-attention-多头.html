@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -55,57 +59,91 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 为什么要多头？</h3>
+  <p>多头注意力（Multi-Head Attention, MHA）允许模型在多个不同的子空间中并行学习信息。例如，一个头可能关注语法关系，另一个头关注语义实体。</p>
+
+  <h3>2. MHA 流程与公式</h3>
+  <p>$$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W^O$$</p>
+  <p>其中 $\text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)$。</p>
+  <ul>
+    <li><strong>线性投影:</strong> 将输入的维度 $d_{model}$ 投影到较小的 $d_k = d_{model}/h$。</li>
+    <li><strong>拼接与输出投影:</strong> 将所有头的输出拼接后，再通过一个线性层 $W^O$ 融合信息。</li>
+  </ul>
+
+  <h3>3. 并行化实现技巧</h3>
+  <p>在工程实现中，我们不会真的写循环。而是通过张量重塑（Reshape）和转置（Transpose）一次性计算所有头。</p>
+
+  <h3>代码示例：MHA 的高效实现</h3>
+  <pre><code class="language-python">import torch
+import torch.nn as nn
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, d_model, num_heads):
+        super().__init__()
+        self.num_heads = num_heads
+        self.d_k = d_model // num_heads
+        
+        self.w_q = nn.Linear(d_model, d_model)
+        self.w_k = nn.Linear(d_model, d_model)
+        self.w_v = nn.Linear(d_model, d_model)
+        self.w_o = nn.Linear(d_model, d_model)
+
+    def forward(self, q, k, v, mask=None):
+        batch_size = q.size(0)
+        
+        # 1. 线性投影并拆分头: (B, S, D) -> (B, H, S, D_k)
+        q = self.w_q(q).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        k = self.w_k(k).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        v = self.w_v(v).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        
+        # 2. 计算 Scaled Dot-Product Attention
+        # ... (见 2.1 节代码)
+        
+        # 3. 拼接并投影回原维度
+        # (B, H, S, D_k) -> (B, S, D)
+        # concat = attn_output.transpose(1, 2).contiguous().view(batch_size, -1, d_model)
+        # return self.w_o(concat)
+</code></pre>
+
+  <h3>多头注意力结构图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph TD
+    A[输入 X] --> B1[Q 投影]
+    A --> B2[K 投影]
+    A --> B3[V 投影]
+    B1 --> C1[拆分为 h 个头]
+    B2 --> C2[拆分为 h 个头]
+    B3 --> C3[拆分为 h 个头]
+    C1 --> D[计算并行的 Attention]
+    C2 --> D
+    C3 --> D
+    D --> E[拼接 h 个头的输出]
+    E --> F[最终投影 W^O]
+    F --> G[输出]
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
   <p>概述：多头把表示投影到多个子空间并行建模不同关系（语法、指代、主题等），再拼接回主空间。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>hidden size H，head 数 h，每头维度 d=H/h（常见）。</li>
-</ul>
-<ul>
-<li>每头独立 W_Q/W_K/W_V；输出再经 W_O 融合。</li>
-</ul>
-<ul>
-<li>头冗余与剪枝：部分头可被移除而损失不大。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>现代 LLM 常用 GQA/MQA：减少 K/V 头数以省显存与带宽。</li>
-</ul>
-<ul>
-<li>head 数影响 kernel 实现效率（对齐到 warp/向量化）。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>误以为 head 越多越好；过多会增加开销且收益递减。</li>
-</ul>
-<p>例题与答案：</p>
-<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
-<div class="qa">
-<div class="q">Q1：H=4096，h=32，则每头维度 d？</div>
-</div>
-<div class="qa">
-<div class="a">A1：d=4096/32=128。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：GQA 相比标准 MHA 的主要节省来自哪里？</div>
-</div>
-<div class="qa">
-<div class="a">A2：减少 K/V 的头数（组共享），从而降低 KV cache 与带宽开销。</div>
-</div>
-</div>
-
-<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
-<h3>Multi-Head Attention（MHA）</h3>
-<p>核心思想：用多个 head 在不同子空间并行做 attention，然后拼接回去。</p>
-<p>$$\mathrm{head}_i=\mathrm{Attention}(QW_i^Q,KW_i^K,VW_i^V)$$</p>
-<p>$$\mathrm{MHA}(Q,K,V)=\mathrm{Concat}(\mathrm{head}_1,\dots,\mathrm{head}_h)W^O$$</p>
-<p class="muted">实现里常见的张量变换：先线性投影到 (B,S,H*D)，再 reshape/transpose 到 (B,H,S,D)。</p>
-
-<h3>原论文与代码库</h3>
-<ul>
-  <li>论文：Vaswani et al., 2017 <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a></li>
-  <li>代码：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（如 `modeling_llama.py`/`modeling_gpt2.py` 的 attention 投影与 reshape）</li>
-</ul>
+  <p>工程提示：</p>
+  <ul>
+    <li>现代 LLM 常用 GQA/MQA：减少 K/V 头数以省显存与带宽。</li>
+    <li>head 数影响 kernel 实现效率（对齐到 warp/向量化）。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：H=4096，h=32，则每头维度 d？</div>
+    <div class="a">A1：d=4096/32=128。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：GQA 相比标准 MHA 的主要节省来自哪里？</div>
+    <div class="a">A2：减少 K/V 的头数（组共享），从而降低 KV cache 与带宽开销。</div>
+  </div>
 </div>
 
     <div class="pager">
@@ -113,8 +151,7 @@
       <a href="kp-2-3-前馈网络-mlp-ffn.html"><strong>2.3 前馈网络（MLP/FFN）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

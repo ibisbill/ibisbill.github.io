@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -55,90 +59,110 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：注意力是 Transformer 的核心算子：用 Query 去“查询” Key，并对 Value 做加权汇总。缩放与</p>
-<p>mask 主要为稳定性与因果约束服务。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>基本公式：Attn(Q,K,V)=softmax(QK^T/sqrt(d_k)+mask) V。</li>
-</ul>
-<ul>
-<li>缩放 sqrt(d_k)：避免点积随维度增大导致 softmax 饱和。</li>
-</ul>
-<ul>
-<li>mask：padding mask 与 causal mask；实现中注意广播与 dtype。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>数值稳定：softmax 计算时减去行最大值；FP16 下更关键。</li>
-</ul>
-<ul>
-<li>训练/推理注意 mask 一致，否则会出现“训练时能看未来”的泄露。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>把 attention 权重当作解释因果关系的唯一证据（注意力不是解释）。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么要除以 sqrt(d_k)？</div>
-</div>
-<div class="qa">
-<div class="a">A1：不缩放时点积方差随 d_k 增大，softmax 更容易饱和，梯度变小，训练不稳定。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：若使用 causal mask，位置 t 可以关注哪些位置？</div>
-</div>
-<div class="qa">
-<div class="a">A2：只能关注 0..t 的历史位置（含自身），不能关注 &gt;t 的未来 token。</div>
-</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
 
-<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
-<h3>核心公式：Scaled Dot-Product Attention</h3>
-<p>给定 $Q \in \mathbb{R}^{S\times d_k}$、$K \in \mathbb{R}^{S\times d_k}$、$V \in \mathbb{R}^{S\times d_v}$：</p>
-<p>$$\mathrm{Attention}(Q,K,V)=\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$</p>
-<p class="muted">关键点：$\sqrt{d_k}$ 缩放用于控制 dot-product 的方差，避免 softmax 在训练初期过度饱和。</p>
+  <h3>1. 什么是 Q, K, V？</h3>
+  <p>注意力机制类比于信息检索系统：</p>
+  <ul>
+    <li><strong>Query (Q):</strong> 你想查询的信息（当前位置的向量）。</li>
+    <li><strong>Key (K):</strong> 数据库中条目的索引（所有位置的向量）。</li>
+    <li><strong>Value (V):</strong> 数据库中条目的具体内容（所有位置的向量）。</li>
+  </ul>
+  <p>模型计算 Q 与 K 的匹配度，然后根据匹配度对 V 进行加权求和。</p>
 
-<div class="demo" data-demo="attention">
-  <h3>交互 Demo：手算 Attention（含中间矩阵）</h3>
-  <div class="row">
-    <div class="col">
-      <label>Q（JSON 2D 数组，形状 S×d_k）</label>
-      <textarea data-role="Q"></textarea>
-    </div>
-    <div class="col">
-      <label>K（JSON 2D 数组，形状 S×d_k）</label>
-      <textarea data-role="K"></textarea>
-    </div>
-    <div class="col">
-      <label>V（JSON 2D 数组，形状 S×d_v）</label>
-      <textarea data-role="V"></textarea>
-    </div>
-  </div>
-  <div class="row">
-    <button class="btn primary" data-action="run">运行：计算 Scores/Probs/Out</button>
-    <button class="btn" data-action="reset">重置示例</button>
-  </div>
-  <div class="out" data-role="OUT"></div>
-</div>
+  <h3>2. 核心公式与缩放因子</h3>
+  <p>$$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$</p>
+  <ul>
+    <li><strong>缩放因子 $\sqrt{d_k}$:</strong> 假设 $Q$ 和 $K$ 的分量是均值为 0、方差为 1 的独立随机变量，则 $Q \cdot K$ 的均值为 0，方差为 $d_k$。如果不除以 $\sqrt{d_k}$，点积的值会非常大，导致 softmax 进入梯度极小的饱和区。</li>
+  </ul>
 
-<h3>代码解读（PyTorch 形状视角）</h3>
-<div class="codeblock">
-  <div class="codehdr"><span>伪代码（接近 PyTorch 实现）</span><span class="kbd">B=batch, S=seq, H=heads, D=head_dim</span></div>
-  <pre><code class="language-python"># q,k,v: (B, H, S, D)
-scores = (q @ k.transpose(-2, -1)) / math.sqrt(D)   # (B, H, S, S)
-probs  = scores.softmax(dim=-1)                     # (B, H, S, S)
-out    = probs @ v                                  # (B, H, S, D)
+  <h3>3. 掩码 (Masking)</h3>
+  <ul>
+    <li><strong>Padding Mask:</strong> 将 padding 部分的 score 设为 $-\infty$，使其在 softmax 后权重几乎为 0。</li>
+    <li><strong>Causal Mask (因果掩码):</strong> 在 Decoder 中，为了防止模型“看到未来”，将当前位置之后的 score 设为 $-\infty$。</li>
+  </ul>
+
+  <h3>代码示例：带 Mask 的 Attention 实现</h3>
+  <pre><code class="language-python">import torch
+import torch.nn.functional as F
+import math
+
+def scaled_dot_product_attention(q, k, v, mask=None):
+    # q, k, v shape: (batch, n_heads, seq_len, head_dim)
+    d_k = q.size(-1)
+    scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
+    
+    if mask is not None:
+        # mask 处填入一个极小值
+        scores = scores.masked_fill(mask == 0, -1e9)
+        
+    weights = F.softmax(scores, dim=-1)
+    return torch.matmul(weights, v), weights
+
+# 模拟 Causal Mask
+seq_len = 4
+causal_mask = torch.tril(torch.ones(seq_len, seq_len))
+print(f"Causal Mask:\n{causal_mask}")
 </code></pre>
+
+  <h3>注意力机制流程图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph TD
+    A[Q] --> C[QK^T 点积]
+    B[K] --> C
+    C --> D[除以 sqrt(d_k)]
+    D --> E[Masking]
+    E --> F[Softmax]
+    F --> G[与 V 相乘]
+    H[V] --> G
+    G --> I[输出]
+    </div>
+  </div>
 </div>
 
-<h3>原论文与典型代码库</h3>
-<ul>
-  <li>论文：Vaswani et al., 2017, <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a></li>
-  <li>代码（参考实现）：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（多模型 attention 实现）</li>
-  <li>代码（极简教学）：<a href="https://github.com/karpathy/nanoGPT">karpathy/nanoGPT</a></li>
-</ul>
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
+  <p>概述：注意力是 Transformer 的核心算子：用 Query 去“查询” Key，并对 Value 做加权汇总。缩放与 mask 主要为稳定性与因果约束服务。</p>
+  <p>工程提示：</p>
+  <ul>
+    <li>数值稳定：softmax 计算时减去行最大值；FP16 下更关键。</li>
+    <li>训练/推理注意 mask 一致，否则会出现“训练时能看未来”的泄露。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么要除以 sqrt(d_k)？</div>
+    <div class="a">A1：不缩放时点积方差随 d_k 增大，softmax 更容易饱和，梯度变小，训练不稳定。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：若使用 causal mask，位置 t 可以关注哪些位置？</div>
+    <div class="a">A2：只能关注 0..t 的历史位置（含自身），不能关注 &gt;t 的未来 token。</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>交互 Demo：手算 Attention</h3>
+  <div class="demo" data-demo="attention">
+    <div class="row">
+      <div class="col">
+        <label>Q</label>
+        <textarea data-role="Q" placeholder="[[1,0],[0,1]]"></textarea>
+      </div>
+      <div class="col">
+        <label>K</label>
+        <textarea data-role="K" placeholder="[[1,0],[0,1]]"></textarea>
+      </div>
+      <div class="col">
+        <label>V</label>
+        <textarea data-role="V" placeholder="[[1,2],[3,4]]"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn primary" data-action="run">计算</button>
+      <button class="btn" data-action="reset">重置</button>
+    </div>
+    <div class="out" data-role="OUT"></div>
+  </div>
 </div>
 
     <div class="pager">
@@ -146,8 +170,7 @@ out    = probs @ v                                  # (B, H, S, D)
       <a href="kp-2-2-multi-head-attention-多头.html"><strong>2.2 Multi-Head Attention（多头）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

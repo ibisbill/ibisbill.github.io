@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -55,54 +59,87 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：Attention 负责信息路由，MLP 提供逐位置的非线性变换与容量。现代 LLM 常用门控 FFN</p>
-<p>提升表达效率。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>经典 FFN：Linear(H-&gt;4H) + 激活 + Linear(4H-&gt;H)。</li>
-</ul>
-<ul>
-<li>门控变体：SwiGLU/GeGLU（两支路相乘或门控）。</li>
-</ul>
-<ul>
-<li>激活：GELU/SiLU 的经验优势。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>FFN 通常占参数大头；kernel 融合（fused MLP）对速度影响大。</li>
-</ul>
-<ul>
-<li>门控 FFN 维度系数需与实现对齐（如 2/3*4H 等常见配置）。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>忽视 FFN 的带宽瓶颈；很多场景 attention 已被 FlashAttention 优化后，FFN 反而成瓶颈。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：FFN 的扩展维度为什么常取 4H？</div>
-</div>
-<div class="qa">
-<div class="a">A1：经验上在计算/参数预算下提供较好容量；门控 FFN 会使用不同系数但同样遵循“先扩再压”的思路。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：SwiGLU 的直觉优势？</div>
-</div>
-<div class="qa">
-<div class="a">A2：门控让网络在不同输入下选择性通过信息，提升表达与训练稳定性。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. FFN 的角色</h3>
+  <p>如果说 Attention 负责在不同 token 之间交换信息（空间维度），那么前馈网络（Feed-Forward Network, FFN）则负责在每个位置独立地进行非线性变换（特征维度）。它通常贡献了模型约 2/3 的参数量。</p>
+
+  <h3>2. 经典 FFN 结构</h3>
+  <p>标准 Transformer 使用两层线性映射，中间夹一个非线性激活函数：</p>
+  <p>$$\text{FFN}(x) = \max(0, xW_1 + b_1)W_2 + b_2$$</p>
+  <ul>
+    <li>第一层将维度从 $d_{model}$ 扩展到 $4d_{model}$。</li>
+    <li>第二层将维度压缩回 $d_{model}$。</li>
+  </ul>
+
+  <h3>3. 现代变体：SwiGLU</h3>
+  <p>Llama 等现代模型使用 <strong>SwiGLU</strong>，它基于门控线性单元（GLU）：</p>
+  <p>$$\text{SwiGLU}(x, W, V, b, c) = \text{Swish}_{\beta}(xW + b) \otimes (xV + c)$$</p>
+  <p>其中 $\otimes$ 表示逐元素乘法。这种结构在处理复杂模式时比单一激活函数更有效。</p>
+
+  <h3>代码示例：SwiGLU 的 PyTorch 实现</h3>
+  <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class SwiGLU(nn.Module):
+    def __init__(self, d_model, d_ff):
+        super().__init__()
+        # SwiGLU 需要三个线性层 (通常 d_ff 取 8/3 * d_model)
+        self.w1 = nn.Linear(d_model, d_ff)
+        self.w2 = nn.Linear(d_model, d_ff)
+        self.w3 = nn.Linear(d_ff, d_model)
+
+    def forward(self, x):
+        # 门控分支 * 线性分支
+        return self.w3(F.silu(self.w1(x)) * self.w2(x))
+
+# 测试
+x = torch.randn(2, 10, 512)
+model = SwiGLU(512, 1376) # Llama 风格的维度比例
+print(f"Output shape: {model(x).shape}")
+</code></pre>
+
+  <h3>FFN 结构示意图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph TD
+    A[输入 x] --> B1[线性层 W1]
+    A --> B2[线性层 V (门控)]
+    B1 --> C[SiLU 激活]
+    C --> D[逐元素相乘]
+    B2 --> D
+    D --> E[线性层 W3]
+    E --> F[输出]
+    </div>
+  </div>
 </div>
 
-
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
+  <p>概述：Attention 负责信息路由，MLP 提供逐位置的非线性变换与容量。现代 LLM 常用门控 FFN 提升表达效率。</p>
+  <p>工程提示：</p>
+  <ul>
+    <li>FFN 通常占参数大头；kernel 融合（fused MLP）对速度影响大。</li>
+    <li>门控 FFN 维度系数需与实现对齐（如 2/3*4H 等常见配置）。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：FFN 的扩展维度为什么常取 4H？</div>
+    <div class="a">A1：经验上在计算/参数预算下提供较好容量；门控 FFN 会使用不同系数但同样遵循“先扩再压”的思路。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：SwiGLU 的直觉优势？</div>
+    <div class="a">A2：门控让网络在不同输入下选择性通过信息，提升表达与训练稳定性。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="kp-2-2-multi-head-attention-多头.html"><strong>2.2 Multi-Head Attention（多头）</strong></a>
       <a href="kp-2-4-残差-归一化与结构变体.html"><strong>2.4 残差、归一化与结构变体</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>

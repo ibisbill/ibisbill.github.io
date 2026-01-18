@@ -17,6 +17,10 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
   <script defer src="./assets/site.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -55,54 +59,89 @@
 </div>
 
 <div class="section">
-  <h2>手册要点 + 例题答案（原文整理）</h2>
-  <p>概述：输入文本的“细节”会显著影响</p>
-<p>tokenization、训练分布与安全边界。规范化的目标是降低无意义差异、控制噪声与风险。</p>
-<p>你需要掌握：</p>
-<ul>
-<li>Unicode 规范化（NFC/NFKC）、空白与不可见字符处理。</li>
-</ul>
-<ul>
-<li>多语言与混合脚本：语言识别、编码一致性。</li>
-</ul>
-<ul>
-<li>特殊内容：代码、公式、表格、URL 的保留与清洗策略。</li>
-</ul>
-<p>工程提示：</p>
-<ul>
-<li>做安全与对齐时必须考虑：不可见字符可用于 prompt 注入与绕过过滤。</li>
-</ul>
-<ul>
-<li>对话数据要统一模板，否则模型学习到“格式偏差”。</li>
-</ul>
-<p>常见误区：</p>
-<ul>
-<li>过度清洗导致丢失关键分布（例如代码缩进、标点、日志格式）。</li>
-</ul>
-<p>例题与答案：</p>
-<div class="qa">
-<div class="q">Q1：为什么需要处理不可见字符（如零宽空格）？</div>
-</div>
-<div class="qa">
-<div class="a">A1：它们可能改变 token 序列或绕过规则/过滤器，造成注入与安全风险。</div>
-</div>
-<div class="qa">
-<div class="q">Q2：NFKC 规范化的潜在风险是什么？</div>
-</div>
-<div class="qa">
-<div class="a">A2：会把某些字符折叠为“等价形式”，可能改变代码/公式的精确语义，需要按场景选择。</div>
-</div>
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. Unicode 规范化 (Unicode Normalization)</h3>
+  <p>相同的文字在 Unicode 中可能有多种表示。例如 “é” 可以表示为一个单一字符（\u00E9），也可以表示为 “e” 加上重音符号（\u0065\u0301）。</p>
+  <ul>
+    <li><strong>NFC (Normalization Form C):</strong> 先分解再组合，最常用的形式。</li>
+    <li><strong>NFD (Normalization Form D):</strong> 完全分解。</li>
+    <li><strong>NFKC / NFKD:</strong> 兼容性规范化。会将带有格式的字符（如上标 ²）折叠为标准字符（如 2）。</li>
+  </ul>
+
+  <h3>2. 空白与不可见字符</h3>
+  <p>空白字符不仅是空格。处理不当会导致模型在推理时出现奇怪的 token 边界。</p>
+  <ul>
+    <li><strong>常见空白:</strong> \n, \r, \t, 以及全角空格 \u3000。</li>
+    <li><strong>不可见字符:</strong> 零宽空格 (ZWSP, \u200B) 等。在安全领域，攻击者常利用这些字符绕过关键词过滤或进行 Prompt 注入。</li>
+  </ul>
+
+  <h3>3. 语言识别与脚本清洗</h3>
+  <ul>
+    <li><strong>语言检测:</strong> 使用 fastText 等工具识别文本语种，用于后续的数据配比。</li>
+    <li><strong>脚本处理:</strong> 统一处理中英文混排中的标点符号（如全角逗号转半角，或反之）。</li>
+    <li><strong>特殊格式:</strong> 对代码段、公式（LaTeX）、表格（Markdown）等需要保留结构的文本，通常需要特定的正则表达式保护。</li>
+  </ul>
+
+  <h3>代码示例：Python 中的 Unicode 处理</h3>
+  <pre><code class="language-python">import unicodedata
+
+# 1. NFC 示例
+s1 = 'e\u0301' # e + '
+s2 = '\u00e9'  # é
+print(f"Original equal: {s1 == s2}")
+print(f"NFC equal: {unicodedata.normalize('NFC', s1) == unicodedata.normalize('NFC', s2)}")
+
+# 2. NFKC 折叠示例
+s3 = '②'
+print(f"NFKC result: {unicodedata.normalize('NFKC', s3)}") # 输出 '2'
+
+# 3. 清除不可见字符
+import re
+text = "Hello\u200BWorld" # 含有零宽空格
+clean_text = re.sub(r'[\u200b-\u200f\uFEFF]', '', text)
+print(f"Cleaned: {clean_text}")
+</code></pre>
+
+  <h3>预处理流程示意图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph LR
+    A[原始语料] --> B[编码转换/修复]
+    B --> C[Unicode 规范化]
+    C --> D[空白/不可见字符清洗]
+    D --> E[敏感信息脱敏]
+    E --> F[语言识别/过滤]
+    F --> G[最终语料]
+    </div>
+  </div>
 </div>
 
-
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
+  <p>概述：输入文本的“细节”会显著影响 tokenization、训练分布与安全边界。规范化的目标是降低无意义差异、控制噪声与风险。</p>
+  <p>工程提示：</p>
+  <ul>
+    <li>做安全与对齐时必须考虑：不可见字符可用于 prompt 注入与绕过过滤。</li>
+    <li>对话数据要统一模板，否则模型学习到“格式偏差”。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么需要处理不可见字符（如零宽空格）？</div>
+    <div class="a">A1：它们可能改变 token 序列或绕过规则/过滤器，造成注入与安全风险。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：NFKC 规范化的潜在风险是什么？</div>
+    <div class="a">A2：会把某些字符折叠为“等价形式”，可能改变代码/公式的精确语义，需要按场景选择。</div>
+  </div>
+</div>
 
     <div class="pager">
       <a href="module-01-nlp-llm-表示与-tokenization.html"><strong>1 NLP/LLM 表示与 Tokenization</strong></a>
       <a href="kp-1-2-tokenization-子词-字节级.html"><strong>1.2 Tokenization（子词/字节级）</strong></a>
     </div>
     <div class="footer">
-      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
-      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+      <div>© 2026 Transformer × LLM 学习站</div>
     </div>
   </div>
 </body>
