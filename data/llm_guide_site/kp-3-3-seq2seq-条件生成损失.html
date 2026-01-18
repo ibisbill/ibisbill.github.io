@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>4 数据与语料｜Transformer × LLM 学习站</title>
+  <title>3.3 Seq2Seq 条件生成损失｜Transformer × LLM 学习站</title>
   <link rel="stylesheet" href="./assets/site.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
   <script>
@@ -31,7 +31,7 @@
         <div class="brand-badge"></div>
         <div>
           <div>Transformer × LLM 学习站</div>
-          <div class="brand-sub">模块 4</div>
+          <div class="brand-sub">知识点 3.3</div>
         </div>
       </div>
       <div class="navlinks">
@@ -46,42 +46,58 @@
   <div class="container">
     
 <div class="hero">
-  <h1>4 数据与语料</h1>
-  <p class="muted">本页是模块汇总（来自 PDF 原文），并链接到本模块的重要知识点页。</p>
-</div>
-
-<div class="grid">
-  
-<div class="card third">
-  <h2><a href="./kp-4-1-数据来源谱系与覆盖.html">4.1 数据来源谱系与覆盖</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
-<div class="card third">
-  <h2><a href="./kp-4-2-清洗-去重与质量过滤.html">4.2 清洗、去重与质量过滤</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
-<div class="card third">
-  <h2><a href="./kp-4-3-数据配比-采样温度与课程学习.html">4.3 数据配比、采样温度与课程学习</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
-<div class="card third">
-  <h2><a href="./kp-4-4-数据格式-packing-与对话模板.html">4.4 数据格式、packing 与对话模板</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
+  <h1>3.3 Seq2Seq 条件生成损失</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 3</span>
+    <span class="pill"><a href="./module-03-语言建模目标与损失.html">返回模块页</a></span>
+  </div>
 </div>
 
 <div class="section">
-  <h2>手册原文（整理版）</h2>
-  <p>学习目标：理解本模块关键概念，能用自己的话解释，并能完成后续例题。</p>
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：在给定输入 x 的条件下生成输出 y，优化 p(y|x)。常见于翻译、摘要、结构化抽取。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Teacher forcing：用真实 y_&lt;t 作为解码器输入。</li>
+</ul>
+<ul>
+<li>可加长度惩罚/coverage 机制（经典 NMT）。</li>
+</ul>
+<ul>
+<li>任务指标：BLEU/ROUGE 等，但要结合人工评审。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>注意训练/推理差异：beam search 与 sampling 的选择要匹配产品目标。</li>
+</ul>
+<ul>
+<li>结构化任务建议使用约束解码或 schema 校验。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>用 ROUGE 作为唯一指标优化，导致模型学会堆砌关键词。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么 Seq2Seq 常用 cross-attention？</div>
+</div>
+<div class="qa">
+<div class="a">A1：解码器需要在生成时读取输入编码表示，用 cross-attention 实现条件依赖。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：Teacher forcing 的副作用？</div>
+</div>
+<div class="qa">
+<div class="a">A2：推理时无法用真实历史 token，造成 exposure bias；可用 scheduled sampling 等缓解但不常用于 LLM。</div>
+</div>
 </div>
 
+
+
     <div class="pager">
+      <a href="kp-3-2-masked-lm-denoising-目标.html"><strong>3.2 Masked LM / Denoising 目标</strong></a>
       <a href="kp-3-4-稳定性与正则化技巧-z-loss-label-smoothing-等.html"><strong>3.4 稳定性与正则化技巧（z-loss/label smoothing 等）</strong></a>
-      <a href="kp-4-1-数据来源谱系与覆盖.html"><strong>4.1 数据来源谱系与覆盖</strong></a>
     </div>
     <div class="footer">
       <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>

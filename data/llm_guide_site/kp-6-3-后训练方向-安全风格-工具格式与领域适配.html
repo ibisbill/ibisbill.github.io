@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>6.3 后训练方向：安全风格、工具格式与领域适配｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 6.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>6.3 后训练方向：安全风格、工具格式与领域适配</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 6</span>
+    <span class="pill"><a href="./module-06-指令微调-sft-与后训练-post-training.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：Post-training 通常指在 SFT</p>
+<p>之后，进一步强化安全、工具调用、长上下文与领域一致性等产品属性。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>安全风格：拒答策略、风险提示、合规边界。</li>
+</ul>
+<ul>
+<li>工具调用：JSON/schema 严格性、参数填充、错误处理。</li>
+</ul>
+<ul>
+<li>长上下文：长序列指令与检索任务；领域术语与格式。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>分阶段：先指令能力、再偏好/安全、再专项（工具/长上下文/领域）。</li>
+</ul>
+<ul>
+<li>每阶段都做回归评测，避免能力漂移。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把安全/拒答数据与普通指令混在一起无区分地训练，导致过度拒答。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么工具调用需要专项数据？</div>
+</div>
+<div class="qa">
+<div class="a">A1：它要求严格结构化输出与状态机式行为，普通对话数据难以覆盖格式与错误处理细节。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：后训练为什么要分阶段？</div>
+</div>
+<div class="qa">
+<div class="a">A2：不同目标（遵循、偏好、安全、工具）可能冲突；分阶段更易控制权衡并定位回归。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-6-2-sft-训练策略-全参-vs-peft-lora-qlora.html"><strong>6.2 SFT 训练策略：全参 vs PEFT（LoRA/QLoRA）</strong></a>
+      <a href="module-07-对齐-alignment-rlhf-dpo-rlvr-等.html"><strong>7 对齐（Alignment）：RLHF / DPO / RLVR 等</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

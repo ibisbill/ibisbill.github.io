@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>4.1 数据来源谱系与覆盖｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 4.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>4.1 数据来源谱系与覆盖</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 4</span>
+    <span class="pill"><a href="./module-04-数据与语料.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：预训练能力上限很大程度由数据决定：覆盖的领域越多、质量越高，模型越“通用”。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Web、书籍、论文、代码、对话、百科等来源的差异与偏置。</li>
+</ul>
+<ul>
+<li>私域数据：企业知识、工单、FAQ；必须考虑权限与合规。</li>
+</ul>
+<ul>
+<li>多语种：语言比例与采样策略会影响跨语能力。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>建立数据台账（来源、许可、时间、处理流程），便于审计audit 与回溯。</li>
+</ul>
+<ul>
+<li>把数据按域分桶，便于做配比与质量诊断。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>只追求“量”，忽视高质量数据对收敛与能力的边际收益。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么代码数据会显著影响模型的推理/结构化能力？</div>
+</div>
+<div class="qa">
+<div class="a">A1：代码包含严格语法、长程依赖与可验证反馈，能强化结构化生成与部分逻辑能力。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：私域数据加入预训练前必须先做什么？</div>
+</div>
+<div class="qa">
+<div class="a">A2：权限与合规评估（许可/PII/敏感信息）、脱敏处理与可追溯记录。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-04-数据与语料.html"><strong>4 数据与语料</strong></a>
+      <a href="kp-4-2-清洗-去重与质量过滤.html"><strong>4.2 清洗、去重与质量过滤</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

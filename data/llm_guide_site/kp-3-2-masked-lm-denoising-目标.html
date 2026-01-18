@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3 语言建模目标与损失｜Transformer × LLM 学习站</title>
+  <title>3.2 Masked LM / Denoising 目标｜Transformer × LLM 学习站</title>
   <link rel="stylesheet" href="./assets/site.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
   <script>
@@ -31,7 +31,7 @@
         <div class="brand-badge"></div>
         <div>
           <div>Transformer × LLM 学习站</div>
-          <div class="brand-sub">模块 3</div>
+          <div class="brand-sub">知识点 3.2</div>
         </div>
       </div>
       <div class="navlinks">
@@ -46,42 +46,59 @@
   <div class="container">
     
 <div class="hero">
-  <h1>3 语言建模目标与损失</h1>
-  <p class="muted">本页是模块汇总（来自 PDF 原文），并链接到本模块的重要知识点页。</p>
-</div>
-
-<div class="grid">
-  
-<div class="card third">
-  <h2><a href="./kp-3-1-自回归语言建模-causal-lm.html">3.1 自回归语言建模（Causal LM）</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
-<div class="card third">
-  <h2><a href="./kp-3-2-masked-lm-denoising-目标.html">3.2 Masked LM / Denoising 目标</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
-<div class="card third">
-  <h2><a href="./kp-3-3-seq2seq-条件生成损失.html">3.3 Seq2Seq 条件生成损失</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
-<div class="card third">
-  <h2><a href="./kp-3-4-稳定性与正则化技巧-z-loss-label-smoothing-等.html">3.4 稳定性与正则化技巧（z-loss/label smoothing 等）</a></h2>
-  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
-</div>
-
+  <h1>3.2 Masked LM / Denoising 目标</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 3</span>
+    <span class="pill"><a href="./module-03-语言建模目标与损失.html">返回模块页</a></span>
+  </div>
 </div>
 
 <div class="section">
-  <h2>手册原文（整理版）</h2>
-  <p>学习目标：理解本模块关键概念，能用自己的话解释，并能完成后续例题。</p>
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：MLM 与去噪目标用遮盖/扰动学习双向上下文，常用于理解或 Seq2Seq 预训练。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>MLM：随机 mask token 预测；需要 special [MASK] 或替换策略。</li>
+</ul>
+<ul>
+<li>Span corruption：遮盖连续片段并生成（T5）。</li>
+</ul>
+<ul>
+<li>去噪自编码：删除/打乱/替换等噪声。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>MLM 与生成任务存在目标差异；要生成通常需要改结构或再训练。</li>
+</ul>
+<ul>
+<li>Span corruption 更接近生成，迁移到生成任务更自然。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>认为 MLM 预训练的模型直接就能像 GPT 那样顺畅长文本生成。</li>
+</ul>
+<p>例题与答案：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="q">Q1：MLM 与 Causal LM 的最大差异？</div>
+</div>
+<div class="qa">
+<div class="a">A1：MLM 允许双向上下文预测被 mask 的位置；Causal LM 只能用左侧上下文自回归预测。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：为什么 T5 的 span corruption 更适合 Seq2Seq？</div>
+</div>
+<div class="qa">
+<div class="a">A2：输入是被遮盖的序列，输出是被遮盖片段的生成，天然是条件生成形式。</div>
+</div>
 </div>
 
+
+
     <div class="pager">
-      <a href="kp-2-6-参数效率与结构演进-kv-gqa-moe-flashattention.html"><strong>2.6 参数效率与结构演进（KV/GQA/MoE/FlashAttention）</strong></a>
       <a href="kp-3-1-自回归语言建模-causal-lm.html"><strong>3.1 自回归语言建模（Causal LM）</strong></a>
+      <a href="kp-3-3-seq2seq-条件生成损失.html"><strong>3.3 Seq2Seq 条件生成损失</strong></a>
     </div>
     <div class="footer">
       <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>

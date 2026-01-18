@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>0.4 软件栈常识｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 0.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>0.4 软件栈常识</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 0</span>
+    <span class="pill"><a href="./module-00-预备基础.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 训练框架与工具库</h3>
+  <p>大模型训练需要解决显存不足和通信开销大的问题。</p>
+  <ul>
+    <li><strong>DeepSpeed:</strong> 微软开发的库，其核心是 ZeRO 技术，能让模型训练突破单卡显存限制。</li>
+    <li><strong>Megatron-LM:</strong> NVIDIA 开发的库，专注于高效的张量并行（TP）和流水线并行（PP）。</li>
+    <li><strong>PyTorch FSDP:</strong> PyTorch 原生的完全分片数据并行，类似 ZeRO-3。</li>
+  </ul>
+
+  <h3>2. 推理引擎与加速</h3>
+  <p>推理的核心瓶颈往往是吞吐量和显存带宽。</p>
+  <ul>
+    <li><strong>vLLM:</strong> 引入 <strong>PagedAttention</strong>，像操作系统管理内存分页一样管理 KV Cache，极大提升了并发能力。</li>
+    <li><strong>TGI (Text Generation Inference):</strong> Hugging Face 开发，支持多种并行策略和量化。</li>
+    <li><strong>TensorRT-LLM:</strong> NVIDIA 深度优化的推理库，集成了 kernel 融合、INT8/FP8 量化等黑科技。</li>
+    <li><strong>llama.cpp:</strong> 纯 C++ 实现，支持多种量化格式（GGUF），是个人电脑跑模型的首选。</li>
+  </ul>
+
+  <h3>3. 核心算子优化</h3>
+  <ul>
+    <li><strong>FlashAttention:</strong> 
+      通过将 Attention 计算拆解成小块（Tiling），利用 GPU 的高速 SRAM 减少对 HBM 的读写次数。
+      其复杂度仍为 $O(S^2)$，但由于减少了 IO，速度提升 2-4 倍，且节省显存。
+    </li>
+  </ul>
+
+  <h3>代码示例：DeepSpeed 配置片段 (ZeRO-2)</h3>
+  <pre><code class="language-json">{
+  "zero_optimization": {
+    "stage": 2,
+    "allgather_partitions": true,
+    "allgather_bucket_size": 2e8,
+    "overlap_comm": true,
+    "reduce_scatter": true,
+    "reduce_bucket_size": 2e8,
+    "contiguous_gradients": true
+  },
+  "fp16": {
+    "enabled": true,
+    "loss_scale": 0,
+    "initial_scale_power": 16
+  }
+}
+</code></pre>
+
+  <h3>软件栈层次示意图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph TD
+    A[应用层: Chat/Agent] --> B[服务层: vLLM/TGI/llama.cpp]
+    B --> C[框架层: PyTorch/Transformers]
+    C --> D[加速层: DeepSpeed/Megatron/Apex]
+    D --> E[算子层: FlashAttention/Triton/CUDA]
+    E --> F[硬件层: H100/A100/L40S]
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
+  <p>概述：LLM 工程依赖大量成熟组件：训练加速、推理引擎、量化/编译工具链。理解各自定位可减少踩坑。</p>
+  <p>工程提示：</p>
+  <ul>
+    <li>同一模型在不同引擎上速度差异很大，关键在 KV 管理、批处理与 kernel 融合。</li>
+    <li>上线前做端到端压测：吞吐、P95 延迟、OOM 与稳定性。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：FlashAttention 的核心收益是什么？</div>
+    <div class="a">A1：通过更好的 IO/分块策略减少显存读写与中间张量，显著降低 attention 的内存占用并提高速度。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：为什么 vLLM 的 paged attention 对服务很重要？</div>
+    <div class="a">A2：它把 KV cache 做分页管理，提升并发与动态批处理下的显存利用率，减少碎片与 OOM。</div>
+  </div>
+</div>
+
+    <div class="pager">
+      <a href="kp-0-3-工程与系统基础.html"><strong>0.3 工程与系统基础</strong></a>
+      <a href="module-01-nlp-llm-表示与-tokenization.html"><strong>1 NLP/LLM 表示与 Tokenization</strong></a>
+    </div>
+    <div class="footer">
+      <div>© 2026 Transformer × LLM 学习站</div>
+    </div>
+  </div>
+</body>
+</html>

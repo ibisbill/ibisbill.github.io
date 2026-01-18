@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>0.1 数学基础｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 0.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>0.1 数学基础</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 0</span>
+    <span class="pill"><a href="./module-00-预备基础.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 线性代数 (Linear Algebra)</h3>
+  <p>在 Transformer 中，几乎所有的操作都是矩阵运算。核心在于张量（Tensor）的形状变换。</p>
+  <ul>
+    <li><strong>矩阵乘法 (Matrix Multiplication):</strong> 
+      对于 $X \in \mathbb{R}^{B \times S \times H}$ 和 $W \in \mathbb{R}^{H \times D}$，乘积 $Y = XW$ 的形状为 $(B, S, D)$。
+      公式：$Y_{i,j,k} = \sum_{m=1}^{H} X_{i,j,m} W_{m,k}$
+    </li>
+    <li><strong>广播规则 (Broadcasting):</strong> 
+      当两个张量维度不一致时，PyTorch/NumPy 会尝试自动扩展维度。例如 $(B, 1, H) + (1, S, H) \to (B, S, H)$。
+    </li>
+    <li><strong>奇异值分解 (SVD):</strong> 
+      $A = U\Sigma V^T$。在模型压缩（如 LoRA）中，我们利用低秩近似 $A \approx U_r \Sigma_r V_r^T$ 来减少参数量。
+    </li>
+  </ul>
+
+  <h3>2. 概率统计 (Probability & Statistics)</h3>
+  <p>语言模型本质上是在建模序列的联合概率分布 $P(x_1, x_2, \dots, x_n)$。</p>
+  <ul>
+    <li><strong>最大似然估计 (MLE):</strong> 
+      通过最大化观测数据的似然函数来估计参数 $\theta$。
+      $$\theta_{MLE} = \arg\max_{\theta} \prod_{i=1}^N P(x_i | \theta)$$
+      在训练中，我们通常最小化负对数似然 (NLL)：$\mathcal{L} = -\sum \log P(x_i | \theta)$。
+    </li>
+    <li><strong>KL 散度 (Kullback-Leibler Divergence):</strong> 
+      衡量两个分布 $p$ 和 $q$ 的差异。
+      $$D_{KL}(p \parallel q) = \sum_{x \in \mathcal{X}} p(x) \log \frac{p(x)}{q(x)}$$
+      在 RLHF 中，常用 KL 散度来约束新模型不要偏离原始模型太远。
+    </li>
+  </ul>
+
+  <h3>3. 信息论 (Information Theory)</h3>
+  <ul>
+    <li><strong>熵 (Entropy):</strong> 衡量分布的不确定性。$H(p) = -\sum p(x) \log p(x)$。</li>
+    <li><strong>交叉熵 (Cross Entropy):</strong> $H(p, q) = -\sum p(x) \log q(x) = H(p) + D_{KL}(p \parallel q)$。</li>
+    <li><strong>困惑度 (Perplexity, PPL):</strong> 
+      反映模型预测序列的能力。$PPL = \exp(H(p, q))$。
+      对于 token 序列，$PPL = \exp(-\frac{1}{N} \sum \log q(x_i))$。
+    </li>
+  </ul>
+
+  <h3>代码示例：KL 散度与形状推导</h3>
+  <pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+# 1. 形状推导示例
+batch, seq_len, hidden = 2, 10, 512
+d_k = 64
+x = torch.randn(batch, seq_len, hidden) # (2, 10, 512)
+w_q = torch.randn(hidden, d_k)          # (512, 64)
+q = torch.matmul(x, w_q)                # (2, 10, 64)
+print(f"Q shape: {q.shape}")
+
+# 2. KL 散度计算
+p = torch.tensor([0.1, 0.9])
+q = torch.tensor([0.2, 0.8])
+# 注意：F.kl_div 的输入顺序和公式略有不同，需要传入 log_target
+kl = F.kl_div(q.log(), p, reduction='sum')
+print(f"KL Divergence: {kl.item():.4f}")
+</code></pre>
+
+  <h3>知识点关联图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph TD
+    A[数学基础] --> B[线性代数]
+    A --> C[概率论]
+    A --> D[信息论]
+    B --> B1[矩阵乘法/张量形状]
+    B --> B2[低秩分解/SVD]
+    C --> C1[MLE/最大似然]
+    C --> C2[KL散度]
+    D --> D1[熵/交叉熵]
+    D --> D2[PPL/困惑度]
+    C2 --> D1
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
+  <p>概述：Transformer/LLM 的核心计算是高维线性变换与概率建模。你需要能熟练做形状推导、理解交叉熵/KL、以及梯度下降为何能工作。</p>
+  <p>常见误区：</p>
+  <ul>
+    <li>把 Perplexity 当作跨 tokenizer 的绝对可比指标（它受 token 划分影响）。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：形状推导：若 X 形状为 (B,S,H)，W_Q 形状为 (H, d_k)，则 Q 的形状是什么？</div>
+    <div class="a">A1：Q = XW_Q，形状为 (B,S,d_k)。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：交叉熵与 KL：给定真实分布 p、模型分布 q，交叉熵 H(p,q) 与 KL(p||q) 的关系？</div>
+    <div class="a">A2：H(p,q)=H(p)+KL(p||q)。在 p 固定时，最小化交叉熵等价于最小化 KL。</div>
+  </div>
+</div>
+
+    <div class="pager">
+      <a href="module-00-预备基础.html"><strong>0 预备基础</strong></a>
+      <a href="kp-0-2-深度学习基础.html"><strong>0.2 深度学习基础</strong></a>
+    </div>
+    <div class="footer">
+      <div>© 2026 Transformer × LLM 学习站</div>
+    </div>
+  </div>
+</body>
+</html>

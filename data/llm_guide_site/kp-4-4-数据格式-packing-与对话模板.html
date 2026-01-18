@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>4.4 数据格式、packing 与对话模板｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 4.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>4.4 数据格式、packing 与对话模板</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 4</span>
+    <span class="pill"><a href="./module-04-数据与语料.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：数据如何被拼成序列决定了 mask、loss 与训练效率。对话模型尤其依赖一致模板。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>EOD（文档结束）token 的使用与文档边界。</li>
+</ul>
+<ul>
+<li>sequence packing：把多个短样本拼到同一序列减少 padding。</li>
+</ul>
+<ul>
+<li>对话格式：system/user/assistant 角色 token、轮次边界、是否对用户 token 计算 loss。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>packing 要确保 attention mask 正确，不同样本之间不可互相注意（除非设计为连续文档）。</li>
+</ul>
+<ul>
+<li>对话训练常见：只对 assistant 回答计算 loss，提升指令遵循一致性。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>packing 时忘了插入分隔符或 mask，导致样本串扰与训练泄露。</li>
+</ul>
+<p>例题与答案：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="q">Q1：为什么 packing 能显著提升训练吞吐？</div>
+</div>
+<div class="qa">
+<div class="a">A1：减少 padding token 的计算与通信开销，提高有效 token 比例。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：对话训练为什么常只对 assistant 部分算 loss？</div>
+</div>
+<div class="qa">
+<div class="a">A2：目标是学习“如何回答”，若对用户部分也算 loss，可能学到复述用户输入等不良行为。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-4-3-数据配比-采样温度与课程学习.html"><strong>4.3 数据配比、采样温度与课程学习</strong></a>
+      <a href="module-05-预训练工程与技巧.html"><strong>5 预训练工程与技巧</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

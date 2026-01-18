@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>4.3 数据配比、采样温度与课程学习｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 4.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>4.3 数据配比、采样温度与课程学习</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 4</span>
+    <span class="pill"><a href="./module-04-数据与语料.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：不同域的 token 贡献不同。合理配比与采样能在有限预算下提升综合能力与特定能力。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>域混合：通用/代码/数学/多语种比例。</li>
+</ul>
+<ul>
+<li>温度采样：对小域过采样，避免被大域淹没。</li>
+</ul>
+<ul>
+<li>课程学习：从干净到复杂，或先学结构化（代码/数学）再学开放域。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>配比要用可解释的目标：例如提升代码 pass@1，或提升特定语言表现。</li>
+</ul>
+<ul>
+<li>避免“过度偏域”：会导致通用能力回退。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把“训练集占比”直接等同于“能力占比”；不同域的学习曲线不同。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：温度采样的直觉是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A1：把大域的权重压低、小域抬高，使模型在训练中看到更多稀缺但重要的样本。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：课程学习可能的风险？</div>
+</div>
+<div class="qa">
+<div class="a">A2：若后期加入大量噪声或风格差异太大，可能造成能力波动或遗忘，需要混入锚定数据。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-4-2-清洗-去重与质量过滤.html"><strong>4.2 清洗、去重与质量过滤</strong></a>
+      <a href="kp-4-4-数据格式-packing-与对话模板.html"><strong>4.4 数据格式、packing 与对话模板</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5.7 续训、领域继续预训练与长上下文扩展｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 5.7</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>5.7 续训、领域继续预训练与长上下文扩展</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 5</span>
+    <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：预训练不是一次性工程。常见需求包括继续预训练、迁移到新域、扩展上下文长度。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>DAPT/TAPT：领域/任务继续预训练。</li>
+</ul>
+<ul>
+<li>长上下文：位置编码缩放 + 长序列数据继续训练。</li>
+</ul>
+<ul>
+<li>能力回归：续训后需要回归评测（通用能力、对齐表现）。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>续训数据要有台账与可解释目标；避免把模型带偏。</li>
+</ul>
+<ul>
+<li>长上下文扩展必须做“长序列任务”训练与评测。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>只增加最大长度配置而不训，期望模型自动具备长上下文能力。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：DAPT 与 TAPT 的差异？</div>
+</div>
+<div class="qa">
+<div class="a">A1：DAPT 面向领域数据（如金融/医疗），TAPT 面向特定任务数据分布（如客服对话）。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：为什么长上下文扩展要回归评测？</div>
+</div>
+<div class="qa">
+<div class="a">A2：位置与训练分布改变可能导致短上下文与对齐能力回退。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-5-6-训练监控-调试与故障处理.html"><strong>5.6 训练监控、调试与故障处理</strong></a>
+      <a href="module-06-指令微调-sft-与后训练-post-training.html"><strong>6 指令微调（SFT）与后训练（Post-training）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

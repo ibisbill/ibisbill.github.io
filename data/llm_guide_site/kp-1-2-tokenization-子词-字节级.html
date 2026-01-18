@@ -94,7 +94,26 @@
 </div>
 </div>
 
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>Tokenization：BPE / SentencePiece / Byte-level</h3>
+<p class="muted">Tokenizer 决定了“一个 token 是什么”，进而影响长度、成本、以及 PPL 的可比性。</p>
 
+<h3>代码解读要点（读实现时看这些）</h3>
+<ul>
+  <li><b>归一化</b>：NFKC、大小写、空白、特殊符号处理（对中英文混排尤其关键）</li>
+  <li><b>预分词</b>：按空白/标点切分或 byte-level 直接从字节开始</li>
+  <li><b>合并规则</b>：BPE merge table / unigram LM 的概率模型</li>
+  <li><b>特殊 token</b>：BOS/EOS/PAD/UNK，以及对话模板中的 role 标记</li>
+</ul>
+
+<h3>原论文与代码库</h3>
+<ul>
+  <li>BPE：Sennrich et al., 2016 <a href="https://arxiv.org/abs/1508.07909">Neural Machine Translation of Rare Words with Subword Units</a></li>
+  <li>SentencePiece：Kudo & Richardson, 2018 <a href="https://arxiv.org/abs/1808.06226">SentencePiece</a></li>
+  <li>字节级 BPE（GPT-2）：Radford et al., 2019（见 GPT-2 tokenizer 设计）</li>
+  <li>实现：<a href="https://github.com/huggingface/tokenizers">huggingface/tokenizers</a>、<a href="https://github.com/google/sentencepiece">google/sentencepiece</a></li>
+</ul>
+</div>
 
     <div class="pager">
       <a href="kp-1-1-文本规范化与预处理.html"><strong>1.1 文本规范化与预处理</strong></a>

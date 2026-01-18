@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>4.2 清洗、去重与质量过滤｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 4.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>4.2 清洗、去重与质量过滤</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 4</span>
+    <span class="pill"><a href="./module-04-数据与语料.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：去重与清洗的目标是提高“有效 token”，减少训练把算力花在重复/垃圾样本上。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>去重：exact 与 near-duplicate（MinHash/SimHash 等）。</li>
+</ul>
+<ul>
+<li>质量过滤：语言识别、困惑度过滤、启发式规则（重复度/标点/长度）。</li>
+</ul>
+<ul>
+<li>有害内容与 PII：检测、掩码、删除与审计。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>去重粒度：文档级/段落级/行级；代码与自然语言策略不同。</li>
+</ul>
+<ul>
+<li>过滤阈值需做 A/B：过强会丢分布、过弱会引入噪声。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把困惑度过滤当作万能质量标准；它会偏好“像训练分布”的文本，可能丢掉新域。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：near-duplicate 去重为什么重要？</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="a">A1：重复样本会让模型过拟合常见片段，浪费计算，并增加记忆与版权风险。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：PII 处理的基本原则？</div>
+</div>
+<div class="qa">
+<div class="a">A2：最小化收集与保留；能删除就删除，必要时脱敏，并记录处理链路以便审计。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-4-1-数据来源谱系与覆盖.html"><strong>4.1 数据来源谱系与覆盖</strong></a>
+      <a href="kp-4-3-数据配比-采样温度与课程学习.html"><strong>4.3 数据配比、采样温度与课程学习</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

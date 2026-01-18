@@ -94,7 +94,19 @@
 </div>
 </div>
 
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>Multi-Head Attention（MHA）</h3>
+<p>核心思想：用多个 head 在不同子空间并行做 attention，然后拼接回去。</p>
+<p>$$\mathrm{head}_i=\mathrm{Attention}(QW_i^Q,KW_i^K,VW_i^V)$$</p>
+<p>$$\mathrm{MHA}(Q,K,V)=\mathrm{Concat}(\mathrm{head}_1,\dots,\mathrm{head}_h)W^O$$</p>
+<p class="muted">实现里常见的张量变换：先线性投影到 (B,S,H*D)，再 reshape/transpose 到 (B,H,S,D)。</p>
 
+<h3>原论文与代码库</h3>
+<ul>
+  <li>论文：Vaswani et al., 2017 <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a></li>
+  <li>代码：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（如 `modeling_llama.py`/`modeling_gpt2.py` 的 attention 投影与 reshape）</li>
+</ul>
+</div>
 
     <div class="pager">
       <a href="kp-2-1-scaled-dot-product-attention.html"><strong>2.1 Scaled Dot-Product Attention</strong></a>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>6.1 SFT 数据：质量、覆盖与模板｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 6.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>6.1 SFT 数据：质量、覆盖与模板</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 6</span>
+    <span class="pill"><a href="./module-06-指令微调-sft-与后训练-post-training.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：SFT 的目标是让模型更好地遵循指令与对话规范。数据质量与模板一致性通常比规模更重要。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>数据形态：单轮指令-回答、多轮对话、工具调用格式示例。</li>
+</ul>
+<ul>
+<li>模板：system/user/assistant 角色分隔；统一分隔符与停止 token。</li>
+</ul>
+<ul>
+<li>质量：明确目标、可验证答案、避免含糊套话；覆盖边界条件。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>建立数据审查：随机抽样人工复核 + 自动规则（重复、长度、敏感）。</li>
+</ul>
+<ul>
+<li>避免“模板泄露”：把评测提示混入训练会导致过拟合。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把低质量合成数据大量堆入 SFT，导致模型“会说话但不做事”。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：多轮对话数据为什么需要严格模板？</div>
+</div>
+<div class="qa">
+<div class="a">A1：模型会学习格式作为行为线索；模板不一致会导致角色混淆与输出不稳定。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：SFT 中常见的 loss mask 策略？</div>
+</div>
+<div class="qa">
+<div class="a">A2：只对 assistant 输出部分计算 loss，用户输入不计入，以强化回答生成而非复述。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-06-指令微调-sft-与后训练-post-training.html"><strong>6 指令微调（SFT）与后训练（Post-training）</strong></a>
+      <a href="kp-6-2-sft-训练策略-全参-vs-peft-lora-qlora.html"><strong>6.2 SFT 训练策略：全参 vs PEFT（LoRA/QLoRA）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

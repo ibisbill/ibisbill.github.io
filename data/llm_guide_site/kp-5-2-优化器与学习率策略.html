@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5.2 优化器与学习率策略｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 5.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>5.2 优化器与学习率策略</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 5</span>
+    <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：LLM 训练对学习率非常敏感。warmup + 衰减是标准做法，配合梯度裁剪与累积保证稳定。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>AdamW：beta、epsilon、weight decay 的作用。</li>
+</ul>
+<ul>
+<li>LR schedule：warmup + cosine/linear decay。</li>
+</ul>
+<ul>
+<li>梯度裁剪、梯度累积、batch size 与有效学习率。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>warmup 不足常导致早期发散；过长会浪费训练。</li>
+</ul>
+<ul>
+<li>大 batch 常需要更大的 LR，但需验证；不要机械套用线性缩放。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 loss spike 当作正常波动；很多 spike 是坏 batch 或溢出前兆。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么要 warmup？</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="a">A1：初期参数未稳定，梯度大且方差高，warmup 逐步提高 LR 可避免发散。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：梯度裁剪有什么作用？</div>
+</div>
+<div class="qa">
+<div class="a">A2：限制梯度范数，防止个别 batch 触发梯度爆炸导致数值崩溃。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-5-1-规模法则与预算规划.html"><strong>5.1 规模法则与预算规划</strong></a>
+      <a href="kp-5-3-混合精度与数值稳定.html"><strong>5.3 混合精度与数值稳定</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

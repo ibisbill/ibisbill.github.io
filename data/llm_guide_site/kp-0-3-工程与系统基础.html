@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>0.3 工程与系统基础｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 0.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>0.3 工程与系统基础</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 0</span>
+    <span class="pill"><a href="./module-00-预备基础.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>核心知识点详细讲解</h2>
+
+  <h3>1. 硬件基础与性能指标</h3>
+  <p>大模型训练与推理受限于硬件的三个维度：算力、带宽和显存。</p>
+  <ul>
+    <li><strong>Roofline 模型:</strong> 
+      性能受限于 $\min(\text{算力 Peak FLOPS}, \text{内存带宽} \times \text{算力密度})$。
+      算力密度 (Arithmetic Intensity) = 计算量 / 访存量。
+    </li>
+    <li><strong>内存层次:</strong> HBM (显存) -> SRAM (片上缓存) -> 寄存器。带宽依次增加，容量依次减小。</li>
+  </ul>
+
+  <h3>2. 分布式并行策略</h3>
+  <p>由于单张显卡无法容纳超大模型，需要并行策略：</p>
+  <ul>
+    <li><strong>数据并行 (DP/DDP):</strong> 每张卡存一份模型，输入数据不同。通过 All-Reduce 同步梯度。</li>
+    <li><strong>张量并行 (TP):</strong> 将单个线性层的权重切分到多张卡。如 Megatron-LM。</li>
+    <li><strong>流水线并行 (PP):</strong> 将模型的不同层分给不同卡，像流水线一样处理 batch。</li>
+    <li><strong>ZeRO (Zero Redundancy Optimizer):</strong> 切分优化器状态、梯度和参数，极大减少显存冗余。</li>
+  </ul>
+
+  <h3>3. 显存占用分析</h3>
+  <p>训练时的显存占用主要来自：</p>
+  <ul>
+    <li><strong>模型参数:</strong> FP16 为 $2 \times \text{参数量}$ 字节。</li>
+    <li><strong>优化器状态:</strong> Adam 优化器在混合精度训练下，每参数约占 12-16 字节。</li>
+    <li><strong>激活值 (Activations):</strong> 随 batch size 和序列长度线性增加。</li>
+    <li><strong>KV Cache:</strong> 推理时存储 Key 和 Value 张量，随序列长度线性增加。</li>
+  </ul>
+
+  <h3>代码示例：KV Cache 显存估算</h3>
+  <pre><code class="language-python">def estimate_kv_cache_size(batch, seq_len, num_layers, num_heads, head_dim, precision=2):
+    """
+    precision: 2 字节 (FP16/BF16)
+    """
+    # 每层有 K 和 V 两个张量
+    # 每个张量大小: batch * num_heads * seq_len * head_dim
+    bytes_per_layer = 2 * (batch * num_heads * seq_len * head_dim) * precision
+    total_bytes = bytes_per_layer * num_layers
+    return total_bytes / (1024**2)  # 返回 MB
+
+# 示例：Llama-7B, 16位精度, batch=1, seq=1024
+mb = estimate_kv_cache_size(batch=1, seq_len=1024, num_layers=32, num_heads=32, head_dim=128)
+print(f"KV Cache Size: {mb:.2f} MB")
+</code></pre>
+
+  <h3>分布式并行示意图</h3>
+  <div style="text-align: center;">
+    <div class="mermaid">
+graph TD
+    A[大规模模型训练] --> B[数据并行 DP]
+    A --> C[模型并行]
+    C --> C1[张量并行 TP]
+    C --> C2[流水线并行 PP]
+    B --> B1[ZeRO-1/2/3]
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案</h2>
+  <p>概述：训练/推理效率通常受显存与通信限制。理解并行、混合精度与性能指标，才能把模型跑起来且跑得快。</p>
+  <p>工程提示：</p>
+  <ul>
+    <li>做性能分析时区分：计算瓶颈 vs 内存带宽瓶颈 vs 通信瓶颈。</li>
+    <li>混合精度：BF16 通常比 FP16 更抗溢出；FP16 需 loss scaling。</li>
+  </ul>
+  <p>例题与答案：</p>
+  <div class="qa">
+    <div class="q">Q1：为什么 attention 的显存/计算会随序列长度近似二次增长？</div>
+    <div class="a">A1：标准全注意力要计算 QK^T，复杂度与显存约为 O(S^2)。</div>
+  </div>
+  <div class="qa">
+    <div class="q">Q2：推理为什么要区分 prefill 与 decode？</div>
+    <div class="a">A2：prefill 处理整段输入，计算量大；decode 每步只生成 1 个 token，依赖 KV cache，延迟更敏感。</div>
+  </div>
+</div>
+
+    <div class="pager">
+      <a href="kp-0-2-深度学习基础.html"><strong>0.2 深度学习基础</strong></a>
+      <a href="kp-0-4-软件栈常识.html"><strong>0.4 软件栈常识</strong></a>
+    </div>
+    <div class="footer">
+      <div>© 2026 Transformer × LLM 学习站</div>
+    </div>
+  </div>
+</body>
+</html>

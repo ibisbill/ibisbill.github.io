@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5.6 训练监控、调试与故障处理｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 5.6</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>5.6 训练监控、调试与故障处理</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 5</span>
+    <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：LLM 训练失败成本极高。必须建立从数据到数值到系统的监控与快速定位机制。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>监控：loss、学习率、grad norm、吞吐、显存、通信时间。</li>
+</ul>
+<ul>
+<li>异常：loss spike、NaN/Inf、吞吐突降、OOM。</li>
+</ul>
+<ul>
+<li>定位：坏 batch、数据解码错误、并行死锁、硬件 ECC 错误。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>为每次实验保存：代码版本、配置、数据版本、随机种子、环境信息。</li>
+</ul>
+<ul>
+<li>checkpoint 与断点续训策略：频率、保留窗口、验证一致性。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>常见误区：</p>
+<ul>
+<li>只看训练 loss 不看验证与任务评测，导致训练方向偏离目标。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：出现 NaN 的第一批排查项？</div>
+</div>
+<div class="qa">
+<div class="a">A1：学习率/梯度裁剪、混合精度溢出、坏数据（极长样本/异常字符）、softmax/LN 稳定实现。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：吞吐突然下降常见原因？</div>
+</div>
+<div class="qa">
+<div class="a">A2：数据加载瓶颈、通信拥塞、频繁 checkpoint、GPU 频率降档或作业抢占等。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-5-5-内存与算子优化-checkpoint-flashattention-fused.html"><strong>5.5 内存与算子优化（checkpoint/FlashAttention/fused）</strong></a>
+      <a href="kp-5-7-续训-领域继续预训练与长上下文扩展.html"><strong>5.7 续训、领域继续预训练与长上下文扩展</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

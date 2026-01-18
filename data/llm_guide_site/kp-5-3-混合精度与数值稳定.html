@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5.3 混合精度与数值稳定｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 5.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>5.3 混合精度与数值稳定</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 5</span>
+    <span class="pill"><a href="./module-05-预训练工程与技巧.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：混合精度提升吞吐，但会带来溢出/舍入误差。需要掌握 BF16/FP16 的差异与稳定手段。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>BF16：指数位多，抗溢出强；FP16：精度更高但易溢出。</li>
+</ul>
+<ul>
+<li>动态 loss scaling（FP16 常用）。</li>
+</ul>
+<ul>
+<li>关键算子：softmax、layernorm 的稳定实现。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>优先 BF16（若硬件支持）；FP16 必须监控 overflow/NaN。</li>
+</ul>
+<ul>
+<li>日志中记录：grad norm、loss scale、inf/nan 计数。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>认为使用 AMP 就自动安全；实际仍需正确的 loss scaling 与稳定算子。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：FP16 为什么更容易溢出？</div>
+</div>
+<div class="qa">
+<div class="a">A1：指数范围更小，表示不了大数；训练中 logits/梯度可能超范围。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：softmax 为什么要减 max？</div>
+</div>
+<div class="qa">
+<div class="a">A2：避免 exp(大数) 溢出，同时不改变 softmax 结果（等价变换）。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-5-2-优化器与学习率策略.html"><strong>5.2 优化器与学习率策略</strong></a>
+      <a href="kp-5-4-分布式训练并行-dp-tp-pp-zero-fsdp.html"><strong>5.4 分布式训练并行（DP/TP/PP/ZeRO/FSDP）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

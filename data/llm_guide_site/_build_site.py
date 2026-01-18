@@ -373,6 +373,39 @@ out    = probs @ v                                  # (B, H, S, D)
   <li>ALiBi：Press et al., 2021, <a href="https://arxiv.org/abs/2108.12409">Train Short, Test Long</a></li>
 </ul>
 """,
+    "1.2": """
+<h3>Tokenization：BPE / SentencePiece / Byte-level</h3>
+<p class="muted">Tokenizer 决定了“一个 token 是什么”，进而影响长度、成本、以及 PPL 的可比性。</p>
+
+<h3>代码解读要点（读实现时看这些）</h3>
+<ul>
+  <li><b>归一化</b>：NFKC、大小写、空白、特殊符号处理（对中英文混排尤其关键）</li>
+  <li><b>预分词</b>：按空白/标点切分或 byte-level 直接从字节开始</li>
+  <li><b>合并规则</b>：BPE merge table / unigram LM 的概率模型</li>
+  <li><b>特殊 token</b>：BOS/EOS/PAD/UNK，以及对话模板中的 role 标记</li>
+</ul>
+
+<h3>原论文与代码库</h3>
+<ul>
+  <li>BPE：Sennrich et al., 2016 <a href="https://arxiv.org/abs/1508.07909">Neural Machine Translation of Rare Words with Subword Units</a></li>
+  <li>SentencePiece：Kudo & Richardson, 2018 <a href="https://arxiv.org/abs/1808.06226">SentencePiece</a></li>
+  <li>字节级 BPE（GPT-2）：Radford et al., 2019（见 GPT-2 tokenizer 设计）</li>
+  <li>实现：<a href="https://github.com/huggingface/tokenizers">huggingface/tokenizers</a>、<a href="https://github.com/google/sentencepiece">google/sentencepiece</a></li>
+</ul>
+""",
+    "2.2": """
+<h3>Multi-Head Attention（MHA）</h3>
+<p>核心思想：用多个 head 在不同子空间并行做 attention，然后拼接回去。</p>
+<p>$$\\mathrm{head}_i=\\mathrm{Attention}(QW_i^Q,KW_i^K,VW_i^V)$$</p>
+<p>$$\\mathrm{MHA}(Q,K,V)=\\mathrm{Concat}(\\mathrm{head}_1,\\dots,\\mathrm{head}_h)W^O$$</p>
+<p class="muted">实现里常见的张量变换：先线性投影到 (B,S,H*D)，再 reshape/transpose 到 (B,H,S,D)。</p>
+
+<h3>原论文与代码库</h3>
+<ul>
+  <li>论文：Vaswani et al., 2017 <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a></li>
+  <li>代码：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（如 `modeling_llama.py`/`modeling_gpt2.py` 的 attention 投影与 reshape）</li>
+</ul>
+""",
     "7.3": """
 <h3>DPO：直接偏好优化（Direct Preference Optimization）</h3>
 <p>DPO 用“偏好对”直接优化策略模型，避免显式训练 reward model + PPO 的复杂度。一个常见写法是：</p>
@@ -391,6 +424,24 @@ out    = probs @ v                                  # (B, H, S, D)
   <li>论文：Rafailov et al., 2023, <a href="https://arxiv.org/abs/2305.18290">Direct Preference Optimization</a></li>
   <li>代码：<a href="https://github.com/huggingface/trl">huggingface/trl</a>（包含 DPOTrainer 等实现）</li>
   <li>对齐背景：Ouyang et al., 2022, <a href="https://arxiv.org/abs/2203.02155">InstructGPT (RLHF)</a></li>
+</ul>
+""",
+    "7.2": """
+<h3>RLHF 三阶段：SFT → Reward Model → PPO</h3>
+<ul>
+  <li><b>SFT</b>：用高质量指令数据把模型拉到“能听话、能按格式回答”的区域。</li>
+  <li><b>RM</b>：用偏好对训练奖励模型（更偏好 y+、更不偏好 y-）。</li>
+  <li><b>PPO</b>：在 KL 约束下优化策略模型，使其在 RM 上得分更高且不偏离参考模型太远。</li>
+</ul>
+
+<h3>PPO 的一个关键约束（直觉）</h3>
+<p class="muted">实际工程里常见项：$\\beta\\,\\mathrm{KL}(\\pi_\\theta\\,||\\,\\pi_{ref})$，避免策略“跑飞”导致语言质量/稳定性下降。</p>
+
+<h3>原论文与代码库</h3>
+<ul>
+  <li>InstructGPT（RLHF）：Ouyang et al., 2022 <a href="https://arxiv.org/abs/2203.02155">Training language models to follow instructions</a></li>
+  <li>PPO：Schulman et al., 2017 <a href="https://arxiv.org/abs/1707.06347">Proximal Policy Optimization Algorithms</a></li>
+  <li>实现：<a href="https://github.com/huggingface/trl">huggingface/trl</a></li>
 </ul>
 """,
     "8.3": """
@@ -566,9 +617,8 @@ def build():
     module_file[mid] = slug_for_section(mid, modules[mid].title, is_module=True)
   for mid in module_ids:
     for sub in subs_by_module.get(mid, []):
-      # only generate key knowledge pages for complex sections (or all, if you want)
-      if sub.id in extras or int(mid) in (1,2,7,8,9,10,11,12,13):
-        sub_file[sub.id] = slug_for_section(sub.id, sub.title, is_module=False)
+      # Generate one HTML per knowledge point (subsection) to satisfy the “可 reference 到所有知识点”目录诉求。
+      sub_file[sub.id] = slug_for_section(sub.id, sub.title, is_module=False)
 
   # Build index.html
   cards: List[str] = []

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>6.2 SFT 训练策略：全参 vs PEFT（LoRA/QLoRA）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 6.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>6.2 SFT 训练策略：全参 vs PEFT（LoRA/QLoRA）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 6</span>
+    <span class="pill"><a href="./module-06-指令微调-sft-与后训练-post-training.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：SFT</p>
+<p>资源成本低于预训练，但仍需控制过拟合与遗忘。参数高效微调可在有限算力下快速迭代。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>全参微调：效果强但成本高、易遗忘；需小 LR 与稳定 schedule。</li>
+</ul>
+<ul>
+<li>LoRA：在部分线性层插入低秩适配；可合并权重部署。</li>
+</ul>
+<ul>
+<li>QLoRA：4-bit 权重量化 + LoRA，显著降显存。</li>
+</ul>
+<ul>
+<li>层选择：注意力投影/MLP 等模块的取舍。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>PEFT 适合快速试验与多租户定制；最终可视需求做全参收敛。</li>
+</ul>
+<ul>
+<li>避免过拟合：早停、混入少量通用数据、正则与数据增广。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 LoRA rank 设得很大当作“更强”；会增加训练不稳与部署成本。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：LoRA 的核心思想？</div>
+</div>
+<div class="qa">
+<div class="a">A1：冻结原权重 W，仅训练低秩更新 ΔW=AB（rank r），以较小参数实现适配。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：QLoRA 的关键工程收益？</div>
+</div>
+<div class="qa">
+<div class="a">A2：把基座权重以 4-bit 存储并在计算中解量化，显著降低显存，使单卡可微调更大模型。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-6-1-sft-数据-质量-覆盖与模板.html"><strong>6.1 SFT 数据：质量、覆盖与模板</strong></a>
+      <a href="kp-6-3-后训练方向-安全风格-工具格式与领域适配.html"><strong>6.3 后训练方向：安全风格、工具格式与领域适配</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

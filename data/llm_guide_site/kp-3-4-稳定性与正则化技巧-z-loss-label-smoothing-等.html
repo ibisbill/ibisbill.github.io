@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3.4 稳定性与正则化技巧（z-loss/label smoothing 等）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 3.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>3.4 稳定性与正则化技巧（z-loss/label smoothing 等）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 3</span>
+    <span class="pill"><a href="./module-03-语言建模目标与损失.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：大规模训练容易出现 logits 失控、过拟合或不稳定。适当正则与稳定项可显著降低发散风险。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Label smoothing：把 one-hot 变为平滑分布，降低过拟合。</li>
+</ul>
+<ul>
+<li>z-loss/logit regularization：惩罚 logits 过大，帮助数值稳定。</li>
+</ul>
+<ul>
+<li>MoE 的负载均衡损失：避免路由塌缩。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>正则不是越多越好：对齐/对话任务中过强会损害可控性。</li>
+</ul>
+<ul>
+<li>观察信号：logit 范围、梯度范数、NaN/Inf 频率。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 NaN 归因于“模型太大”；很多时候是学习率、混合精度或坏数据。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：Label smoothing 可能带来什么副作用？</div>
+</div>
+<div class="qa">
+<div class="a">A1：可能降低概率校准或影响“尖锐分布”任务（如某些分类/抽取），需评估。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：什么是 logit overflow？如何缓解？</div>
+</div>
+<div class="qa">
+<div class="a">A2：logits 过大导致 softmax 溢出/饱和；可用更稳定实现、z-loss、降低 LR、使用 BF16 等。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-3-3-seq2seq-条件生成损失.html"><strong>3.3 Seq2Seq 条件生成损失</strong></a>
+      <a href="module-04-数据与语料.html"><strong>4 数据与语料</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>
