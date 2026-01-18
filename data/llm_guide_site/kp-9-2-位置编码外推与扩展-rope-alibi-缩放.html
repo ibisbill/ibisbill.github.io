@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>9.2 位置编码外推与扩展（RoPE/ALiBi/缩放）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 9.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>9.2 位置编码外推与扩展（RoPE/ALiBi/缩放）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 9</span>
+    <span class="pill"><a href="./module-09-长上下文与记忆机制.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：要让模型在训练长度之外工作，需要位置编码外推策略并配合长序列继续训练。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>RoPE：旋转位置编码；外推常用缩放/插值策略。</li>
+</ul>
+<ul>
+<li>ALiBi：用线性偏置实现距离衰减，外推较自然。</li>
+</ul>
+<ul>
+<li>关键：只改位置编码不续训，效果通常有限。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>扩展后做回归：短序列能力、对齐、安全都可能漂移。</li>
+</ul>
+<ul>
+<li>长序列数据要包含：跨段推理、检索、引用与一致性任务。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>在不变训练数据的情况下强行外推到很长，导致输出幻觉与引用混乱。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么 RoPE 外推会出问题？</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="a">A1：训练只见过有限长度的相位分布，超出范围的相位组合在模型参数中未充分学习。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：位置插值/缩放的目标？</div>
+</div>
+<div class="qa">
+<div class="a">A2：把更长的实际位置映射到训练见过的相位范围内，减少分布漂移。</div>
+</div>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>RoPE：旋转位置编码（Rotary Position Embedding）</h3>
+<p>RoPE 的核心是把每个 head 的向量按维度成对分组，在复平面上做位置相关旋转，从而把“相对位置”融入 dot-product。</p>
+<p class="muted">工程上你通常会在实现里看到：对 q/k 做 rotate-half、按频率表 cos/sin 做融合（LLaMA 等）。</p>
+
+<h3>扩展/外推：为什么要做 RoPE scaling？</h3>
+<p>训练时上下文长度有限，测试时拉长会导致频率分布与相位偏移失配；所以会出现各种 scaling / interpolation / yarn 类技巧来改善长上下文外推。</p>
+
+<h3>原论文与代码库</h3>
+<ul>
+  <li>RoPE：Su et al., 2021 <a href="https://arxiv.org/abs/2104.09864">RoFormer</a></li>
+  <li>ALiBi：Press et al., 2021 <a href="https://arxiv.org/abs/2108.12409">Train Short, Test Long</a></li>
+  <li>参考实现：<a href="https://github.com/meta-llama/llama">meta-llama/llama</a>、<a href="https://github.com/huggingface/transformers">huggingface/transformers</a></li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="kp-9-1-长上下文瓶颈-o-s-2-与-lost-in-the-middle.html"><strong>9.1 长上下文瓶颈：O(S^2) 与 lost-in-the-middle</strong></a>
+      <a href="kp-9-3-高效注意力-局部-稀疏-分块与线性注意力.html"><strong>9.3 高效注意力：局部/稀疏/分块与线性注意力</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

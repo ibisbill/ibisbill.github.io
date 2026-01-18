@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10.5 Agent 评测与可观测性（trace/回归）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 10.5</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>10.5 Agent 评测与可观测性（trace/回归）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 10</span>
+    <span class="pill"><a href="./module-10-工具调用与-agent.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：Agent 的质量不能只看最终答案，需要评估轨迹、工具调用成本与失败模式。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>指标：任务完成率、平均步数、工具调用次数/成本、P95 延迟。</li>
+</ul>
+<ul>
+<li>可观测性：trace（每一步输入/输出/工具结果）、错误分类。</li>
+</ul>
+<ul>
+<li>回归：工具升级、模型升级、知识库更新都要跑评测。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>为关键任务建立“金标准轨迹”或可验证结果（tests）。</li>
+</ul>
+<ul>
+<li>把失败样本沉淀为训练数据或规则修复。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>只做人工 spot-check；上线后问题难复现且无法定位。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么需要 trace？</div>
+</div>
+<div class="qa">
+<div class="a">A1：它能定位失败发生在哪一步（检索、解析、调用、推理），并支持复盘与改进。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：Agent 的线上指标为何重要？</div>
+</div>
+<div class="qa">
+<div class="a">A2：离线评测无法覆盖真实分布与工具故障；线上指标能及时发现回归与风险。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-10-4-安全-prompt-injection-最小权限与沙箱.html"><strong>10.4 安全：Prompt Injection、最小权限与沙箱</strong></a>
+      <a href="module-11-模型压缩与部署.html"><strong>11 模型压缩与部署</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

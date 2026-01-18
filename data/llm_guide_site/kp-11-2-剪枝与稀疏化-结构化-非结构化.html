@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>11.2 剪枝与稀疏化（结构化/非结构化）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 11.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>11.2 剪枝与稀疏化（结构化/非结构化）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 11</span>
+    <span class="pill"><a href="./module-11-模型压缩与部署.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：剪枝通过移除冗余参数降低计算，但只有在结构与内核支持下才能转化为真实加速。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>非结构化稀疏：随机权重置零，需专用内核/硬件支持。</li>
+</ul>
+<ul>
+<li>结构化剪枝：剪通道/剪头/剪层，更易获得实际速度提升。</li>
+</ul>
+<ul>
+<li>注意力头剪枝：常用于分析与轻量化。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>剪枝后通常需要再训练/蒸馏恢复质量。</li>
+</ul>
+<ul>
+<li>先从结构化剪枝入手更容易落地。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把稀疏率当作速度提升的线性指标；实际受内核与访存限制。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么非结构化稀疏不一定加速？</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="a">A1：如果硬件/内核不能利用稀疏结构，仍会按密集矩阵计算。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：结构化剪枝的优势？</div>
+</div>
+<div class="qa">
+<div class="a">A2：改变张量形状，能直接减少矩阵乘法规模，更容易获得真实加速。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-11-1-量化-ptq-qat-kv-量化.html"><strong>11.1 量化（PTQ/QAT/KV 量化）</strong></a>
+      <a href="kp-11-3-蒸馏-logits-序列级-偏好蒸馏.html"><strong>11.3 蒸馏（logits/序列级/偏好蒸馏）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

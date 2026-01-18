@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>9.4 记忆机制：RAG、摘要记忆与 KV 压缩｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 9.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>9.4 记忆机制：RAG、摘要记忆与 KV 压缩</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 9</span>
+    <span class="pill"><a href="./module-09-长上下文与记忆机制.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：超出上下文窗口的“记忆”通常靠外部存储（检索）或压缩（摘要/结构化）。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>RAG：chunking、embedding、向量检索、重排序、引用。</li>
+</ul>
+<ul>
+<li>摘要记忆：把对话历史压缩为要点，降低 token 成本。</li>
+</ul>
+<ul>
+<li>结构化记忆：事件/偏好/事实的表结构存储，便于检索与更新。</li>
+</ul>
+<ul>
+<li>KV 压缩：合并 token、重要性采样等。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>RAG 关键在：切分粒度、召回率与精确率、rerank、引用一致性。</li>
+</ul>
+<ul>
+<li>记忆要有权限与隐私策略：可撤回、可审计、最小化。</li>
+</ul>
+<p>常见误区：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<ul>
+<li>把 RAG 当作“自动消除幻觉”；检索质量差会放大错误。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：RAG 的两阶段检索常见组成？</div>
+</div>
+<div class="qa">
+<div class="a">A1：向量召回（高召回）+ rerank（高精确），再把最相关片段拼入上下文。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：摘要记忆的风险？</div>
+</div>
+<div class="qa">
+<div class="a">A2：摘要可能丢关键信息或引入错误，且错误会被反复放大；需可追溯与必要时回看原文。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-9-3-高效注意力-局部-稀疏-分块与线性注意力.html"><strong>9.3 高效注意力：局部/稀疏/分块与线性注意力</strong></a>
+      <a href="kp-9-5-长上下文评测-needle-多跳与引用准确性.html"><strong>9.5 长上下文评测：needle、多跳与引用准确性</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1.3 表示学习（Embedding 与位置编码）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 1.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>1.3 表示学习（Embedding 与位置编码）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 1</span>
+    <span class="pill"><a href="./module-01-nlp-llm-表示与-tokenization.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：LLM 通过嵌入把离散 token</p>
+<p>转为连续向量，再叠加位置/段落信息。位置编码决定模型如何理解顺序与距离。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Token embedding 与 weight tying（输入 embedding 与输出 softmax 权重共享）。</li>
+</ul>
+<ul>
+<li>绝对位置（learned/sinusoidal）与相对位置（bias）。</li>
+</ul>
+<ul>
+<li>RoPE/ALiBi：现代 decoder-only LLM 常用的位置方案与外推性质。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>RoPE 外推需要配合长序列训练或缩放；只改公式不训往往不够。</li>
+</ul>
+<ul>
+<li>注意 mask：causal/padding/prefix-LM 在训练与推理必须一致。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把位置编码当作“可随意替换的插件”；不同方案会影响已学到的分布与能力。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：什么是 weight tying？常见收益是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A1：输入 embedding 与输出层权重共享，减少参数并常带来轻微泛化收益。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：causal mask 的作用是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A2：保证位置 t 的预测只依赖 &lt;t 的 token，防止“偷看未来”。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>正弦位置编码（Sinusoidal PE）</h3>
+<p>原 Transformer 使用固定位置编码：</p>
+<p>$$PE(pos,2i)=\sin\left(\frac{pos}{10000^{2i/d_{model}}}\right),\quad PE(pos,2i+1)=\cos\left(\frac{pos}{10000^{2i/d_{model}}}\right)$$</p>
+<p class="muted">直觉：不同频率的正弦/余弦提供“可外推”的相对位置信息；线性组合可近似位移。</p>
+
+<div class="demo" data-demo="posenc">
+  <h3>交互 Demo：生成并可视化某个位置的 PE</h3>
+  <div class="row">
+    <div class="col">
+      <label>pos</label>
+      <input data-role="pos" />
+    </div>
+    <div class="col">
+      <label>d_model</label>
+      <input data-role="dim" />
+    </div>
+  </div>
+  <div class="row">
+    <button class="btn primary" data-action="run">生成</button>
+  </div>
+  <canvas width="920" height="220" style="width:100%;margin-top:10px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18)"></canvas>
+  <div class="out" data-role="OUT"></div>
+</div>
+
+<h3>扩展阅读：RoPE/ALiBi</h3>
+<ul>
+  <li>RoPE：Su et al., 2021, <a href="https://arxiv.org/abs/2104.09864">RoFormer</a></li>
+  <li>ALiBi：Press et al., 2021, <a href="https://arxiv.org/abs/2108.12409">Train Short, Test Long</a></li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="kp-1-2-tokenization-子词-字节级.html"><strong>1.2 Tokenization（子词/字节级）</strong></a>
+      <a href="module-02-transformer-核心结构.html"><strong>2 Transformer 核心结构</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

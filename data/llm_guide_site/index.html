@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>目录｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">目录与模块导航</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="active">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>Transformer 与 LLM：交互式学习手册（站点版）</h1>
+  <p>按模块拆分（0–13）。每页包含手册原文要点/例题与答案，并对关键算法补充公式、代码逐段解读、以及原论文与典型代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">MathJax 公式</span>
+    <span class="pill">代码高亮</span>
+    <span class="pill">Attention/PE 等可交互 Demo</span>
+    <span class="pill">论文 & Codebase 回链</span>
+  </div>
+</div>
+
+<div class="grid">
+  
+<div class="card">
+  <h2><a href="./module-00-预备基础.html">0 预备基础</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  
+</div>
+
+<div class="card">
+  <h2><a href="./module-01-nlp-llm-表示与-tokenization.html">1 NLP/LLM 表示与 Tokenization</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-1-1-文本规范化与预处理.html">1.1 文本规范化与预处理</a></li><li><a href="./kp-1-2-tokenization-子词-字节级.html">1.2 Tokenization（子词/字节级）</a></li><li><a href="./kp-1-3-表示学习-embedding-与位置编码.html">1.3 表示学习（Embedding 与位置编码）</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-02-transformer-核心结构.html">2 Transformer 核心结构</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-2-1-scaled-dot-product-attention.html">2.1 Scaled Dot-Product Attention</a></li><li><a href="./kp-2-2-multi-head-attention-多头.html">2.2 Multi-Head Attention（多头）</a></li><li><a href="./kp-2-3-前馈网络-mlp-ffn.html">2.3 前馈网络（MLP/FFN）</a></li><li><a href="./kp-2-4-残差-归一化与结构变体.html">2.4 残差、归一化与结构变体</a></li><li><a href="./kp-2-5-transformer-形态-encoder-decoder-seq2seq.html">2.5 Transformer 形态：Encoder/Decoder/Seq2Seq</a></li><li><a href="./kp-2-6-参数效率与结构演进-kv-gqa-moe-flashattention.html">2.6 参数效率与结构演进（KV/GQA/MoE/FlashAttention）</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-03-语言建模目标与损失.html">3 语言建模目标与损失</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-3-1-自回归语言建模-causal-lm.html">3.1 自回归语言建模（Causal LM）</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-04-数据与语料.html">4 数据与语料</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  
+</div>
+
+<div class="card">
+  <h2><a href="./module-05-预训练工程与技巧.html">5 预训练工程与技巧</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  
+</div>
+
+<div class="card">
+  <h2><a href="./module-06-指令微调-sft-与后训练-post-training.html">6 指令微调（SFT）与后训练（Post-training）</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  
+</div>
+
+<div class="card">
+  <h2><a href="./module-07-对齐-alignment-rlhf-dpo-rlvr-等.html">7 对齐（Alignment）：RLHF / DPO / RLVR 等</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-7-1-对齐的目标与约束-helpful-harmless-honest.html">7.1 对齐的目标与约束（Helpful/Harmless/Honest）</a></li><li><a href="./kp-7-2-rlhf-三阶段与-ppo-关键点.html">7.2 RLHF：三阶段与 PPO 关键点</a></li><li><a href="./kp-7-3-dpo-直接偏好优化.html">7.3 DPO：直接偏好优化</a></li><li><a href="./kp-7-4-rlvr-可验证奖励的强化学习.html">7.4 RLVR：可验证奖励的强化学习</a></li><li><a href="./kp-7-5-rlaif-constitutional-ai-模型辅助对齐.html">7.5 RLAIF / Constitutional AI（模型辅助对齐）</a></li><li><a href="./kp-7-6-对齐评测与红队-jailbreak-injection-over-refusal.html">7.6 对齐评测与红队（Jailbreak/Injection/Over-refusal）</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-08-推理-inference-与解码-decoding.html">8 推理（Inference）与解码（Decoding）</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-8-1-prefill-vs-decode-推理阶段拆分.html">8.1 Prefill vs Decode：推理阶段拆分</a></li><li><a href="./kp-8-2-kv-cache-机制-显存与优化.html">8.2 KV Cache：机制、显存与优化</a></li><li><a href="./kp-8-3-解码策略-greedy-beam-sampling.html">8.3 解码策略：Greedy/Beam/Sampling</a></li><li><a href="./kp-8-4-约束解码与结构化输出-json-schema-grammar.html">8.4 约束解码与结构化输出（JSON/schema/grammar）</a></li><li><a href="./kp-8-5-推理服务工程-批处理-流式与推测解码.html">8.5 推理服务工程：批处理、流式与推测解码</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-09-长上下文与记忆机制.html">9 长上下文与记忆机制</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-9-1-长上下文瓶颈-o-s-2-与-lost-in-the-middle.html">9.1 长上下文瓶颈：O(S^2) 与 lost-in-the-middle</a></li><li><a href="./kp-9-2-位置编码外推与扩展-rope-alibi-缩放.html">9.2 位置编码外推与扩展（RoPE/ALiBi/缩放）</a></li><li><a href="./kp-9-3-高效注意力-局部-稀疏-分块与线性注意力.html">9.3 高效注意力：局部/稀疏/分块与线性注意力</a></li><li><a href="./kp-9-4-记忆机制-rag-摘要记忆与-kv-压缩.html">9.4 记忆机制：RAG、摘要记忆与 KV 压缩</a></li><li><a href="./kp-9-5-长上下文评测-needle-多跳与引用准确性.html">9.5 长上下文评测：needle、多跳与引用准确性</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-10-工具调用与-agent.html">10 工具调用与 Agent</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-10-1-工具-函数调用基础-schema-与选择策略.html">10.1 工具/函数调用基础（schema 与选择策略）</a></li><li><a href="./kp-10-2-agent-范式-react-与-plan-and-execute.html">10.2 Agent 范式：ReAct 与 Plan-and-Execute</a></li><li><a href="./kp-10-3-agent-关键组件-planner-memory-executor-critic.html">10.3 Agent 关键组件：Planner/Memory/Executor/Critic</a></li><li><a href="./kp-10-4-安全-prompt-injection-最小权限与沙箱.html">10.4 安全：Prompt Injection、最小权限与沙箱</a></li><li><a href="./kp-10-5-agent-评测与可观测性-trace-回归.html">10.5 Agent 评测与可观测性（trace/回归）</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-11-模型压缩与部署.html">11 模型压缩与部署</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-11-1-量化-ptq-qat-kv-量化.html">11.1 量化（PTQ/QAT/KV 量化）</a></li><li><a href="./kp-11-2-剪枝与稀疏化-结构化-非结构化.html">11.2 剪枝与稀疏化（结构化/非结构化）</a></li><li><a href="./kp-11-3-蒸馏-logits-序列级-偏好蒸馏.html">11.3 蒸馏（logits/序列级/偏好蒸馏）</a></li><li><a href="./kp-11-4-部署与服务化-并发-监控-灰度与安全.html">11.4 部署与服务化：并发、监控、灰度与安全</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-12-评测与可靠性.html">12 评测与可靠性</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-12-1-能力评测维度与基准设计.html">12.1 能力评测维度与基准设计</a></li><li><a href="./kp-12-2-离线与在线指标-质量-成本-稳定性.html">12.2 离线与在线指标（质量、成本、稳定性）</a></li><li><a href="./kp-12-3-幻觉-hallucination-与事实性.html">12.3 幻觉（Hallucination）与事实性</a></li><li><a href="./kp-12-4-安全-偏见与隐私评测.html">12.4 安全、偏见与隐私评测</a></li></ul>
+</div>
+
+<div class="card">
+  <h2><a href="./module-13-可解释性与分析.html">13 可解释性与分析</a></h2>
+  <p class="muted">来自手册的要点 + 例题答案，并补充公式/论文/代码解读与交互 Demo（关键主题）。</p>
+  <ul><li><a href="./kp-13-1-黑盒分析-敏感性-校准与失效模式.html">13.1 黑盒分析：敏感性、校准与失效模式</a></li><li><a href="./kp-13-2-白盒分析-attention-probe-logit-lens.html">13.2 白盒分析：Attention/Probe/Logit lens</a></li><li><a href="./kp-13-3-机制可解释性-因果追踪与特征分解-sae.html">13.3 机制可解释性：因果追踪与特征分解（SAE）</a></li><li><a href="./kp-13-4-训练数据记忆-隐私与-unlearning.html">13.4 训练数据记忆、隐私与 unlearning</a></li><li><a href="./kp-13-5-对齐与安全的可解释性-拒答触发与对齐税.html">13.5 对齐与安全的可解释性：拒答触发与对齐税</a></li></ul>
+</div>
+
+</div>
+
+<div class="section">
+  <h2>怎么用这套站点学习</h2>
+  <ul>
+    <li>先看 <b>模块页</b> 抓主线，再点进 <b>知识点页</b> 做公式与交互练习。</li>
+    <li>读到算法时，优先对照 “原论文与代码库” 小节，建立 <b>公式 → 代码 → 工程约束</b> 的映射。</li>
+    <li>遇到概念不稳，回到模块页的 “例题与答案” 做自测。</li>
+  </ul>
+</div>
+
+    <div class="pager">
+      <span style="flex:1"></span>
+      <span style="flex:1"></span>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

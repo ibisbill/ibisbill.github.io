@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>13.4 训练数据记忆、隐私与 unlearning｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 13.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>13.4 训练数据记忆、隐私与 unlearning</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 13</span>
+    <span class="pill"><a href="./module-13-可解释性与分析.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：模型可能记住训练语料中的稀有片段。需要评估记忆风险并在必要时做遗忘（unlearning）或数</p>
+<p>据治理。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>记忆检测：重复生成测试、相似度匹配、成员推断评估。</li>
+</ul>
+<ul>
+<li>隐私保护：PII 清洗、最小化日志、访问控制。</li>
+</ul>
+<ul>
+<li>Unlearning：针对特定数据/概念减弱记忆（实现复杂且可能伤害能力）。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>优先从数据治理解决：源头减少敏感语料比事后 unlearning 更可靠。</li>
+</ul>
+<ul>
+<li>对外部引用要合规，避免复现受版权保护文本。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>用简单“黑名单词”当作隐私方案；无法覆盖变体与上下文。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么 unlearning 很难？</div>
+</div>
+<div class="qa">
+<div class="a">A1：参数共享导致知识纠缠，删除某段记忆可能影响相关能力；且难以验证完全遗忘。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：降低记忆风险的首要手段？</div>
+</div>
+<div class="qa">
+<div class="a">A2：训练前数据去重与 PII 清理，以及对敏感域设置严格过滤与审计。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-13-3-机制可解释性-因果追踪与特征分解-sae.html"><strong>13.3 机制可解释性：因果追踪与特征分解（SAE）</strong></a>
+      <a href="kp-13-5-对齐与安全的可解释性-拒答触发与对齐税.html"><strong>13.5 对齐与安全的可解释性：拒答触发与对齐税</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

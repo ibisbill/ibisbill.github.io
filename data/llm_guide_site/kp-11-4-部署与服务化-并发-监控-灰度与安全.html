@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>11.4 部署与服务化：并发、监控、灰度与安全｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 11.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>11.4 部署与服务化：并发、监控、灰度与安全</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 11</span>
+    <span class="pill"><a href="./module-11-模型压缩与部署.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：部署不仅是把模型跑起来，更要保证可用性、稳定性、成本与合规。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>加载与分片：权重 sharding、并行推理。</li>
+</ul>
+<ul>
+<li>服务指标：QPS、P50/P95、TTFT、tokens/s、OOM、错误率。</li>
+</ul>
+<ul>
+<li>灰度发布：AB、回滚；审计与日志脱敏。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>把评测纳入 CI：每次模型/引擎升级都自动跑回归。</li>
+</ul>
+<ul>
+<li>生产必须有限流与配额，防止雪崩。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>没有监控就上线；问题发生时无法定位是模型、数据还是系统。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么需要灰度发布？</div>
+</div>
+<div class="qa">
+<div class="a">A1：新版本可能引入质量或安全回归；灰度可限制影响范围并支持快速回滚。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：日志为何必须脱敏？</div>
+</div>
+<div class="qa">
+<div class="a">A2：日志可能包含用户隐私与敏感信息；脱敏与最小化存储是合规与安全要求。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-11-3-蒸馏-logits-序列级-偏好蒸馏.html"><strong>11.3 蒸馏（logits/序列级/偏好蒸馏）</strong></a>
+      <a href="module-12-评测与可靠性.html"><strong>12 评测与可靠性</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

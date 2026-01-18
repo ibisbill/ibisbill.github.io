@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2.6 参数效率与结构演进（KV/GQA/MoE/FlashAttention）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 2.6</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="active">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>2.6 参数效率与结构演进（KV/GQA/MoE/FlashAttention）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 2</span>
+    <span class="pill"><a href="./module-02-transformer-核心结构.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：现代 LLM 在不改变基本 Transformer 思路下，通过注意力实现与稀疏/共享策略获得更高效率。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>KV cache：推理阶段缓存历史 K/V，避免重复计算。</li>
+</ul>
+<ul>
+<li>GQA/MQA：减少 K/V 头数，降低 KV cache 成本。</li>
+</ul>
+<ul>
+<li>FlashAttention：分块计算减少中间张量与 IO。</li>
+</ul>
+<ul>
+<li>MoE：稀疏激活专家网络，提升参数规模而控制计算。</li>
+</ul>
+<p>工程提示：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<ul>
+<li>MoE 关键：router 负载均衡、通信（all-to-all）、专家并行。</li>
+</ul>
+<ul>
+<li>FlashAttention/GQA 会改变性能瓶颈分布，需要整体 profiling。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 MoE 当作“无成本变大模型”；实际上训练复杂、路由不稳会明显降质。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：KV cache 为什么能显著降低 decode 阶段复杂度？</div>
+</div>
+<div class="qa">
+<div class="a">A1：decode 时只需为新 token 计算 Q，并与缓存 K/V 做注意力；无需重复生成历史 K/V。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：MoE 的主要风险是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A2：路由崩塌（只用少数专家）、负载不均导致通信与显存问题，以及训练不稳定。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>结构演进速览：MHA → MQA/GQA、FlashAttention、MoE</h3>
+<ul>
+  <li><b>MQA/GQA</b>：减少 K/V 的 head 数（共享/分组），降低 KV cache 显存与带宽压力。</li>
+  <li><b>FlashAttention</b>：通过分块与 IO-aware 的实现，把注意力计算做成更少显存读写、更快的 kernel。</li>
+  <li><b>MoE</b>：用路由器选择少量专家前馈网络，提升参数规模而控制计算量。</li>
+</ul>
+
+<h3>原论文与典型代码库</h3>
+<ul>
+  <li>FlashAttention：Dao et al., 2022 <a href="https://arxiv.org/abs/2205.14135">FlashAttention</a>；代码：<a href="https://github.com/Dao-AILab/flash-attention">Dao-AILab/flash-attention</a></li>
+  <li>MQA：Shazeer, 2019 <a href="https://arxiv.org/abs/1911.02150">Fast Transformer Decoding</a></li>
+  <li>GQA：Ainslie et al., 2023 <a href="https://arxiv.org/abs/2305.13245">GQA</a></li>
+  <li>MoE：Fedus et al., 2021 <a href="https://arxiv.org/abs/2101.03961">Switch Transformers</a></li>
+  <li>工程实现：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（GQA/RoPE/MoE 等多种变体）</li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="kp-2-5-transformer-形态-encoder-decoder-seq2seq.html"><strong>2.5 Transformer 形态：Encoder/Decoder/Seq2Seq</strong></a>
+      <a href="module-03-语言建模目标与损失.html"><strong>3 语言建模目标与损失</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

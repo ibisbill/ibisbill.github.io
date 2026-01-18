@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>7.5 RLAIF / Constitutional AI（模型辅助对齐）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 7.5</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="active">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>7.5 RLAIF / Constitutional AI（模型辅助对齐）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 7</span>
+    <span class="pill"><a href="./module-07-对齐-alignment-rlhf-dpo-rlvr-等.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：通过 AI 生成偏好数据、批注或基于“宪法规则”自我批评，降低人力标注成本并提高一致性。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>RLAIF：用强模型或规则产生偏好/评分。</li>
+</ul>
+<ul>
+<li>Constitutional AI：基于规则集进行自我批评与修订。</li>
+</ul>
+<ul>
+<li>风险：偏差自举、回音室效应、规则覆盖不足。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>对 AI 标注必须做抽样人工校验与对抗测试。</li>
+</ul>
+<ul>
+<li>规则要可操作、可审计，并与产品政策一致。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 AI 生成的偏好当作“真理”，忽视其系统性偏差。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：RLAIF 的主要优点？</div>
+</div>
+<div class="qa">
+<div class="a">A1：可规模化生成偏好数据，降低成本，并可能保持标注一致性。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：Constitutional 方法的关键前提？</div>
+</div>
+<div class="qa">
+<div class="a">A2：规则（宪法）要清晰、可执行，并能覆盖关键风险场景。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-7-4-rlvr-可验证奖励的强化学习.html"><strong>7.4 RLVR：可验证奖励的强化学习</strong></a>
+      <a href="kp-7-6-对齐评测与红队-jailbreak-injection-over-refusal.html"><strong>7.6 对齐评测与红队（Jailbreak/Injection/Over-refusal）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

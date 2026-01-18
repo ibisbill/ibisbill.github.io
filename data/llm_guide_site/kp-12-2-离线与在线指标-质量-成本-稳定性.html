@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>12.2 离线与在线指标（质量、成本、稳定性）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 12.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>12.2 离线与在线指标（质量、成本、稳定性）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 12</span>
+    <span class="pill"><a href="./module-12-评测与可靠性.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：离线指标适合迭代与对比，在线指标反映真实用户分布。两者都不可缺。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>离线：准确率、pass@k、人工评审；对话可用偏好对比。</li>
+</ul>
+<ul>
+<li>在线：会话成功率、升级人工率、拒答率、用户满意度。</li>
+</ul>
+<ul>
+<li>系统：延迟、吞吐、成本、错误率。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>用 guardrail 监控安全事件与敏感输出率。</li>
+</ul>
+<ul>
+<li>把评测与监控自动化，形成闭环。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>只做离线评测；上线后分布漂移导致质量与风险失控。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么在线指标可能与离线不一致？</div>
+</div>
+<div class="qa">
+<div class="a">A1：用户分布、提示方式、工具故障与系统延迟等因素离线难以复现。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：如何监控模型回归？</div>
+</div>
+<div class="qa">
+<div class="a">A2：固定回归集 + 线上 A/B + 关键指标报警（拒答率、错误率、敏感输出）。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-12-1-能力评测维度与基准设计.html"><strong>12.1 能力评测维度与基准设计</strong></a>
+      <a href="kp-12-3-幻觉-hallucination-与事实性.html"><strong>12.3 幻觉（Hallucination）与事实性</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

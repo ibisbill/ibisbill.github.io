@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2.1 Scaled Dot-Product Attention｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 2.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="active">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>2.1 Scaled Dot-Product Attention</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 2</span>
+    <span class="pill"><a href="./module-02-transformer-核心结构.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：注意力是 Transformer 的核心算子：用 Query 去“查询” Key，并对 Value 做加权汇总。缩放与</p>
+<p>mask 主要为稳定性与因果约束服务。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>基本公式：Attn(Q,K,V)=softmax(QK^T/sqrt(d_k)+mask) V。</li>
+</ul>
+<ul>
+<li>缩放 sqrt(d_k)：避免点积随维度增大导致 softmax 饱和。</li>
+</ul>
+<ul>
+<li>mask：padding mask 与 causal mask；实现中注意广播与 dtype。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>数值稳定：softmax 计算时减去行最大值；FP16 下更关键。</li>
+</ul>
+<ul>
+<li>训练/推理注意 mask 一致，否则会出现“训练时能看未来”的泄露。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 attention 权重当作解释因果关系的唯一证据（注意力不是解释）。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么要除以 sqrt(d_k)？</div>
+</div>
+<div class="qa">
+<div class="a">A1：不缩放时点积方差随 d_k 增大，softmax 更容易饱和，梯度变小，训练不稳定。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：若使用 causal mask，位置 t 可以关注哪些位置？</div>
+</div>
+<div class="qa">
+<div class="a">A2：只能关注 0..t 的历史位置（含自身），不能关注 &gt;t 的未来 token。</div>
+</div>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>核心公式：Scaled Dot-Product Attention</h3>
+<p>给定 $Q \in \mathbb{R}^{S\times d_k}$、$K \in \mathbb{R}^{S\times d_k}$、$V \in \mathbb{R}^{S\times d_v}$：</p>
+<p>$$\mathrm{Attention}(Q,K,V)=\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$</p>
+<p class="muted">关键点：$\sqrt{d_k}$ 缩放用于控制 dot-product 的方差，避免 softmax 在训练初期过度饱和。</p>
+
+<div class="demo" data-demo="attention">
+  <h3>交互 Demo：手算 Attention（含中间矩阵）</h3>
+  <div class="row">
+    <div class="col">
+      <label>Q（JSON 2D 数组，形状 S×d_k）</label>
+      <textarea data-role="Q"></textarea>
+    </div>
+    <div class="col">
+      <label>K（JSON 2D 数组，形状 S×d_k）</label>
+      <textarea data-role="K"></textarea>
+    </div>
+    <div class="col">
+      <label>V（JSON 2D 数组，形状 S×d_v）</label>
+      <textarea data-role="V"></textarea>
+    </div>
+  </div>
+  <div class="row">
+    <button class="btn primary" data-action="run">运行：计算 Scores/Probs/Out</button>
+    <button class="btn" data-action="reset">重置示例</button>
+  </div>
+  <div class="out" data-role="OUT"></div>
+</div>
+
+<h3>代码解读（PyTorch 形状视角）</h3>
+<div class="codeblock">
+  <div class="codehdr"><span>伪代码（接近 PyTorch 实现）</span><span class="kbd">B=batch, S=seq, H=heads, D=head_dim</span></div>
+  <pre><code class="language-python"># q,k,v: (B, H, S, D)
+scores = (q @ k.transpose(-2, -1)) / math.sqrt(D)   # (B, H, S, S)
+probs  = scores.softmax(dim=-1)                     # (B, H, S, S)
+out    = probs @ v                                  # (B, H, S, D)
+</code></pre>
+</div>
+
+<h3>原论文与典型代码库</h3>
+<ul>
+  <li>论文：Vaswani et al., 2017, <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a></li>
+  <li>代码（参考实现）：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（多模型 attention 实现）</li>
+  <li>代码（极简教学）：<a href="https://github.com/karpathy/nanoGPT">karpathy/nanoGPT</a></li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="module-02-transformer-核心结构.html"><strong>2 Transformer 核心结构</strong></a>
+      <a href="kp-2-2-multi-head-attention-多头.html"><strong>2.2 Multi-Head Attention（多头）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

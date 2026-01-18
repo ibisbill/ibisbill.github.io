@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>8.2 KV Cache：机制、显存与优化｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 8.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="active">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>8.2 KV Cache：机制、显存与优化</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 8</span>
+    <span class="pill"><a href="./module-08-推理-inference-与解码-decoding.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：KV cache 缓存每层历史 K/V，使 decode 阶段避免重复计算。它也是推理显存的主要来源之一。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>缓存维度约为：layers × (K,V) × batch × heads × seq_len × head_dim。</li>
+</ul>
+<ul>
+<li>GQA/MQA：减少 KV 头数；KV quantization：降低 cache 精度。</li>
+</ul>
+<ul>
+<li>Paged KV 管理：减少碎片，支持连续批处理。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>在高并发服务中，KV 管理策略决定能否稳定不 OOM。</li>
+</ul>
+<ul>
+<li>多轮对话可复用前缀 KV（prompt cache），但要考虑个性化与安全隔离。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>忽视 KV cache 的增长，导致长上下文或高并发下频繁 OOM。</li>
+</ul>
+<p>例题与答案：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="q">Q1：KV cache 为什么随 seq_len 线性增长？</div>
+</div>
+<div class="qa">
+<div class="a">A1：每增加 1 个 token，就要为每层存一份 K/V 向量，因此是 O(S)。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：GQA/MQA 对质量可能的影响？</div>
+</div>
+<div class="qa">
+<div class="a">A2：减少 KV 头数可能降低表示能力；需要在速度/显存与质量之间做实验权衡。</div>
+</div>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>KV Cache：为什么能加速 Decode？</h3>
+<p>在 decode 阶段，每次只生成 1 个新 token。若不缓存，每步都要对整段历史重新计算 K/V；KV cache 把历史 token 的 K/V 保留下来，使得每步只需计算新 token 的 K/V 并与历史做注意力。</p>
+
+<h3>显存估算（近似）</h3>
+<p>对 decoder-only：每层缓存 K 与 V，形状近似为 $(B, H, S, D)$。若用 FP16/BF16（2 bytes）：</p>
+<p>$$\mathrm{KV\_bytes}\approx 2\,(K+V)\times B\times L\times H\times S\times D\times bytes$$</p>
+<p class="muted">这也是长上下文推理最“吃显存”的来源之一。</p>
+
+<div class="demo" data-demo="kvcalc">
+  <h3>交互 Demo：KV Cache 显存计算器</h3>
+  <div class="row">
+    <div class="col"><label>Batch B</label><input data-role="B" value="1" /></div>
+    <div class="col"><label>Layers L</label><input data-role="L" value="32" /></div>
+    <div class="col"><label>Heads H</label><input data-role="H" value="32" /></div>
+    <div class="col"><label>Head dim D</label><input data-role="D" value="128" /></div>
+    <div class="col"><label>Seq len S</label><input data-role="S" value="4096" /></div>
+    <div class="col"><label>dtype bytes（FP16=2, FP8=1）</label><input data-role="bytes" value="2" /></div>
+  </div>
+  <div class="row">
+    <button class="btn primary" data-action="run">计算</button>
+  </div>
+  <div class="out" data-role="OUT"></div>
+</div>
+
+<h3>原论文与代码库</h3>
+<ul>
+  <li>KV cache 的系统化实现可参考：<a href="https://github.com/vllm-project/vllm">vLLM</a>（PagedAttention 等）</li>
+  <li>推理与服务工程：<a href="https://github.com/huggingface/text-generation-inference">huggingface/text-generation-inference</a></li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="kp-8-1-prefill-vs-decode-推理阶段拆分.html"><strong>8.1 Prefill vs Decode：推理阶段拆分</strong></a>
+      <a href="kp-8-3-解码策略-greedy-beam-sampling.html"><strong>8.3 解码策略：Greedy/Beam/Sampling</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

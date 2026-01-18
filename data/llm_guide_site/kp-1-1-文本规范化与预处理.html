@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1.1 文本规范化与预处理｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 1.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>1.1 文本规范化与预处理</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 1</span>
+    <span class="pill"><a href="./module-01-nlp-llm-表示与-tokenization.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：输入文本的“细节”会显著影响</p>
+<p>tokenization、训练分布与安全边界。规范化的目标是降低无意义差异、控制噪声与风险。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Unicode 规范化（NFC/NFKC）、空白与不可见字符处理。</li>
+</ul>
+<ul>
+<li>多语言与混合脚本：语言识别、编码一致性。</li>
+</ul>
+<ul>
+<li>特殊内容：代码、公式、表格、URL 的保留与清洗策略。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>做安全与对齐时必须考虑：不可见字符可用于 prompt 注入与绕过过滤。</li>
+</ul>
+<ul>
+<li>对话数据要统一模板，否则模型学习到“格式偏差”。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>过度清洗导致丢失关键分布（例如代码缩进、标点、日志格式）。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么需要处理不可见字符（如零宽空格）？</div>
+</div>
+<div class="qa">
+<div class="a">A1：它们可能改变 token 序列或绕过规则/过滤器，造成注入与安全风险。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：NFKC 规范化的潜在风险是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A2：会把某些字符折叠为“等价形式”，可能改变代码/公式的精确语义，需要按场景选择。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-01-nlp-llm-表示与-tokenization.html"><strong>1 NLP/LLM 表示与 Tokenization</strong></a>
+      <a href="kp-1-2-tokenization-子词-字节级.html"><strong>1.2 Tokenization（子词/字节级）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

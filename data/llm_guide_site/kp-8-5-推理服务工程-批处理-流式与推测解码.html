@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>8.5 推理服务工程：批处理、流式与推测解码｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 8.5</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="active">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>8.5 推理服务工程：批处理、流式与推测解码</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 8</span>
+    <span class="pill"><a href="./module-08-推理-inference-与解码-decoding.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：真实系统需要在吞吐、延迟与成本之间做取舍，并通过批处理与新型解码加速提升性价比。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>连续批处理（continuous batching）：动态合并请求。</li>
+</ul>
+<ul>
+<li>流式输出：改善体验但增加系统复杂度。</li>
+</ul>
+<ul>
+<li>推测解码（speculative decoding）：小模型草稿 + 大模型校验。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>高并发下要做限流与队列；对关键用户可做优先级。</li>
+</ul>
+<ul>
+<li>推测解码收益取决于 draft 模型质量与验证成本。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>只用离线 tokens/s 指标评估服务，忽视 P95 延迟与尾部抖动。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：连续批处理的核心收益？</div>
+</div>
+<div class="qa">
+<div class="a">A1：提高 GPU 利用率，把多个请求合并计算，提升吞吐并降低单位 token 成本。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：推测解码何时收益最大？</div>
+</div>
+<div class="qa">
+<div class="a">A2：当 draft 模型能较准确预测大模型输出，且验证开销较小、并发足够时。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-8-4-约束解码与结构化输出-json-schema-grammar.html"><strong>8.4 约束解码与结构化输出（JSON/schema/grammar）</strong></a>
+      <a href="module-09-长上下文与记忆机制.html"><strong>9 长上下文与记忆机制</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

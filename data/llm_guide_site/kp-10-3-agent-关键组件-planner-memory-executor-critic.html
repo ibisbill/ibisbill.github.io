@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10.3 Agent 关键组件：Planner/Memory/Executor/Critic｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 10.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>10.3 Agent 关键组件：Planner/Memory/Executor/Critic</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 10</span>
+    <span class="pill"><a href="./module-10-工具调用与-agent.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：可用的 Agent 需要模块化：规划、记忆、执行与审阅。每个模块都要可观测、可测试。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Planner：任务分解、依赖、优先级、停止条件。</li>
+</ul>
+<ul>
+<li>Memory：短期上下文、长期记忆（向量库/结构化）。</li>
+</ul>
+<ul>
+<li>Executor：工具调用、重试、超时、幂等。</li>
+</ul>
+<ul>
+<li>Critic/Verifier：自检、事实核验、约束验证。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>引入 verifier 可显著降低幻觉：例如用检索核对引用，用单元测试核对代码。</li>
+</ul>
+<ul>
+<li>日志要记录：输入、工具调用参数、返回、决策与耗时。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把所有逻辑塞进 prompt；可维护性差且难以评测。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：幂等性对工具调用为何重要？</div>
+</div>
+<div class="qa">
+<div class="a">A1：模型可能重试同一调用；幂等可避免重复扣费/重复写入等副作用。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：Verifier 的一个简单实现？</div>
+</div>
+<div class="qa">
+<div class="a">A2：对关键事实做检索核对；对代码运行单元测试；对 JSON 做 schema 验证。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-10-2-agent-范式-react-与-plan-and-execute.html"><strong>10.2 Agent 范式：ReAct 与 Plan-and-Execute</strong></a>
+      <a href="kp-10-4-安全-prompt-injection-最小权限与沙箱.html"><strong>10.4 安全：Prompt Injection、最小权限与沙箱</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

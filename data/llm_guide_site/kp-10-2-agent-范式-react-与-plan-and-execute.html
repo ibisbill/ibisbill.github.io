@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10.2 Agent 范式：ReAct 与 Plan-and-Execute｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 10.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>10.2 Agent 范式：ReAct 与 Plan-and-Execute</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 10</span>
+    <span class="pill"><a href="./module-10-工具调用与-agent.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：Agent 是“多步策略 + 工具”组合。常见范式包括 ReAct（边想边做）与计划-执行分离。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>ReAct：思考-行动-观察循环；适合探索性任务。</li>
+</ul>
+<ul>
+<li>Plan-and-Execute：先规划子任务，再逐步执行；更可控。</li>
+</ul>
+<ul>
+<li>多 Agent：角色分工（检索/规划/审阅/执行）。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>为 Agent 设计停止条件与失败回退：避免无限循环。</li>
+</ul>
+<ul>
+<li>把工具成本纳入策略（例如检索次数上限）。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>只看单次回答质量，不记录轨迹；导致无法调试与回归。</li>
+</ul>
+<p>例题与答案：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="q">Q1：ReAct 的关键优势？</div>
+</div>
+<div class="qa">
+<div class="a">A1：把中间观察（工具结果）纳入后续决策，提升复杂任务完成率。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：Plan-and-Execute 的主要风险？</div>
+</div>
+<div class="qa">
+<div class="a">A2：计划可能在信息不足时不准确；需要执行中动态修正与重新规划。</div>
+</div>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>ReAct：Reason + Act 的 Agent 范式</h3>
+<p>ReAct 让模型交替输出“思考（Reason）”与“行动（Act）”，通过工具/检索获得外部信息，再继续推理与执行。</p>
+<p class="muted">工程关键：把工具调用结果纳入可观测 trace；对 prompt injection 做隔离；把权限收敛到最小。</p>
+
+<h3>原论文与代码库</h3>
+<ul>
+  <li>ReAct：Yao et al., 2022 <a href="https://arxiv.org/abs/2210.03629">ReAct</a></li>
+  <li>典型实现：<a href="https://github.com/langchain-ai/langchain">langchain-ai/langchain</a>、<a href="https://github.com/run-llama/llama_index">run-llama/llama_index</a></li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="kp-10-1-工具-函数调用基础-schema-与选择策略.html"><strong>10.1 工具/函数调用基础（schema 与选择策略）</strong></a>
+      <a href="kp-10-3-agent-关键组件-planner-memory-executor-critic.html"><strong>10.3 Agent 关键组件：Planner/Memory/Executor/Critic</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

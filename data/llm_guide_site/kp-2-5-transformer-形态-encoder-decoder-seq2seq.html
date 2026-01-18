@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2.5 Transformer 形态：Encoder/Decoder/Seq2Seq｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 2.5</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="active">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>2.5 Transformer 形态：Encoder/Decoder/Seq2Seq</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 2</span>
+    <span class="pill"><a href="./module-02-transformer-核心结构.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：不同结构对应不同任务：理解类任务偏 encoder，生成类任务偏 decoder；Seq2Seq</p>
+<p>用于条件生成。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Encoder-only：双向注意力（如 BERT），适合分类/抽取。</li>
+</ul>
+<ul>
+<li>Decoder-only：因果注意力（GPT），LLM 主流。</li>
+</ul>
+<ul>
+<li>Encoder-Decoder：输入编码+输出解码（T5），翻译/摘要强。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>选择结构时看任务：是否需要条件输入、是否需要开放式生成。</li>
+</ul>
+<ul>
+<li>同一数据格式在不同结构下的 mask 设计不同。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 BERT 目标直接用于对话生成而不改结构/目标，导致生成能力差。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么 decoder-only 更适合开放式生成？</div>
+</div>
+<div class="qa">
+<div class="a">A1：它直接优化 p(x_t|x_{&lt;t}) 的自回归目标，训练与推理一致。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：Seq2Seq 的优势场景？</div>
+</div>
+<div class="qa">
+<div class="a">A2：输入与输出分离的条件生成，如翻译、摘要、信息抽取到结构化输出。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-2-4-残差-归一化与结构变体.html"><strong>2.4 残差、归一化与结构变体</strong></a>
+      <a href="kp-2-6-参数效率与结构演进-kv-gqa-moe-flashattention.html"><strong>2.6 参数效率与结构演进（KV/GQA/MoE/FlashAttention）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

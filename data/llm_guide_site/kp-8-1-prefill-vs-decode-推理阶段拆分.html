@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>8.1 Prefill vs Decode：推理阶段拆分｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 8.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="active">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>8.1 Prefill vs Decode：推理阶段拆分</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 8</span>
+    <span class="pill"><a href="./module-08-推理-inference-与解码-decoding.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：LLM 推理分为 prefill（处理输入）与 decode（逐 token</p>
+<p>生成）。两者瓶颈不同，优化策略也不同。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Prefill：对整段 prompt 做前向，attention 仍是 O(S^2)。</li>
+</ul>
+<ul>
+<li>Decode：每步生成 1 token，依赖 KV cache，关键是延迟与并发。</li>
+</ul>
+<ul>
+<li>指标：TTFT（首 token 时间）、TPOT（每 token 时间）、吞吐 tokens/s。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>产品侧常关心 TTFT 与 P95 延迟；批处理会提升吞吐但增加 TTFT。</li>
+</ul>
+<ul>
+<li>对长 prompt，prefill 成本可能主导总时延。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>只优化 decode（如 KV），忽视长 prompt 的 prefill 成本。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么 TTFT 往往由 prefill 主导？</div>
+</div>
+<div class="qa">
+<div class="a">A1：首 token 生成前必须完成对 prompt 的计算；prompt 越长，prefill 越慢。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：如何降低长 prompt 的 prefill 成本？</div>
+</div>
+<div class="qa">
+<div class="a">A2：压缩/裁剪 prompt、检索后精简上下文、使用高效 attention 或分块策略。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-08-推理-inference-与解码-decoding.html"><strong>8 推理（Inference）与解码（Decoding）</strong></a>
+      <a href="kp-8-2-kv-cache-机制-显存与优化.html"><strong>8.2 KV Cache：机制、显存与优化</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

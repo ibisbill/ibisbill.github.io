@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2.4 残差、归一化与结构变体｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 2.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="active">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>2.4 残差、归一化与结构变体</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 2</span>
+    <span class="pill"><a href="./module-02-transformer-核心结构.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：残差连接保证梯度流动，归一化控制数值尺度。Pre-LN 结构是现代深层 LLM 的默认选择之一。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Residual：y = x + f(LN(x))（Pre-LN 典型形式）。</li>
+</ul>
+<ul>
+<li>LayerNorm vs RMSNorm：RMSNorm 省去均值项，常更快。</li>
+</ul>
+<ul>
+<li>Dropout：大模型常降低甚至关闭，取决于数据与过拟合风险。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>深层训练不稳优先检查：是否 Pre-LN、是否有足够 warmup、norm/softmax 的数值稳定。</li>
+</ul>
+<ul>
+<li>RMSNorm 与权重初始化/学习率有耦合，迁移配置需小心。</li>
+</ul>
+<p>常见误区：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<ul>
+<li>把 Post-LN 直接套在深层 decoder-only 上，导致训练发散。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：Residual 的直接收益是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A1：让梯度能绕过子层直接传播，减轻深层网络优化困难。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：RMSNorm 与 LayerNorm 的主要差异？</div>
+</div>
+<div class="qa">
+<div class="a">A2：RMSNorm 只按均方根缩放，不减去均值；LayerNorm 既减均值又按方差缩放。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-2-3-前馈网络-mlp-ffn.html"><strong>2.3 前馈网络（MLP/FFN）</strong></a>
+      <a href="kp-2-5-transformer-形态-encoder-decoder-seq2seq.html"><strong>2.5 Transformer 形态：Encoder/Decoder/Seq2Seq</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

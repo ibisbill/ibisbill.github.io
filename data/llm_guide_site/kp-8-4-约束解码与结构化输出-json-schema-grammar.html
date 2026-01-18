@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>8.4 约束解码与结构化输出（JSON/schema/grammar）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 8.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="active">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>8.4 约束解码与结构化输出（JSON/schema/grammar）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 8</span>
+    <span class="pill"><a href="./module-08-推理-inference-与解码-decoding.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：当输出必须满足格式（JSON、函数参数、DSL），需要约束解码或事后校验与纠错。</p>
+<p>你需要掌握：</p>
+<p>-</p>
+<p>JSON schema：字段类型、必填项、枚举；输出后做验证。</p>
+<ul>
+<li>Grammar-constrained decoding：在解码过程中限制 token 合法性。</li>
+</ul>
+<p>-</p>
+<p>logit bias：对特定 token 加偏置；stop sequence 管理。</p>
+<p>工程提示：</p>
+<ul>
+<li>严格约束会提高失败率：建议“约束 + 自动修复（repair）+ 重试”。</li>
+</ul>
+<ul>
+<li>工具调用应当设计幂等与超时，避免模型重复触发副作用。</li>
+</ul>
+<p>常见误区：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<ul>
+<li>只做事后正则修复，忽视模型分布；导致大量不可修复输出。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么 grammar-constrained decoding 更可靠？</div>
+</div>
+<div class="qa">
+<div class="a">A1：它在生成过程中就排除了非法路径，避免生成后再修补的不可控复杂度。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：结构化输出常见失败模式？</div>
+</div>
+<div class="qa">
+<div class="a">A2：漏字段、类型错误、尾逗号、未闭合括号；需验证+修复+重试策略。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-8-3-解码策略-greedy-beam-sampling.html"><strong>8.3 解码策略：Greedy/Beam/Sampling</strong></a>
+      <a href="kp-8-5-推理服务工程-批处理-流式与推测解码.html"><strong>8.5 推理服务工程：批处理、流式与推测解码</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

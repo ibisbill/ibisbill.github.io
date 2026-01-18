@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10.1 工具/函数调用基础（schema 与选择策略）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 10.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>10.1 工具/函数调用基础（schema 与选择策略）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 10</span>
+    <span class="pill"><a href="./module-10-工具调用与-agent.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：工具调用让模型把语言能力扩展为可执行能力。关键是清晰接口、严格 schema</p>
+<p>与可靠的调用策略。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>工具定义：函数名、参数 schema、返回结构、错误码。</li>
+</ul>
+<ul>
+<li>何时调用工具：信息不足、需要实时数据、需要执行/计算。</li>
+</ul>
+<ul>
+<li>输出格式：严格 JSON；字段校验与容错。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>工具返回应视为不可信输入：防注入、脱敏、权限控制。</li>
+</ul>
+<ul>
+<li>对关键动作要二次确认或使用安全策略（例如只读工具）。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>让模型直接拼 SQL/命令在生产环境执行而无沙箱与审计。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么需要 schema 校验？</div>
+</div>
+<div class="qa">
+<div class="a">A1：防止模型输出半结构化文本导致解析失败，提升工具调用成功率与可观测性。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：何时不应调用工具？</div>
+</div>
+<div class="qa">
+<div class="a">A2：当用户仅需解释/写作且不依赖外部实时信息时；无意义调用会增加延迟与成本。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-10-工具调用与-agent.html"><strong>10 工具调用与 Agent</strong></a>
+      <a href="kp-10-2-agent-范式-react-与-plan-and-execute.html"><strong>10.2 Agent 范式：ReAct 与 Plan-and-Execute</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10 工具调用与 Agent｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">模块 10</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>10 工具调用与 Agent</h1>
+  <p class="muted">本页是模块汇总（来自 PDF 原文），并链接到本模块的重要知识点页。</p>
+</div>
+
+<div class="grid">
+  
+<div class="card third">
+  <h2><a href="./kp-10-1-工具-函数调用基础-schema-与选择策略.html">10.1 工具/函数调用基础（schema 与选择策略）</a></h2>
+  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+</div>
+
+<div class="card third">
+  <h2><a href="./kp-10-2-agent-范式-react-与-plan-and-execute.html">10.2 Agent 范式：ReAct 与 Plan-and-Execute</a></h2>
+  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+</div>
+
+<div class="card third">
+  <h2><a href="./kp-10-3-agent-关键组件-planner-memory-executor-critic.html">10.3 Agent 关键组件：Planner/Memory/Executor/Critic</a></h2>
+  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+</div>
+
+<div class="card third">
+  <h2><a href="./kp-10-4-安全-prompt-injection-最小权限与沙箱.html">10.4 安全：Prompt Injection、最小权限与沙箱</a></h2>
+  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+</div>
+
+<div class="card third">
+  <h2><a href="./kp-10-5-agent-评测与可观测性-trace-回归.html">10.5 Agent 评测与可观测性（trace/回归）</a></h2>
+  <p class="muted">知识点页（含公式/代码解读与可能的交互 demo）。</p>
+</div>
+
+</div>
+
+<div class="section">
+  <h2>手册原文（整理版）</h2>
+  <p>学习目标：理解本模块关键概念，能用自己的话解释，并能完成后续例题。</p>
+</div>
+
+    <div class="pager">
+      <a href="kp-9-5-长上下文评测-needle-多跳与引用准确性.html"><strong>9.5 长上下文评测：needle、多跳与引用准确性</strong></a>
+      <a href="kp-10-1-工具-函数调用基础-schema-与选择策略.html"><strong>10.1 工具/函数调用基础（schema 与选择策略）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

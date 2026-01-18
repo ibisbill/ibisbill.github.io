@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>7.1 对齐的目标与约束（Helpful/Harmless/Honest）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 7.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="active">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>7.1 对齐的目标与约束（Helpful/Harmless/Honest）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 7</span>
+    <span class="pill"><a href="./module-07-对齐-alignment-rlhf-dpo-rlvr-等.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：对齐的本质是在多目标之间做权衡：有用、无害、诚实，并遵守指令层级与合规要求。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>指令层级：system &gt; developer &gt; user；冲突时遵从高优先级。</li>
+</ul>
+<ul>
+<li>诚实：不确定时表达不确定、避免编造；可引用依据。</li>
+</ul>
+<ul>
+<li>无害：拒绝违法/危险请求，提供安全替代方案。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>对齐评测要覆盖：正常任务、边界任务、对抗越狱、提示注入。</li>
+</ul>
+<ul>
+<li>注意 over-refusal：过度拒答会损害可用性。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把“对齐=拒答”，导致模型在安全与可用性上失衡。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：什么是 instruction hierarchy？</div>
+</div>
+<div class="qa">
+<div class="a">A1：系统指令优先级最高，其次开发者，再次用户；模型应在冲突时遵守高优先级。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：诚实对齐的一个可操作准则？</div>
+</div>
+<div class="qa">
+<div class="a">A2：对无法确定的事实明确说明不确定性，并建议可验证途径（检索、咨询专家等）。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-07-对齐-alignment-rlhf-dpo-rlvr-等.html"><strong>7 对齐（Alignment）：RLHF / DPO / RLVR 等</strong></a>
+      <a href="kp-7-2-rlhf-三阶段与-ppo-关键点.html"><strong>7.2 RLHF：三阶段与 PPO 关键点</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>12.1 能力评测维度与基准设计｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 12.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>12.1 能力评测维度与基准设计</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 12</span>
+    <span class="pill"><a href="./module-12-评测与可靠性.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：评测应覆盖语言、推理、代码、工具、长上下文与安全，并与业务目标对齐。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>理解/生成：摘要、改写、抽取。</li>
+</ul>
+<ul>
+<li>推理：数学、逻辑、多跳问答。</li>
+</ul>
+<ul>
+<li>代码：pass@k、单测通过率。</li>
+</ul>
+<ul>
+<li>工具：schema 正确率、任务完成率。</li>
+</ul>
+<ul>
+<li>长上下文：needle、多文档引用。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>基准要做数据隔离：训练/评测严格分离，避免泄露。</li>
+</ul>
+<ul>
+<li>用小而精的回归集监控版本漂移。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把公开榜单分数当作唯一目标，忽略业务分布与安全。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么需要任务分解式评测？</div>
+</div>
+<div class="qa">
+<div class="a">A1：单一总分掩盖失败模式；分维度才能定位问题并指导数据/训练。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：评测泄露的常见来源？</div>
+</div>
+<div class="qa">
+<div class="a">A2：把 benchmark 提示或答案混入训练语料；或评测集与训练集近重复未去重。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-12-评测与可靠性.html"><strong>12 评测与可靠性</strong></a>
+      <a href="kp-12-2-离线与在线指标-质量-成本-稳定性.html"><strong>12.2 离线与在线指标（质量、成本、稳定性）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>7.2 RLHF：三阶段与 PPO 关键点｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 7.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="active">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>7.2 RLHF：三阶段与 PPO 关键点</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 7</span>
+    <span class="pill"><a href="./module-07-对齐-alignment-rlhf-dpo-rlvr-等.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：经典 RLHF：SFT 初始化策略，训练奖励模型，再用 PPO 在 KL</p>
+<p>约束下优化策略以符合人类偏好。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>偏好数据：同一提示下输出 A/B 的比较标注。</li>
+</ul>
+<ul>
+<li>Reward Model：学习打分；需防止过拟合与分布外失真。</li>
+</ul>
+<ul>
+<li>PPO：clip 目标、优势函数；KL penalty 控制偏离参考模型。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>工程难点：on-policy 采样成本、训练不稳定、reward hacking。</li>
+</ul>
+<ul>
+<li>要监控：平均奖励、KL、长度分布、拒答率与安全指标。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 RM 当作“真实价值函数”；RM 有偏差，会被策略钻空子。</li>
+</ul>
+<p>例题与答案：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="q">Q1：RLHF 中 KL penalty 的作用？</div>
+</div>
+<div class="qa">
+<div class="a">A1：限制新策略与参考策略差异，提升稳定性并防止过度优化导致退化。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：什么是 reward hacking？</div>
+</div>
+<div class="qa">
+<div class="a">A2：模型学会利用奖励模型漏洞取得高分，而非真实符合人类偏好（例如堆砌安全套话）。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-7-1-对齐的目标与约束-helpful-harmless-honest.html"><strong>7.1 对齐的目标与约束（Helpful/Harmless/Honest）</strong></a>
+      <a href="kp-7-3-dpo-直接偏好优化.html"><strong>7.3 DPO：直接偏好优化</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

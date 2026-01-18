@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>8.3 解码策略：Greedy/Beam/Sampling｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 8.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="active">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>8.3 解码策略：Greedy/Beam/Sampling</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 8</span>
+    <span class="pill"><a href="./module-08-推理-inference-与解码-decoding.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：解码是把概率分布变成具体文本的策略选择。不同策略在确定性、创造性与重复性上差异显著</p>
+<p>。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Greedy：每步取最大概率；稳定但可能保守。</li>
+</ul>
+<ul>
+<li>Beam search：探索多条路径；对开放式对话可能变得刻板。</li>
+</ul>
+<ul>
+<li>Sampling：temperature、top-k、top-p（nucleus）、typical sampling。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>对话系统常用 top-p + 适度 temperature；严谨任务（抽取/格式）更偏低温或贪心。</li>
+</ul>
+<ul>
+<li>加入重复惩罚与 stop tokens 控制啰嗦与跑题。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 temperature 调高当作“更聪明”；过高会增加胡言乱语与幻觉。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：top-p 的定义？</div>
+</div>
+<div class="qa">
+<div class="a">A1：选择累计概率达到 p 的最小 token 集合并在其中采样。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：beam search 为什么可能降低对话自然度？</div>
+</div>
+<div class="qa">
+<div class="a">A2：它偏向高概率、通用、安全的表达，容易产生模板化与冗长重复。</div>
+</div>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>解码策略小抄：Greedy / Beam / Sampling</h3>
+<ul>
+  <li><b>Greedy</b>：每步选 argmax，最快但多样性差，易陷入重复</li>
+  <li><b>Beam Search</b>：保留 top-B 条候选序列，适合机器翻译等“确定性”任务；对开放式生成可能变“更无聊”</li>
+  <li><b>Sampling</b>：按概率采样（温度、top-k、top-p），更有创造性但方差更大</li>
+</ul>
+
+<h3>温度与 top-k / top-p 的数学表达</h3>
+<p>给定 logits $z$，温度 $T$：$p_i \propto \exp(z_i/T)$。$T\uparrow$ 更“随机”，$T\downarrow$ 更“确定”。</p>
+<p class="muted">top-k / top-p 会把低概率 token 置零再重归一化（改变分布尾部）。</p>
+
+<h3>参考实现代码库</h3>
+<ul>
+  <li><a href="https://github.com/huggingface/transformers">huggingface/transformers</a>：`generate()` 覆盖 greedy/beam/sampling/contrastive 等</li>
+  <li><a href="https://github.com/vllm-project/vllm">vllm-project/vllm</a>：高吞吐推理与采样实现</li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="kp-8-2-kv-cache-机制-显存与优化.html"><strong>8.2 KV Cache：机制、显存与优化</strong></a>
+      <a href="kp-8-4-约束解码与结构化输出-json-schema-grammar.html"><strong>8.4 约束解码与结构化输出（JSON/schema/grammar）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>13.3 机制可解释性：因果追踪与特征分解（SAE）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 13.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>13.3 机制可解释性：因果追踪与特征分解（SAE）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 13</span>
+    <span class="pill"><a href="./module-13-可解释性与分析.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：机制可解释性关注可重复、可干预的“电路”级结构，用因果方法验证哪些激活真正驱动能力</p>
+<p>。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Activation patching：替换/注入激活观察输出变化。</li>
+</ul>
+<ul>
+<li>Causal tracing：定位关键信息从哪层/哪位置传递。</li>
+</ul>
+<ul>
+<li>SAE：稀疏自编码器提取可解释特征。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>干预要做对照：随机 patch、层/位置对比，避免误判。</li>
+</ul>
+<ul>
+<li>特征操控（steering）要评估副作用与分布外风险。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把单次干预结论泛化到所有任务；电路常是任务相关的。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：activation patching 的基本步骤？</div>
+</div>
+<div class="qa">
+<div class="a">A1：在干净输入与对照输入之间替换特定层/位置的激活，观察输出指标变化以推断因果贡献。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：SAE 的目标是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A2：用稀疏表示分解激活为可解释特征，便于定位与操控模型内部概念。</div>
+</div>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>机制可解释性：Activation patching / Causal tracing / SAE</h3>
+<p class="muted">手册里强调：attention heatmap 不是因果解释；需要 patching/ablation 这样的干预来验证“因果贡献”。</p>
+
+<h3>SAE（稀疏自编码器）是什么？</h3>
+<p>SAE 试图把高维激活分解为一组稀疏可解释特征：$x \approx W h$，其中 $h$ 稀疏（L1 或稀疏约束）。直觉上，每个 feature 更接近“单一语义”。</p>
+
+<h3>参考论文与项目</h3>
+<ul>
+  <li>Dictionary Learning / SAE 路线：<a href="https://arxiv.org/abs/2309.10312">Towards Monosemanticity</a>（Anthropic, 2023）</li>
+  <li>工具与实现（社区）：<a href="https://github.com/TransformerLensOrg/TransformerLens">TransformerLens</a></li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="kp-13-2-白盒分析-attention-probe-logit-lens.html"><strong>13.2 白盒分析：Attention/Probe/Logit lens</strong></a>
+      <a href="kp-13-4-训练数据记忆-隐私与-unlearning.html"><strong>13.4 训练数据记忆、隐私与 unlearning</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

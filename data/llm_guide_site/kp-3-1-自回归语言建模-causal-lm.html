@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3.1 自回归语言建模（Causal LM）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 3.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>3.1 自回归语言建模（Causal LM）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 3</span>
+    <span class="pill"><a href="./module-03-语言建模目标与损失.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：LLM 的主流目标：最大化序列概率 p(x)=∏ p(x_t|x_&lt;t)。训练用 teacher</p>
+<p>forcing，推理用逐步生成。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>损失：token-level 交叉熵；常用忽略 padding 的 mask。</li>
+</ul>
+<ul>
+<li>指标：Perplexity；但跨 tokenizer 比较要谨慎。</li>
+</ul>
+<ul>
+<li>Exposure bias：训练见到真实前缀，推理见到模型前缀。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>训练时常做 sequence packing 减少 padding，提高吞吐。</li>
+</ul>
+<ul>
+<li>对话训练要注意系统/用户/助手的 loss mask（是否对用户部分计算 loss）。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把困惑度当作对话质量的充分指标；对话更依赖指令遵循与偏好。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：给定 logits z，softmax 概率 p，真实 token y 的交叉熵是什么？</div>
+</div>
+<div class="qa">
+<div class="a">A1：L = -log p_y（对每个位置求和/平均）。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：为什么推理时错误会“滚雪球”？</div>
+</div>
+<div class="qa">
+<div class="a">A2：推理输入包含模型先前输出，若前面偏离，后续条件分布改变，误差逐步累积。</div>
+</div>
+</div>
+
+<div class="section"><h2>公式 / 代码 / 交互补充（重点）</h2>
+<h3>Causal LM（自回归语言建模）目标</h3>
+<p>给定 token 序列 $x_{1:T}$，最大似然训练等价于最小化负对数似然：</p>
+<p>$$\mathcal{L}_{\mathrm{CLM}}(\theta) = -\sum_{t=1}^{T}\log p_\theta(x_t\mid x_{&lt;t})$$</p>
+<p class="muted">实现里通常是 token-level cross entropy：对每个位置的 logits 做 softmax，再取真实 token 的 $-\log p$，最后对有效位置求均值。</p>
+
+<h3>困惑度（Perplexity）与 bits-per-token</h3>
+<p>若平均交叉熵为 $H$（单位 nat），则：</p>
+<p>$$\mathrm{PPL}=\exp(H)$$</p>
+<p>若用 bit 表示：$\mathrm{bpt}=H/\ln 2$。</p>
+<p class="muted">注意：不同 tokenizer 的 PPL 不能直接横比（手册里也提醒了这一点）。</p>
+
+<h3>原论文与典型代码库</h3>
+<ul>
+  <li>GPT 系列（自回归 LM）：Radford et al., 2018/2019；Brown et al., 2020 <a href="https://arxiv.org/abs/2005.14165">Language Models are Few-Shot Learners</a></li>
+  <li>代码：<a href="https://github.com/huggingface/transformers">huggingface/transformers</a>（`CausalLMOutputWithCrossAttentions` 与 loss 计算）</li>
+  <li>教学代码：<a href="https://github.com/karpathy/nanoGPT">karpathy/nanoGPT</a>（最清晰的 CE loss + next-token shift）</li>
+</ul>
+</div>
+
+    <div class="pager">
+      <a href="module-03-语言建模目标与损失.html"><strong>3 语言建模目标与损失</strong></a>
+      <a href="module-04-数据与语料.html"><strong>4 数据与语料</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

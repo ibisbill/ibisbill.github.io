@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>12.3 幻觉（Hallucination）与事实性｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 12.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>12.3 幻觉（Hallucination）与事实性</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 12</span>
+    <span class="pill"><a href="./module-12-评测与可靠性.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：幻觉是生成模型在不确定时仍给出看似合理答案的倾向。降低幻觉需要证据约束与不确定性表</p>
+<p>达。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>类型：编造事实、错引来源、时间性错误、过度自信。</li>
+</ul>
+<ul>
+<li>缓解：检索+引用、事实核验工具、拒答阈值、logprob 校准。</li>
+</ul>
+<ul>
+<li>训练：加入“引用式回答”、不确定性标注、反幻觉偏好。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>RAG 不等于无幻觉：检索错误/拼接错误会引入新幻觉。</li>
+</ul>
+<ul>
+<li>对关键场景使用 verifier（例如二次检索核对）。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把模型输出当作事实来源，缺少引用与可追溯。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么模型会产生幻觉？</div>
+</div>
+<div class="qa">
+<div class="a">A1：目标是预测下一个 token 的高概率序列，而非保证事实正确；在缺证据时也会生成“像真的”。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：引用机制如何降低幻觉？</div>
+</div>
+<div class="qa">
+<div class="a">A2：要求答案与检索证据对应，使模型倾向于从证据中抽取/改写而非编造。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-12-2-离线与在线指标-质量-成本-稳定性.html"><strong>12.2 离线与在线指标（质量、成本、稳定性）</strong></a>
+      <a href="kp-12-4-安全-偏见与隐私评测.html"><strong>12.4 安全、偏见与隐私评测</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

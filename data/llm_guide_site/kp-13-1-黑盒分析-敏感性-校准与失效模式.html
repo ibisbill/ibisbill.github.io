@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>13.1 黑盒分析：敏感性、校准与失效模式｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 13.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>13.1 黑盒分析：敏感性、校准与失效模式</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 13</span>
+    <span class="pill"><a href="./module-13-可解释性与分析.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：黑盒分析从输入-输出行为入手：测试提示扰动、稳定性与不确定性表达，快速定位问题类别。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>提示敏感性：同义改写、格式变化、顺序置换。</li>
+</ul>
+<ul>
+<li>稳定性：temperature=0 的一致性、重复回答偏差。</li>
+</ul>
+<ul>
+<li>校准：logprob 与错误相关性、拒答阈值。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>用 system prompt 约束风格后仍要评测：模型可能绕过或忽视。</li>
+</ul>
+<ul>
+<li>记录失败样本并分类：事实、推理、工具、对齐、格式。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>用少量示例得出泛化结论；需要系统化扰动与统计。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：什么是 prompt sensitivity？</div>
+</div>
+<div class="qa">
+<div class="a">A1：对提示微小变化输出大幅波动的现象，反映模型边界与对齐稳定性不足。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：校准良好的模型有什么特征？</div>
+</div>
+<div class="qa">
+<div class="a">A2：高置信输出更可能正确；低置信时更愿意承认不确定或请求更多信息。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-13-可解释性与分析.html"><strong>13 可解释性与分析</strong></a>
+      <a href="kp-13-2-白盒分析-attention-probe-logit-lens.html"><strong>13.2 白盒分析：Attention/Probe/Logit lens</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>13.2 白盒分析：Attention/Probe/Logit lens｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 13.2</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>13.2 白盒分析：Attention/Probe/Logit lens</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 13</span>
+    <span class="pill"><a href="./module-13-可解释性与分析.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：白盒分析查看内部表示与激活，帮助理解模块贡献与潜在可剪枝结构，但需要谨慎解释。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Attention 可视化：头关注位置分布。</li>
+</ul>
+<ul>
+<li>Probing：用探针模型测试表示是否包含某属性。</li>
+</ul>
+<ul>
+<li>Logit lens：看各层残差流对最终 logits 的贡献。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>注意力权重不等于因果贡献；建议用干预方法验证。</li>
+</ul>
+<ul>
+<li>探针结果受探针容量与数据集影响，需要对照实验。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 attention heatmap 直接当作“解释”，忽视因果检验。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么说 attention 不是解释？</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<div class="qa">
+<div class="a">A1：高注意力不必然代表对输出有因果影响；需要干预（patching/ablation）验证。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：logit lens 能回答什么问题？</div>
+</div>
+<div class="qa">
+<div class="a">A2：某一层的表示在输出空间上更倾向于哪些 token，帮助理解层间形成答案的过程。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-13-1-黑盒分析-敏感性-校准与失效模式.html"><strong>13.1 黑盒分析：敏感性、校准与失效模式</strong></a>
+      <a href="kp-13-3-机制可解释性-因果追踪与特征分解-sae.html"><strong>13.3 机制可解释性：因果追踪与特征分解（SAE）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

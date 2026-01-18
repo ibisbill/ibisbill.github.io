@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>7.4 RLVR：可验证奖励的强化学习｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 7.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="active">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>7.4 RLVR：可验证奖励的强化学习</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 7</span>
+    <span class="pill"><a href="./module-07-对齐-alignment-rlhf-dpo-rlvr-等.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：RLVR 把奖励建立在可自动验证的信号上（如单元测试、数学答案检查），特别适合代码/数学</p>
+<p>等可验证任务。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>奖励来自：测试通过率、编译成功、答案匹配、约束满足等。</li>
+</ul>
+<ul>
+<li>优势：减少主观标注、降低奖励噪声。</li>
+</ul>
+<ul>
+<li>难点：指标覆盖面有限，可能“教会应试”。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>用多样化测试与对抗样例减少投机取巧。</li>
+</ul>
+<ul>
+<li>结合偏好/安全约束，避免只追求可测指标导致行为退化。</li>
+</ul>
+<p>常见误区：</p>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<ul>
+<li>只优化可测指标，导致输出可读性差或泛化差。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：为什么 RLVR 在代码领域有效？</div>
+</div>
+<div class="qa">
+<div class="a">A1：代码可以通过编译/测试自动验证，奖励信号相对客观且可规模化。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：如何缓解“应试”风险？</div>
+</div>
+<div class="qa">
+<div class="a">A2：增加隐藏测试、多分布测试、对抗生成，并评估分布外任务表现。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-7-3-dpo-直接偏好优化.html"><strong>7.3 DPO：直接偏好优化</strong></a>
+      <a href="kp-7-5-rlaif-constitutional-ai-模型辅助对齐.html"><strong>7.5 RLAIF / Constitutional AI（模型辅助对齐）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

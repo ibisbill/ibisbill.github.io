@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>9.1 长上下文瓶颈：O(S^2) 与 lost-in-the-middle｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 9.1</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>9.1 长上下文瓶颈：O(S^2) 与 lost-in-the-middle</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 9</span>
+    <span class="pill"><a href="./module-09-长上下文与记忆机制.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：长上下文不仅是算力问题，也是使用能力问题：模型可能“看得见但用不好”。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>标准 attention 计算/显存 O(S^2)，KV cache O(S)。</li>
+</ul>
+<ul>
+<li>中间遗忘（lost-in-the-middle）：信息在中部更难被利用。</li>
+</ul>
+<ul>
+<li>长 prompt 导致 prefill 成本主导。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>先从系统设计减负：检索后精简、摘要、分块读取。</li>
+</ul>
+<ul>
+<li>用针对性评测（needle、multi-hop）验证“可用性”。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把 max_length 拉长就以为模型会更会用长文。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：什么是 lost-in-the-middle？</div>
+</div>
+<div class="qa">
+<div class="a">A1：模型更容易利用开头/结尾信息，中间信息利用率下降，导致检索失败或引用错误。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：长上下文性能下降的两个来源？</div>
+</div>
+<div class="qa">
+<div class="a">A2：计算/显存瓶颈，以及模型在训练中缺少长序列任务导致的能力不足。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="module-09-长上下文与记忆机制.html"><strong>9 长上下文与记忆机制</strong></a>
+      <a href="kp-9-2-位置编码外推与扩展-rope-alibi-缩放.html"><strong>9.2 位置编码外推与扩展（RoPE/ALiBi/缩放）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10.4 安全：Prompt Injection、最小权限与沙箱｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 10.4</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>10.4 安全：Prompt Injection、最小权限与沙箱</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 10</span>
+    <span class="pill"><a href="./module-10-工具调用与-agent.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：Agent 的风险主要来自工具链：模型可能被外部内容注入指令，或在高权限工具上误操作。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Prompt injection：外部文档/网页携带恶意指令。</li>
+</ul>
+<ul>
+<li>最小权限：只给必要工具与必要范围的数据。</li>
+</ul>
+<ul>
+<li>沙箱：代码执行隔离、网络/文件权限控制。</li>
+</ul>
+<ul>
+<li>审计：全链路日志、可回放。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>对外部文本做“指令去激活”：把工具输出当数据而非指令。</li>
+</ul>
+<ul>
+<li>对高风险动作做策略门控（policy gate）。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>常见误区：</p>
+<ul>
+<li>让检索到的网页内容直接进入 system 指令区域，导致越权。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：如何降低 prompt injection 风险？</div>
+</div>
+<div class="qa">
+<div class="a">A1：隔离指令与数据、对工具输出做净化、限制工具权限、对关键动作二次确认与审计。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：为什么要最小权限？</div>
+</div>
+<div class="qa">
+<div class="a">A2：即使模型被诱导，也能把潜在伤害限制在最小范围。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-10-3-agent-关键组件-planner-memory-executor-critic.html"><strong>10.3 Agent 关键组件：Planner/Memory/Executor/Critic</strong></a>
+      <a href="kp-10-5-agent-评测与可观测性-trace-回归.html"><strong>10.5 Agent 评测与可观测性（trace/回归）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

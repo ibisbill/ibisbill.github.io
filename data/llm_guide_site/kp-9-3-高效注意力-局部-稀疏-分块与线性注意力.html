@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>9.3 高效注意力：局部/稀疏/分块与线性注意力｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 9.3</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>9.3 高效注意力：局部/稀疏/分块与线性注意力</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 9</span>
+    <span class="pill"><a href="./module-09-长上下文与记忆机制.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：为了突破 O(S^2)，可用局部窗口、块稀疏或分层结构；但通常需要训练适配。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>Sliding window：只关注邻近窗口。</li>
+</ul>
+<ul>
+<li>Block sparse：块级稀疏 pattern。</li>
+</ul>
+<ul>
+<li>层次注意力：先段内聚合再段间交互。</li>
+</ul>
+<ul>
+<li>线性注意力：用核技巧近似（质量与稳定性需验证）。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>高效 attention 通常改变归纳偏置；要用匹配的训练任务与评测。</li>
+</ul>
+<ul>
+<li>对检索任务，常结合全局 token 或跨块 summary token。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>直接替换 attention 实现而不续训，期望质量不变。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：局部注意力的主要代价？</div>
+</div>
+<div class="qa">
+<div class="a">A1：削弱长距离依赖建模；需要额外机制（全局 token/跨块汇总）补偿。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：为什么稀疏 pattern 要慎选？</div>
+</div>
+<div class="qa">
+<div class="a">A2：pattern 决定模型可见信息路径；不合适会造成信息断裂与能力退化。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-9-2-位置编码外推与扩展-rope-alibi-缩放.html"><strong>9.2 位置编码外推与扩展（RoPE/ALiBi/缩放）</strong></a>
+      <a href="kp-9-4-记忆机制-rag-摘要记忆与-kv-压缩.html"><strong>9.4 记忆机制：RAG、摘要记忆与 KV 压缩</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

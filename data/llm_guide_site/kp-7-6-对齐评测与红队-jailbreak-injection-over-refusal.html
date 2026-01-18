@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>7.6 对齐评测与红队（Jailbreak/Injection/Over-refusal）｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 7.6</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="active">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>7.6 对齐评测与红队（Jailbreak/Injection/Over-refusal）</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 7</span>
+    <span class="pill"><a href="./module-07-对齐-alignment-rlhf-dpo-rlvr-等.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：没有系统评测的对齐不可控。红队测试用于发现越狱、注入与信息泄露等高风险问题。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>越狱：角色扮演、分步诱导、编码混淆等。</li>
+</ul>
+<ul>
+<li>提示注入：把恶意指令藏在网页/文档/工具返回中。</li>
+</ul>
+<ul>
+<li>指标：拒答率、误拒率、成功越狱率、敏感信息泄露率。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>建立分层防线：输入净化、工具权限最小化、输出安全分类器与审计日志。</li>
+</ul>
+<ul>
+<li>持续回归：模型/工具/检索升级都要重新红队。</li>
+</ul>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+<p>常见误区：</p>
+<ul>
+<li>只做一次性红队；上线后分布变化会让风险快速回归。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：什么是 prompt injection？</div>
+</div>
+<div class="qa">
+<div class="a">A1：外部内容（网页/文档/工具输出）携带指令试图覆盖系统/开发者约束，诱导模型泄露或违规行动。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：over-refusal 的典型表现？</div>
+</div>
+<div class="qa">
+<div class="a">A2：对正常、无害请求也频繁拒答或给出过多安全套话，导致可用性下降。</div>
+</div>
+<p>Transformer 与 LLM 学习手册（含例题与答案）</p>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-7-5-rlaif-constitutional-ai-模型辅助对齐.html"><strong>7.5 RLAIF / Constitutional AI（模型辅助对齐）</strong></a>
+      <a href="module-08-推理-inference-与解码-decoding.html"><strong>8 推理（Inference）与解码（Decoding）</strong></a>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>

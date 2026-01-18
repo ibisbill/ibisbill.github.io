@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>13.5 对齐与安全的可解释性：拒答触发与对齐税｜Transformer × LLM 学习站</title>
+  <link rel="stylesheet" href="./assets/site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="./assets/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.hljs) window.hljs.highlightAll();
+    });
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div>Transformer × LLM 学习站</div>
+          <div class="brand-sub">知识点 13.5</div>
+        </div>
+      </div>
+      <div class="navlinks">
+        <a href="./index.html" class="">目录</a>
+        <a href="./module-02-transformer.html" class="">Transformer</a>
+        <a href="./module-07-alignment.html" class="">对齐</a>
+        <a href="./module-08-inference.html" class="">推理</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<div class="hero">
+  <h1>13.5 对齐与安全的可解释性：拒答触发与对齐税</h1>
+  <p class="muted">先读手册要点，再看公式/代码/交互 demo 与论文/代码库引用。</p>
+  <div class="pillrow">
+    <span class="pill">模块 13</span>
+    <span class="pill"><a href="./module-13-可解释性与分析.html">返回模块页</a></span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>手册要点 + 例题答案（原文整理）</h2>
+  <p>概述：对齐后模型行为变化需要可解释：什么时候拒答、为何拒答、是否牺牲了有用性（alignment</p>
+<p>tax）。</p>
+<p>你需要掌握：</p>
+<ul>
+<li>拒答触发：是策略层还是模型内化？不同路径的可控性不同。</li>
+</ul>
+<ul>
+<li>越狱路径分析：指令冲突、角色注入、工具链注入。</li>
+</ul>
+<ul>
+<li>对齐税：安全增强导致能力回退的量化与定位。</li>
+</ul>
+<p>工程提示：</p>
+<ul>
+<li>用分层评测拆解：安全合规、可用性、事实性、长上下文、工具能力。</li>
+</ul>
+<ul>
+<li>对齐与能力冲突时，考虑分模型路由或分场景策略。</li>
+</ul>
+<p>常见误区：</p>
+<ul>
+<li>把能力回退全归因于“模型变笨”；很多是目标权重改变。</li>
+</ul>
+<p>例题与答案：</p>
+<div class="qa">
+<div class="q">Q1：如何量化 alignment tax？</div>
+</div>
+<div class="qa">
+<div class="a">A1：在相同基准与评测设置下对比对齐前后模型的能力指标变化，并分任务维度分析。</div>
+</div>
+<div class="qa">
+<div class="q">Q2：拒答触发定位的一个方法？</div>
+</div>
+<div class="qa">
+<div class="a">A2：对比加入/移除策略层（如安全分类器）输出差异，并结合激活分析或偏好数据溯源。</div>
+</div>
+</div>
+
+
+
+    <div class="pager">
+      <a href="kp-13-4-训练数据记忆-隐私与-unlearning.html"><strong>13.4 训练数据记忆、隐私与 unlearning</strong></a>
+      <span style="flex:1"></span>
+    </div>
+    <div class="footer">
+      <div>来源：`Transformer_LLM_Study_Guide_CN.pdf`（生成日期 2026-01-18）</div>
+      <div><a href="../transformers/Transformer_LLM_Study_Guide_CN.pdf">打开原 PDF</a></div>
+    </div>
+  </div>
+</body>
+</html>
