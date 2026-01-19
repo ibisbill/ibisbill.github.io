@@ -138,7 +138,7 @@ function initPosEncDemo(root){
     ctx.clearRect(0,0,W,H);
     // axes
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = 'rgba(255,255,255,.18)';
+    ctx.strokeStyle = 'rgba(0,0,0,.18)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(40, 10);
@@ -155,7 +155,7 @@ function initPosEncDemo(root){
       return (H-26) - t*plotH;
     }
     // line
-    ctx.strokeStyle = 'rgba(122,162,255,.95)';
+    ctx.strokeStyle = '#2563eb';
     ctx.lineWidth = 2;
     ctx.beginPath();
     series.forEach((v,i)=>{
