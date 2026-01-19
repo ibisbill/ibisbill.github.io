@@ -237,39 +237,87 @@ a:hover {
 
 /* Code Blocks & Math */
 .codeblock {
-  margin: 1.5rem 0;
+  margin: 2rem 0;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  background: #1e1e1e; /* Match VS2015 theme */
 }
 
 .codehdr {
-  background: var(--bg-sidebar);
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--border);
+  background: #2d2d2d;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #3e3e3e;
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  align-items: center;
+  font-size: 0.75rem;
+  color: #a9a9a9;
   font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
+
+.codehdr .dots {
+  display: flex;
+  gap: 6px;
+}
+
+.codehdr .dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.codehdr .dots .red { background: #ff5f56; }
+.codehdr .dots .yellow { background: #ffbd2e; }
+.codehdr .dots .green { background: #27c93f; }
 
 pre {
   margin: 0;
-  padding: 1rem;
-  background: #1e1e1e; /* Consistent dark for code */
-  color: #d4d4d4;
+  padding: 1.5rem;
+  background: transparent !important;
   font-family: var(--mono);
-  font-size: 0.9rem;
+  font-size: 0.95rem; /* Standard coding size */
+  line-height: 1.6;
   overflow-x: auto;
+  -webkit-font-smoothing: antialiased;
 }
 
-code {
+.copy-btn {
+  background: transparent;
+  border: 1px solid #444;
+  color: #a9a9a9;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover {
+  background: #444 !important;
+  color: #fff !important;
+  border-color: #666;
+}
+
+pre code.hljs {
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+}
+
+/* Inline Code */
+:not(pre) > code {
   font-family: var(--mono);
   background: var(--bg-sidebar);
+  color: #eb5757; /* classic red for inline code */
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
   font-size: 0.9em;
+  border: 1px solid var(--border);
 }
 
 /* Q&A / Knowledge Points */

@@ -250,6 +250,40 @@ function initAll(){
     const href = a.getAttribute('href') || '';
     if (href.endsWith(here)) a.classList.add('active');
   });
+
+  // Enhance Code Blocks
+  $all('pre code').forEach(code => {
+    const pre = code.parentElement;
+    if (pre.parentElement.classList.contains('codeblock')) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'codeblock';
+    
+    const hdr = document.createElement('div');
+    hdr.className = 'codehdr';
+    
+    const lang = code.className.replace('language-', '').split(' ')[0] || 'code';
+    hdr.innerHTML = `
+      <div class="dots"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span>${lang}</span>
+        <button class="copy-btn">Copy</button>
+      </div>
+    `;
+    
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(hdr);
+    wrapper.appendChild(pre);
+
+    const btn = hdr.querySelector('.copy-btn');
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(code.innerText).then(() => {
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = 'Copy', 2000);
+      });
+    });
+  });
+
   $all('[data-demo="attention"]').forEach(initAttentionDemo);
   $all('[data-demo="posenc"]').forEach(initPosEncDemo);
   $all('[data-demo="kvcalc"]').forEach(initKVCalcDemo);
