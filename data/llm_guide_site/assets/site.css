@@ -284,6 +284,7 @@ pre {
   line-height: 1.6;
   overflow-x: auto;
   -webkit-font-smoothing: antialiased;
+  color: #d4d4d4; /* Default VS2015 light text color */
 }
 
 .copy-btn {
@@ -303,10 +304,16 @@ pre {
   border-color: #666;
 }
 
+pre code {
+  color: #d4d4d4 !important; /* Force light color for all code text */
+  background: transparent !important;
+}
+
 pre code.hljs {
   padding: 0;
   background: transparent;
   font-family: inherit;
+  color: #d4d4d4; /* Base color for hljs */
 }
 
 /* Inline Code */
