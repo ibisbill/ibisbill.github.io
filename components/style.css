@@ -129,7 +129,7 @@ nav .nav-inner {
   display: grid;
   grid-template-columns: 1fr 280px;
   gap: 60px;
-  align-items: start;
+  align-items: center;
 }
 
 .hero-text h1 {
@@ -198,7 +198,6 @@ nav .nav-inner {
   position: relative;
   width: 280px;
   height: 280px;
-  margin-top: 5.2rem;
 }
 
 .avatar-wrapper img {
@@ -213,10 +212,6 @@ nav .nav-inner {
   left: 0;
   opacity: 0;
   transition: opacity 0.8s ease-in-out;
-}
-
-.avatar-wrapper img.active {
-  opacity: 1;
 }
 
 .avatar-wrapper img.active {
