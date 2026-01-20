@@ -4,29 +4,269 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publications - Maggie Huan</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600;1,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="components/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* ----- 调色板：你可以修改这里的颜色代码来换风格 ----- */
+            
+            /* 风格：现代学术蓝 (Modern Academic Blue) */
+            --bg-body: #f8fafc;          /* 极淡的灰蓝色背景 */
+            --bg-card: #ffffff;          /* 卡片白色背景 */
+            --text-main: #2c332e;
+    --text-muted: #6b7280;
+    --primary: #4d7c5e;
+    --primary-dark: #3a6048;
+    --accent-bg: #edf5f0;
+    --border: #e2e8f0; 
+    
+            /* 尺寸变量 */
+            --max-width: 960px;
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 通用链接样式 */
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* 容器 */
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* --- 导航栏 --- */
+        nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 0;
+        }
+
+        nav .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* --- Page Header --- */
+        .page-header {
+            padding: 60px 0 40px;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .page-header .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Section Styles --- */
+        section {
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        /* --- Publications --- */
+        .pub-list {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .pub-item {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .pub-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08);
+            border-color: var(--border);
+        }
+
+        .pub-item.highlight {
+            background: #fff;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+        }
+
+        /* 如果有缩略图可以放这里，没有就隐藏 */
+        .pub-img {
+            display: none; /* 如果你想放paper缩略图，把这里改为 block 并设置宽高 */
+        } 
+
+        .pub-content {
+            flex: 1;
+        }
+
+        .pub-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .pub-authors {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .pub-authors strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .pub-venue {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .tag-oral {
+            display: inline-block;
+            background-color: #ffffff; /* 淡黄色背景 */
+            color: #ff6200; /* 深褐色文字 */
+            font-size: 0.75rem;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-style: italic;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pub-links {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .pub-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
     <nav>
         <div class="container nav-inner">
-            <div class="nav-logo">Maggie Ziyu Huan</div>
+            <div class="nav-logo">Maggie's Work</div>
             <div class="nav-links">
                 <a href="index.html">About</a>
                 <a href="publications.html" class="active">Publications</a>
-                <a href="data/llm_guide_site/index.html">Study Guide</a>
             </div>
         </div>
     </nav>
 
     <div class="container">
-        <header style="padding: 60px 0 40px;">
-            <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Publications</h1>
-            <p style="font-size: 1.25rem; color: var(--text-muted); font-family: var(--sans);">Papers, Preprints, and Scholarly Work</p>
-        </header>
+        <div class="container">
+            <header style="padding: 60px 0 40px;">
+                <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Publications</h1>
+                <p style="font-size: 1.25rem; color: var(--text-muted); font-family: var(--sans);">Papers, Preprints, and Scholarly Work</p>
+            </header>
 
         <section>
+
             <div class="section-title">2025</div>
             
             <div class="pub-list">
@@ -62,62 +302,59 @@
                 </div>
 
             </div>
-        </section>
-
-        <section>
             <div class="section-title">Preprints</div>
 
-            <div class="pub-list">
-                <div class="pub-item highlight">
-                    <div class="pub-content">
-                        <div class="pub-title">Does Math Reasoning Improve General LLM Capabilities? Understanding Transferability of LLM Reasoning</div>
-                        <div class="pub-authors">
-                            <strong>Maggie Huan*</strong>, Yuetai Li*, Tuney Zheng*, Xiaoyu Xu, Seungone Kim, Minxin Du, Radha Poovendran, Graham Neubig, Xiang Yue
-                        </div>
-                        <div class="pub-venue">In Submission, 2025</div>
-                        <div class="pub-links">
-                            <a href="https://arxiv.org/abs/2507.00432" target="_blank">Paper</a>
-                            <a href="https://github.com/ReasoningTransfer/Transferability-of-LLM-Reasoning" target="_blank">Code</a>
-                            <a href="https://huggingface.co/ReasoningTransferability" target="_blank">Huggingface</a>
-                        </div>
+            <div class="pub-item highlight">
+                <div class="pub-content">
+                    <div class="pub-title">Does Math Reasoning Improve General LLM Capabilities? Understanding Transferability of LLM Reasoning</div>
+                    <div class="pub-authors">
+                        <strong>Maggie Huan*</strong>, Yuetai Li*, Tuney Zheng*, Xiaoyu Xu, Seungone Kim, Minxin Du, Radha Poovendran, Graham Neubig, Xiang Yue
                     </div>
-                </div>
-
-                <div class="pub-item">
-                    <div class="pub-content">
-                        <div class="pub-title">Domain Gating Ensemble Networks for AI-Generated Text Detection</div>
-                        <div class="pub-authors">
-                            Arihant Tripathi, Liam Dugan, Charis Gao, <strong>Maggie Huan</strong>, Meiqing Jin, Peter Zhang, Lyuxin David Zhang, Julia Zhao, Chris Callison-Burch
-                        </div>
-                        <div class="pub-venue">In Submission, 2025</div>
-                        <div class="pub-links">
-                            <a href="https://arxiv.org/abs/2505.13855" target="_blank">Paper</a>
-                            <a href="https://github.com/Siris2314/dogen" target="_blank">Code</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pub-item">
-                    <div class="pub-content">
-                        <div class="pub-title">How and Why LLMs Generalize: A Fine-Grained Analysis of LLM Reasoning from Cognitive Behaviors to Low-Level Patterns</div>
-                        <div class="pub-authors">
-                            Haoyue Bai, Yiyou Sun, Wenjie Hu, Qiu Shi, <strong>Maggie Huan</strong>, Peiyang Song, Robert Nowak, Dawn Song
-                        </div>
-                        <div class="pub-venue">In Submission, 2025</div>
-                        <div class="pub-links">
-                            <a href="https://arxiv.org/html/2512.24063v1" target="_blank">Paper</a>
-                        </div>
+                    <div class="pub-venue">In Submission</div>
+                    <div class="pub-links">
+                        <a href="https://arxiv.org/abs/2507.00432" target="_blank">Paper</a>
+                        <a href="https://github.com/ReasoningTransfer/Transferability-of-LLM-Reasoning" target="_blank">Code</a>
+                        <a href="https://huggingface.co/ReasoningTransferability" target="_blank">Huggingface</a>
                     </div>
                 </div>
             </div>
+
+            <div class="pub-item">
+                <div class="pub-content">
+                    <div class="pub-title">Domain Gating Ensemble Networks for AI-Generated Text Detection</div>
+                    <div class="pub-authors">
+                        Arihant Tripathi, Liam Dugan, Charis Gao, <strong>Maggie Huan</strong>, Meiqing Jin, Peter Zhang, Lyuxin David Zhang, Julia Zhao, Chris Callison-Burch
+                    </div>
+                    <div class="pub-venue">In Submission</div>
+                    <div class="pub-links">
+                        <a href="https://arxiv.org/abs/2505.13855" target="_blank">Paper</a>
+                        <a href="https://github.com/Siris2314/dogen" target="_blank">Code</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pub-item">
+                <div class="pub-content">
+                    <div class="pub-title">How and Why LLMs Generalize: A Fine-Grained Analysis of LLM Reasoning from Cognitive Behaviors to Low-Level Patterns</div>
+                    <div class="pub-authors">
+                        Haoyue Bai, Yiyou Sun, Wenjie Hu, Qiu Shi, <strong>Maggie Huan</strong>, Peiyang Song, Robert Nowak, Dawn Song
+                    </div>
+                    <div class="pub-venue">In Submission</div>
+                    <div class="pub-links">
+                        <a href="https://arxiv.org/html/2512.24063v1" target="_blank">Paper</a>
+                    </div>
+                </div>
+            </div>
+
         </section>
     </div>
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 Maggie Ziyu Huan</p>
+            <p>Maggie @ 2025</p>
         </div>
     </footer>
+
 
 </body>
 </html>
