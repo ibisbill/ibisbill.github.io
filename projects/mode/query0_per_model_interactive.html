@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Per-Model Cluster Analysis - Query 0</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+        .query-text {
+            background: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            color: #4a5568;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* Cluster count comparison section */
+        .comparison-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .comparison-section h2 {
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .cluster-count-card.pretrain {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        .cluster-count-card.posttrain {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        .cluster-count-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .cluster-count-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            word-break: break-all;
+        }
+        
+        /* Model sections */
+        .model-section {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .model-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .model-header.pretrain {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        .model-header.posttrain {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        .model-header:hover {
+            opacity: 0.9;
+        }
+        .model-info h3 {
+            margin-bottom: 4px;
+        }
+        .model-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .model-body {
+            display: none;
+            padding: 20px;
+        }
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Clusters within model */
+        .cluster-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .cluster-header {
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .cluster-header:hover {
+            background: #edf2f7;
+        }
+        .cluster-info h4 {
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+        .keywords {
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #4a5568;
+        }
+        .cluster-size {
+            background: #667eea;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .cluster-body {
+            display: none;
+            padding: 0 16px 16px;
+        }
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Responses */
+        .response-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .response-tag {
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #4a5568;
+        }
+        .response-text {
+            color: #2d3748;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+        
+        /* Controls */
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn:hover {
+            background: #5a67d8;
+        }
+        .btn.secondary {
+            background: #718096;
+        }
+        .btn.secondary:hover {
+            background: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Per-Model Cluster Analysis Results</h1>
+            <div class="query-text">
+                <strong>Query 0:</strong> Write a short story about a colorful toad goes on an adventure in 50 words.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">60</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">25</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4.2</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cluster Count Comparison -->
+        <div class="comparison-section">
+            <h2>Cluster Count Comparison</h2>
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain">
+                    <div class="cluster-count-value">8</div>
+                    <div class="cluster-count-label">pretrain_stage1-step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">pretrain_stage1-step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">posttrain_step_100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">posttrain_step_200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">posttrain_step_300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">posttrain_step_400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">Expand/Collapse All Models</button>
+            <button class="btn secondary" onclick="toggleAllClusters()">Expand/Collapse All Clusters</button>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <h3>pretrain_stage1-step1413814</h3>
+                    <div class="model-stats">
+                        <span>8 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">8</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: TOADIOT</h4>
+                            <span class="keywords">adventure, jumping, forest, stream, journey, legend</span>
+                        </div>
+                        <div class="cluster-size">3</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">ad in a little stream, named Pippa. She was always trying to find a way to stand out in the murky water.
+
+One sunny morning, Pippa discovered a tiny flower in the stream. She took a deep breath and carefully climbed up onto the flower&#39;s stem, holding onto its delicate petals. As she looked around, she realized that the water was not as deep as she thought, and she was now standing on the flower!
+
+...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">ad named Toadiot. Toadiot was known for his ability to jump higher than any other toad in the entire animal kingdom. He was the pride and joy of his family and the envy of all his friends.
+
+One day, Toadiot decided to go on a journey to explore the world. He hopped and jumped his way through the forest, past the fields, and across the streams. Along the way, he met a friendly frog who taught him a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">ad sitting on a lily pad in the middle of a pond. He was quite the sight to behold. With bright green skin, a big orange mouth, and a big white belly, he was like no other toad around. As the sun shone down on him, he smiled at his reflection in the water. He was so happy, he hopped around in delight.
+
+Now, this toad wasn’t just any toad. He was the Toad of Legend, and he was famous for his abilit...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: colorful toadstool</h4>
+                            <span class="keywords">adventure, mushrooms, party, woods, friends, basket</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">adstool. It had many friends. One day, all of them went into the woods, because the colorful toadstool was looking for mushrooms for a party he was going to have with his friends. The colorful toadstool found many different kinds of mushrooms. The colorful toadstool found the mushrooms, and put them in a basket. Then, they all went home to the toadstool&#39;s house to have their party. The toadstool h...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: FROGGIE</h4>
+                            <span class="keywords">fairy, pond, meadow, cheerful, ripple, sparkles</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">ad named Froggie. Froggie was known for his kind heart and cheerful demeanor, and he lived in a small pond near a sunny meadow.
+
+One sunny morning, Froggie woke up to the sound of gentle ripples in the water. He looked up to see a shimmering fairy gracefully dancing on the surface. The fairy’s wings sparkled in the sunlight as she twirled and glided across the water.
+
+“Good morning, Froggie!” chir...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: fairy toad</h4>
+                            <span class="keywords">song, swamp, loneliness, beauty, adventure, friendship</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">ad in an empty swamp, he was very lonely, and his life was very difficult. He had a beautiful song, so he kept singing every day. One day, the beautiful fairy heard the beautiful song, and felt that the song was very touching, and she liked the toad very much.
+
+The fairy was a beautiful and handsome girl. After the toad heard this, she was shocked. She liked the toad very much. She came to the swa...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: tad and tilly</h4>
+                            <span class="keywords">adventure, marsh, lily pad, song, yellow bird, exploration</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">ad named Tad. He lived in a beautiful marsh, surrounded by tall reeds and sparkling water. Tad loved exploring and jumping from lily pad to lily pad, searching for delicious insects and tasty treats.
+
+One sunny day, Tad heard a soft, melodious sound. It was the voice of a small, yellow bird called Tilly. Tilly was singing a song about how wonderful the world was, with bright colors and friendly cr...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: hide and seek</h4>
+                            <span class="keywords">toad, flower, leaf, color, adventure, hide</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">ad who loved playing hide and seek. One day, he spotted a bright purple flower and decided to count to 10 while hiding behind it.
+
+But the sneaky toad soon realized the flower’s vibrant hue would make him easy to spot. He switched to a green leaf, hoping it would blend in better.
+
+However, the toad soon discovered the leaf’s small size made it difficult to hide. So, he tried hiding behind a big ro...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: colorful toad</h4>
+                            <span class="keywords">swamp, flower, song, glow, dance, enchantment</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">ad who lived in a swamp. One day, while exploring the swamp, he stumbled upon a beautiful pink flower. Mesmerized by its delicate petals and sweet fragrance, the toad approached the flower and began to sing a song. As he sang, the flower began to dance and twirl, casting a warm, soothing glow around the swamp.
+
+The toad couldn’t help but be enchanted by the flower’s beauty and grace. He sang and d...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: no toad adventure</h4>
+                            <span class="keywords">fire, loss, nothing, house, car, dog</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">ad. He was quite happy with his life. He had everything he could ever want. He had a big house, a nice car, a dog, and a job that he loved. He also had lots of friends and a great family.
+
+But one day, something bad happened. The toad lost everything he had. His house was destroyed by a fire, his car was stolen, and his dog ran away. He was left with nothing but the clothes on his back.
+
+The toad ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <h3>pretrain_stage1-step960000</h3>
+                    <div class="model-stats">
+                        <span>10 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: BLUE CAP TOADSTOOL</h4>
+                            <span class="keywords">toadstool, blue cap, wishes, teleport, poison, rumors</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">adstool with a vibrant blue cap and a yellowish-white stem. It was a peculiar sight, standing out in a field of more traditional brown mushrooms. This toadstool had become quite the spectacle in the neighborhood, with rumors spreading faster than the speed of lightning. People claimed it could grant wishes or even teleport you to another world. Others warned of its poisonous nature, capable of par...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: friendly toad</h4>
+                            <span class="keywords">adventure, garden, flowers, frog, play, shy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">ad and a handsome frog. The toad was very friendly, and the frog was very shy. The toad always wanted to play with the frog, but the frog was too shy to join in. One day, the toad saw that the frog was so sad and said, “Come on, let’s play together!” The frog was shy but decided to join in the fun.
+
+The toad took the frog to a beautiful garden full of flowers and fruits. They played hopscotch and ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: colorful toad adventure</h4>
+                            <span class="keywords">city, dreams, small size, fame, welcome, journey</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">ad, and one day, he set off to the big city. He had big dreams of becoming a famous actor, and he was determined to make it happen. But as he traveled through the city, he realized that the toads there weren&#39;t very welcoming. They all looked down on him and made fun of his small size.
+
+But the toad was not one to give up easily. He continued on his journey, determined to prove that he was just as ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: colorful toad</h4>
+                            <span class="keywords">adventure, pond, dry, survival, home, question</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">ad with blue spots, who lived in a little pond surrounded by green grass and bright flowers. The toad was very happy because the pond was his home, and he had everything he needed to live his best life.
+
+But the toad had one big question: What would he do when the pond dried up? He wondered how he could survive without a home or food to eat.
+
+One day, the toad decided to ask the other animals in t...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: random objects</h4>
+                            <span class="keywords">toad, adventure, bag, tools, movie, project</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">on who was given the task to help bring a certain movie project to completion. He was given a very large bag, which contained everything he would need for his adventure. The bag contained the following: a camera, a pencil and a paper, a pen, a brush, a sheet of paper, a paintbrush, a paintpot and some paint, a ruler, an eraser, a computer and a pencil, a keyboard, a mouse, a screen, a power cord, ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: bright toad</h4>
+                            <span class="keywords">green skin, oak tree, birds, stream, adventure, leap</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">ad, with bright green skin. The toad had no legs, so he couldn&#39;t hop around and travel around. Instead, the toad would lie under a large oak tree and wait for the birds to pass by.
+
+A few of the birds had learned to take the toad to the stream. When they did this, the toad would leap off into the stream and swim away.
+
+One day, a young lady saw the toad sitting under the oak tree, with its bright ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: FROGGY AND FLOWERS</h4>
+                            <span class="keywords">meadow, flowers, secret society, giggling, council, adventure</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">ad named Froggy. One day, he decided to take a stroll through a beautiful meadow. As he walked, he saw a group of flowers giggling and chatting among themselves. Intrigued, Froggy approached them and asked, “Hello, flowers! What are you all up to?”
+
+The flowers were surprised but happy to have a new friend. They explained that they had decided to form a secret society called the Flower Council. Th...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: toad adventure</h4>
+                            <span class="keywords">meadow, pond, friends, sunny, green, curious</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">ad named Toad who was living his best life in a sunny meadow. Toad was a friendly and outgoing toad, with bright green eyes and a smile that could light up the whole meadow. He loved to spend his days basking in the sun and chatting with his animal friends.
+
+One day, Toad was walking around the meadow when he noticed a group of animals gathered around a small pond. Curious, Toad approached the gro...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: bubbles</h4>
+                            <span class="keywords">toad, pond, ducks, grace, adventure, elegance</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">ad named Bubbles. Bubbles lived in a pond surrounded by lush green trees. One day, as Bubbles was hopping around, he noticed a group of ducks floating on the water. The ducks were not only beautiful but also graceful as they glided through the pond.
+
+Bubbles watched the ducks and couldn’t help but be impressed by their elegance. He wondered if he could ever become as graceful as them. So, he decid...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: strange behavior</h4>
+                            <span class="keywords">friendship, odd, cool, laughter, toad, adventure</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">on animal who was really into his friends. When he was around them, he would act in a strange and unorthodox way. At first, his friends would laugh at his odd behavior. But then, he decided to turn a blind eye to their laughter and started to hang out with them anyway. As a result, they began to notice that his strange behavior wasn&#39;t all that strange after all. In fact, it was pretty cool! Now, w...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <h3>posttrain_step_100</h3>
+                    <div class="model-stats">
+                        <span>2 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: COLORFUL TOADS</h4>
+                            <span class="keywords">adventure, colors, forest, dance, rainbow, friendship</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Bumble, the cobalt toad, hopped from sunlit pond to mossy log, guided by shimmering dragonfly signals. Along the way, she discovered a hidden beetle gold mine and danced raindrops into rainbows. By twilight, Bumble returned home, her vibrant skin sparkling—carrying a tale only a true adventurer could tell.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Blossoming into hues of emerald, tangerine, and lavender, Tessa the toad braved the dusk. With a leap, she discovered a secret mossy path. Along the way, she met a starry firefly, shared a song, and returned home glowing brighter than ever—her adventure forever painted in color.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Jasper the toad was a burst of turquoise, lime, and red. One sunny morning, he hopped off his log, chasing a shimmering beetle. Along the way, he danced through wildflowers, splashed in rainbow puddles, and met a curious squirrel. Together, they laughed all the way home, painting the woods with Jasper’s radiant colors.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Jazzberry, a toad with bright green streaks and a purple belly, dreamed of adventure. He hopped across meadows, danced in sunlit ponds, and met a ladybug who told him a secret: the rainbow at sunset was the greatest treasure of all. With a grin, Jazzberry made for the hills.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Blinky, a bright green toad with a turquoise belly, hopped from the swamp’s edge. Curiosity tugged him toward the shimmering river. He splashed through sunbeams, met a sky-blue heron, and danced atop lily pads. At sunset, tired but glowing, Blinky returned home, his colors brighter than ever.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Blossoming with rainbows on his skin, Taffy the toad leapt from mud puddle to dandelion fluff. Curiosity pulled him toward the sun-dappled forest edge. Along the way, he befriended a squirrel, skated atop a beetle, and danced in spiderweb stars, painting memories as bright as his skin.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Blossom the bright blue toad hopped from the mud to sun-dappled leaves. Each leap left a sparkling trail. Chasing a flicker of firefly light, she discovered a hidden pond glowing in emerald green. There, she sang her song and danced, painting the night with her radiant colors until dawn welcomed her home.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Blinky, a neon toad with emerald eyes and a lime-green vest, woke to the whispering wind. Determined, he hopped onto his speckled log and journeyed through the glade. Over glittering streams and through whispering ferns, Blinky found joy in every new, vivid thing his adventure unveiled.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Blossom the toad, a riot of yellow, emerald, and violet, hopped from her marsh. Curious, she followed a shimmering rainbow to a hidden waterfall. There, she met starry fireflies and heard music from deep roots. Blossom beamed, painted by wonder on her bright back, as she returned, heart full of new colors.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: luna adventure</h4>
+                            <span class="keywords">toad, butterfly, meadow, color, glitter, race</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Luna, a bright green toad with a neon yellow belly, hopped from mushroom to mossy log. Curious, she discovered a glittering pebble. Following a shimmering trail, she met a blue butterfly, together they raced to the sunlit meadow, painting the day with new color and laughter.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <h3>posttrain_step_200</h3>
+                    <div class="model-stats">
+                        <span>2 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: COLORFUL TOAD ADVENTURES</h4>
+                            <span class="keywords">emerald, sapphire, rainbow, forest, dance, adventure</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Milo, a toad with shimmering emerald and sapphire spots, woke with a yawn. Today, he’d explore beyond the mud puddle. He leapt over pebbles, danced past bluebells, and met a clever caterpillar. Together, they raced to the glimmering pond, where Milo splashed joyfully beneath the twinkling moon.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Blossom, a toad with emerald scales and a sapphire stripe, hopped from the mossy log into the wild meadow. Curiosity led her to the shimmering riverbank, where she discovered a rainbow flickering above the water. Blossom danced along, chasing the ever-moving colors—her most vibrant adventure yet.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Benny the bright blue toad hopped out of Mossy Hollow. Curious, he chased a shimmering rainbow into Sunspot Forest, where he met a fox in red boots. Together, they danced on dewdrops and found a secret glade glowing with every color Benny knew.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Milo, a neon-green toad with polka-dotted feet, bounced from daisy to lily pad. His bright pattern caught the attention of a squirrel, who swung him atop a willow branch. There, the wind painted Milo’s skin with sunset hues as he chanted, “Adventure!” and splashed down to greet a world even more dazzling than his own.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Benny, the boldest blue toad in the pond, hopped from reed to lily pad. Curious, he tasted dew on a violet leaf. A green grasshopper joined, sharing stories under the pink moonlight. Together, they discovered a sparkling pebble, glowing like a hidden treasure in their bright, bountiful world.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Bright green Toadley hopped out of Mossy Grove, clutching a red berry and a blue mushroom. Each step left footprints of sparkly dew. He wandered through the emerald meadow, seeking adventure. Along the way, he made friends with a yellow butterfly and found a secret glade glowing with rainbow light, painting his day in color.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Milo, a dazzlingly patterned toad, woke with a giggle. His emerald back shimmered in the morning sun. Today, he’d explore the wildflower meadow! He leapt over silver daisies, slid past purple thistles, and made a rainbow arch for a snail. Back home, he boasted of his brightest tale—of his marvelous, magnificent adventure.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Bumble, a bright orange toad, stretched his spiky back and set off for adventure. Along the mossy path, he met a blue-spotted snail and a green grasshopper. Together, they leapt and skippered past a rainbow puddle, painting the world even brighter than Bumble’s spotless skin.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Beneath a sunrise-stained sky, Tootles the turquoise toad hopped from lily pad to mossy stone. He gathered sparkling pebbles, painted his belly pink, and sang to the dew. Each turn revealed a new color in the forest—amber mushrooms, emerald leaves—and Tootles danced, eager to discover the world’s dazzling hues.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: BOUNCY BENNY</h4>
+                            <span class="keywords">toad, adventure, rainbow, treasure, snail, willow</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Bouncy Benny the toad, painted in turquoise and sunflower yellow, hopped from his mossy log. He spotted a glimmer of rainbow in the pond and set off. Along the way, he befriended a tiny red snail and together they solved the mystery of the hidden treasure—a single sparkling pebble—under the biggest willow in the meadow.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <h3>posttrain_step_300</h3>
+                    <div class="model-stats">
+                        <span>2 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: ZIPPY ADVENTURE</h4>
+                            <span class="keywords">toad, rainbow, adventure, color, gem, forest</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Blinking in the sunrise, Zippy the turquoise toad hopped from the dewy meadow. His speckled back shimmered as he followed a rainbow arc, leaping over curious worms and splashing through puddles. With a gleeful croak, Zippy discovered a glittering gem, ending his bright adventure with a sparkling smile and a new friend: a grinning frog.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Beneath a neon dawn, Zippy the toad, a kaleidoscope of spotty greens and purples, blinked awake. Curious, he slithered from his mud puddle, seeking adventure. Each leap painted the forest in swirls of color as Zippy discovered sparkling dewdrops and a hidden rainbow tunnel. His vibrant journey began!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Bella, a vibrant toad with emerald spots and a sunflower-yellow throat, desired adventure. At dawn, she slipped from her log home. Along the willow-banked creek, she discovered a rainbow sheen on the moss and nuzzled a sleepy snail. Back home, Bella’s stripes glowed brighter, a true explorer.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Blossom the toad, a kaleidoscope of turquoise, pink, and emerald, yearned for adventure. Slipping from the mossy log, she bounced through sun-dappled woods. With a whoop, she leapt over a beetle’s path, trailing sparkles in her wake. At sunset, she found a rainbow—and danced right across its arc.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Bella, a brilliant blue toad with gold freckles, hopped from her mossy log to the meadow. There, she spotted a rainbow flicker. Chasing it led her to a shimmering pond, where she found a secret flower that hummed in the breeze. Bella returned home, her tail glowing with the magic of her colorful adventure.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Blossom, a bright yellow toad with emerald polka dots, hopped from mossy log to sunlit brook. As she tasted the raindrops and danced through wildflowers, the world seemed more vibrant than ever. Suddenly, a map-frogs whispered a secret trail—Blossom leapt bravely into the unknown, seeking new colors and wonders.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Blossom the toad, striped in emerald and sunflower yellow, set off for adventure beneath the dappled canopy. She hopped across rainbows left by mist, searching for a legendary glowing mushroom. Along the way, she befriended a snail and discovered the world was brighter with a little curiosity and courage.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Blinking emerald eyes, Zaff the toad leapt from his mossy log. Vibrant as a rainbow, he wiggled past thorny brambles, splashed into a sun-dappled stream, and caught raindrops in his spotted back. Each turn revealed new colors in the forest, and Zaff sang with glee, proud of his bright, bold adventure.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Blinky, a toad with rainbow-sparkled skin, woke to a sunny day. He bounced through the marsh, leaping over pebbles and past curious dragonflies. In a glade of flowers, he found a lost acorn. Returning it, Blinky was rewarded with a new friend and a melody that echoed his own vibrant song.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: blossom adventure</h4>
+                            <span class="keywords">toad, colors, spore, mushroom, adventure, glow</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Blossom, a bright green toad, stretched under a mushroom ring. One curious dot of blue spore drifted near, beckoning. Ignoring caution, Blossom plopped in, and the world exploded into purples and yellows. Each hop led to more colors—until Blossom danced back home, glowing with new adventures.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <h3>posttrain_step_400</h3>
+                    <div class="model-stats">
+                        <span>1 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: COLORFUL TOADS</h4>
+                            <span class="keywords">adventure, rainbow, glow, forest, spark, discovery</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Bright Yellow Wally hopped from the mossy pond, his speckled back glowing like a sunset. Dashing through ferns, he discovered a rainbow-spotted beetle. Together, they raced over roots and past a sleepy frog, promising more adventures where color and curiosity led the way.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Blossom the toad was streaked in red, yellow, and violet. One morning, she spotted a shimmering butterfly. Eager for adventure, she leapt over reeds and through wild violets, following the flutter until she reached a sunlit pond, discovering a hidden, sparkling gem beneath the lily pads.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Bright as a sunset, Tally the toad hopped from flower to flower. Each step left a sparkly trail. One day, she spotted a strange rainbow leaf. Climbing, she discovered a hidden pond glowing with all seven hues. Tally’s adventure became the most vivid day of her life.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Blossom, a bright turquoise toad, leaped from her lily pad. Her neon pattern glowed in the sun. Chasing a shimmering bug, she discovered a hidden cave filled with rainbow crystals. Each step lit her way, and she danced back to her pond, now sparkling with newfound color.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Brightly patterned Toadny hop-trotted from Ferny Meadow. Curious, he tasted dewdrops, leaped over moonlit mushrooms, and danced among fireflies. At the Whispering Willows, Toadny discovered a hidden gem—a secret pond glowing with rainbow light. Home again, his colors shone even brighter from the wild adventure.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Glimmer, a bright orange toad, woke to the chirping of dawn. Craving adventure, he leapt from his pond. Through emerald fields and by the rainbow-touched river, Glimmer chased a shimmering blue butterfly, painting memories in hues no one had ever seen before.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Bumble, a toad with shimmering emerald and sun-yellow patches, woke to a craving for adventure. He slipped through the rain-spotted garden, leapt over a dewy leaf, and danced into the twilight, collecting sparkling firefly sparks along the way. Back home, his colors glowed brighter than ever.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Milo, a bright green toad, hopped from his mossy home into the sunlit meadow. His speckled back shimmered in the light. Curious, he followed a rainbow flicker—discovering a hidden pond where fireflies danced. Milo laughed, soaking in the glow and joy of his perfect, dazzling adventure.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Blossom, the vibrant toad, woke to a flicker of sunrise. Curious, she slipped from her lily pad, darting through dew-kissed grass. She danced over pebbles, sang to the mist, and met a sleepy snail. With a splash in a glittering puddle, Blossom realized every day was an adventure.</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Benny the blue-striped toad craved adventure. One dewy dawn, he slipped through emerald moss, leaped into a sunlit pond, and spotted a glimmer of gold. Chasing it, Benny danced across pebbles, discovering a hidden glade where fireflies twirled, painting the night with his own radiant hue.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
