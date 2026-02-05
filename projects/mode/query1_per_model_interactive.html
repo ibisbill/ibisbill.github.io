@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Per-Model Cluster Analysis - Query 1</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+        .query-text {
+            background: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            color: #4a5568;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* Cluster count comparison section */
+        .comparison-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .comparison-section h2 {
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .cluster-count-card.pretrain {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        .cluster-count-card.posttrain {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        .cluster-count-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .cluster-count-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            word-break: break-all;
+        }
+        
+        /* Model sections */
+        .model-section {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .model-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .model-header.pretrain {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        .model-header.posttrain {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        .model-header:hover {
+            opacity: 0.9;
+        }
+        .model-info h3 {
+            margin-bottom: 4px;
+        }
+        .model-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .model-body {
+            display: none;
+            padding: 20px;
+        }
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Clusters within model */
+        .cluster-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .cluster-header {
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .cluster-header:hover {
+            background: #edf2f7;
+        }
+        .cluster-info h4 {
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+        .keywords {
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #4a5568;
+        }
+        .cluster-size {
+            background: #667eea;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .cluster-body {
+            display: none;
+            padding: 0 16px 16px;
+        }
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Responses */
+        .response-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .response-tag {
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #4a5568;
+        }
+        .response-text {
+            color: #2d3748;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+        
+        /* Controls */
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn:hover {
+            background: #5a67d8;
+        }
+        .btn.secondary {
+            background: #718096;
+        }
+        .btn.secondary:hover {
+            background: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Per-Model Cluster Analysis Results</h1>
+            <div class="query-text">
+                <strong>Query 1:</strong> Generate a joke about electric vehicles.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">60</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">13</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2.2</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cluster Count Comparison -->
+        <div class="comparison-section">
+            <h2>Cluster Count Comparison</h2>
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain">
+                    <div class="cluster-count-value">4</div>
+                    <div class="cluster-count-label">pretrain_stage1-step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain">
+                    <div class="cluster-count-value">4</div>
+                    <div class="cluster-count-label">pretrain_stage1-step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">posttrain_step_100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">posttrain_step_200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">posttrain_step_300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">posttrain_step_400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">Expand/Collapse All Models</button>
+            <button class="btn secondary" onclick="toggleAllClusters()">Expand/Collapse All Clusters</button>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <h3>pretrain_stage1-step1413814</h3>
+                    <div class="model-stats">
+                        <span>4 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">4</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: electric car jokes</h4>
+                            <span class="keywords">therapy, battery, charge, voltage, current, humor</span>
+                        </div>
+                        <div class="cluster-size">7</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> Because it had an existential battery crisis and needed someone to help it charge its emotional battery!
+
+Why did the electric car go to therapy? It had too many battery issues to handle on its own!
+
+Why did the electric car go to therapy? It was feeling drained and needed a power nap!
+
+How did the electric car end its therapy session? With a “spark” of hope and a renewed sense of charge!
+
+Why di...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> Because it needed to recharge its emotional battery.
+
+What do you call an electric car with a PhD? A brainiac battery.
+
+Why did the electric car apply for a job? Because it had a lot of charge!
+
+Why don’t electric cars ever get lost? Because they always have a built-in GPS charge.
+
+Why did the electric car become a motivational speaker? Because it had a lot of current.
+
+Why did the electric car s...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> Because it had too many charging issues.
+The electric car is the car that never gets tired.
+Why did the electric car get in trouble at school? Because it couldn’t stop charging its classmates with its high voltage personality.
+I used to work as a comedian for electric cars, but I got shocked out of the job. I guess I just couldn’t keep up the current.
+Why did the electric car take up stand-up com...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> It had some serious current issues.
+
+Why don’t electric cars charge at night? They’re not compatible with voltage drops.
+
+Why was the electric car charged? It needed to get into the fast lane.
+
+How do electric cars communicate with each other? Through electric signals.
+
+Why did the electric car take a break? It needed to charge its batteries and recharge.
+
+Why was the electric car’s battery alway...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> Because it had too many ‘charge’ issues!
+
+Why are electric vehicles environmentally friendly? Because they’re always on the move and don’t have a “parking problem.”
+
+Why don’t electric vehicles get lost? Because they’re always ‘charged up’ on their whereabouts!
+
+What do you call an electric vehicle with a good sense of humor? Charged with electricity!
+
+Electric Vehicle Puns in Everyday Life
+
+Driv...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> It needed to recharge.
+
+Did you hear about the electric vehicle that went on a diet? Now it’s a power-efficient sedan.
+
+Why don’t electric vehicles ever get lost? Because they always stay charged.
+
+How did the electric vehicle propose to its partner? With a spark of energy.
+
+What’s an electric vehicle’s favorite type of music? Electric boogie!
+
+How do electric vehicles stay entertained on road tr...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> Because it was feeling charged and needed to vent about the battery of emotions!
+
+Electric Vehicle Jokes
+
+Who is the most popular singer at an electric vehicle dealership? Kanye West – because he’s always talking about “Ye West” in the EV world!
+
+Did you hear about the electric vehicle that won the science fair? It was a shock to everyone!
+
+Why did the electric vehicle cross the road? Because it ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: ELECTRIC JOKES</h4>
+                            <span class="keywords">electric, vehicle, charging, motor, electrician, joke</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> 
+
+It had too many charging issues. 
+
+What do you call an electric motor that doesn’t work?
+
+A joke-er
+
+How can you tell the difference between a good electrician and a bad electrician?
+
+If your house doesn’t get struck by lightning.
+
+You can explore electrician joke reddit one liners, including funnies and gags. Read them and you will understand what jokes are funny? Those of you who have teens c...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: ELECTRIC JOKES</h4>
+                            <span class="keywords">electric cars, humor, recharge, band, albino, future</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> Because it couldn&#39;t handle the recharge!
+
+Electric Cars: They&#39;re not just good for the environment, they&#39;re also good for your sense of humor.
+
+I&#39;m going to start a band called &quot;Electric&quot; and our first album will be called &quot;Albino&quot; It&#39;ll be the only albino band ever!
+
+Electric Cars: Driving the Future, and also driving the electric jokes!</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: electric vehicle jokes</h4>
+                            <span class="keywords">taxi, airport, charging, map, driver, joke</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> It was having trouble getting charged.
+A man gets in a taxi at an airport
+A man gets in a taxi at an airport and says to the driver “Drive me to the airport” the driver replies “I would love to, but I left my map at home” the man says “you’re from around here you have no idea where the airport is?” the driver confirms. The man says “how about you drop me off and take a look, I’ll pay extra” the d...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <h3>pretrain_stage1-step960000</h3>
+                    <div class="model-stats">
+                        <span>4 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">4</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: ELECTRIC CAR JOKE</h4>
+                            <span class="keywords">charging, battery, zapped, puns, electric vehicle, humor</span>
+                        </div>
+                        <div class="cluster-size">6</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> To charge its feelings.
+
+What’s a battery’s favorite dance? The lithium-ion shuffle.
+
+What’s a car’s favorite TV show? The Road to Adventure.
+
+What did the electric car say when it saw a gas station? “Don’t leave me stranded!”
+
+What do you call a car that’s always late? A tardy-bag.
+
+What’s a car’s favorite sport? The race to the finish line.
+
+Why don’t electric cars go on dates? They’re always g...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> Because it was feeling a bit battery-ed!” 🙃 #BatteriesAreHeavy
+
+7. “Did you hear about the electric car that crashed? It was a little too zapped up on the highway!” 😅 #ZappedUp
+
+8. “Why did the electric car go to the doctor? It had a bad case of the charging blues!” 😅 #ChargingBlues
+
+9. “Why don’t electric cars tell jokes? Because they’re afraid of being zapped by a bad punchline!” 😂 #ZappedPunch...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> Because it couldn&#39;t handle the high voltage of its emotions!
+What&#39;s an electric vehicle&#39;s favorite sport? Sustaining.
+What do you call a small electric vehicle? A spark plug.
+Why did the electric vehicle refuse to get married? It couldn&#39;t commit to one charger.
+What do you call a group of electric vehicles? A battery of vehicles.
+What do you call an electric vehicle that&#39;s always late? A punctual...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> It needed some grounding and a good battery charge!”
+
+2. “A car without a driver is like a phone without a screen – it’s still cool, but it’s missing a crucial part!”
+
+3. “Why do electric cars always make friends with trees? They have such great battery trees!”
+
+4. “What did the electric car say to the charging station? ‘I’m all charged up and ready to rock!’”
+
+5. “Why did the electric car go to ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> It needed a battery to recharge its emotional self!
+Are you a battery? Because you’re a little chargeful!
+Did you hear about the electric car that won a race? It really revved up the competition!
+Why did the battery go to college? To get a degree in volts!
+Did you hear about the electric car that got in a fight? It had a serious battery of evidence!
+Why did the electric car refuse to move? It was...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> Because it had too many issues with its battery life and needed some emotional support!
+
+Why was the electric vehicle a successful artist? It had a great sense of voltage and rhythm!
+
+Why did the electric vehicle attend the music festival? To rock the stage with its electric beats and powerful tunes!
+
+Why did the electric vehicle get promoted to CEO? It had a natural talent for leading the charge...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: electric vehicle jokes</h4>
+                            <span class="keywords">therapy, battery, self-esteem, ev, catharsis, issues</span>
+                        </div>
+                        <div class="cluster-size">2</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> Because it had a lot of issues with its battery and needed a catharsis!
+Get the best experience
+Hi There
+Welcome to InsanelySmashing, the home of the Insanely Smashing Community!
+
+Here you can ask questions, meet new people, and get updates on the latest stories from InsanelySmashing.
+
+You must create an account to participate in the Insanely Smashing community!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> It had some serious self-esteem issues.
+
+Why did the electric vehicle go to therapy? It had some serious self-esteem issues.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: AI FUTURISM</h4>
+                            <span class="keywords">ai, technology, future, daily lives, ethics, innovation</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> To charge up its self-esteem! 😅🔋
+
+@trendspod What are your thoughts on AI and the future of technology?
+
+@futurethoughts AI and technology are fascinating! I believe AI will enhance our daily lives, but it’s important to ensure it benefits everyone fairly. What do you think the future holds?
+
+What are your thoughts on the impact of technology on our daily lives?
+
+@techlife Technology has transfor...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: CHARGING JOKE</h4>
+                            <span class="keywords">electric vehicle, battery, therapy, charging issues, charged up, get it</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> Because it needed to sort out its charging issues! Get it? Charging issues? Charging issues?
+
+Get It?
+
+Did you get it?
+
+Q: What did the electric vehicle say to its battery? I’m feeling a bit charged up today!
+
+Q: Why did the electric vehicle go to therapy? Because it needed to sort out its charging issues! Get it? Charging issues? Charging issues?
+
+I’m feeling a bit charged up today!
+
+I guess thi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <h3>posttrain_step_100</h3>
+                    <div class="model-stats">
+                        <span>1 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: electric car jokes</h4>
+                            <span class="keywords">electric vehicles, charging, batteries, spark, bakery, innovation</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Why don’t batteries ever get lost?
+
+Because they always find the charging station — or they just *spark* some inspiration and power through!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Why did the electric car decide to open a bakery?
+
+Because it always had the battery to deliver the *current* loaves—every time you plugged in for a recharge, it could whip up a fresh batch of sourdough with a spark of innovation!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get lost on the highway?
+
+Because they always stick to the charger—just like good directions! 🚗⚡😄</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Why did the electric car join a rock band?
+
+Because it had the batteries to deliver the electrifying solos!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get stuck in a parking lot?
+
+Because they always have the *juice* to find their own way out!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get lost?
+
+Because they always follow the charging current!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get lost on the highway?
+
+Because they always have the *current* direction!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Why did the battery in the electric car start telling jokes at the charging station?
+
+Because it wanted to *charge* the room with some current humor! 🔋😄</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get lost on the highway?
+
+Because they always take the *charge*—and they never run out of *current* directions! 🚗⚡️</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get stuck in a parallel universe?
+
+Because they already have a built-in battery of ideas!</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <h3>posttrain_step_200</h3>
+                    <div class="model-stats">
+                        <span>1 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: electric vehicle jokes</h4>
+                            <span class="keywords">battery, charge, therapy, party, charger, electric car</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Why did the electric car go to the party alone?
+
+Because it didn’t want to risk getting charged up by the crowd!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Why did the battery go to therapy?
+
+Because it had too many unresolved charge-ups and couldn’t let its negative emotions go!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Why did the battery cross the road?
+
+To chase the last charger on the other side!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Why don’t skeletons ever use electric cars?
+
+Because they already have a battery in their back… but they keep forgetting to plug it in!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Why did the electric car get invited to the party?
+
+Because it knew how to “charge” the mood and didn’t need a gas station to hit the dance floor! 🔋🚗💃</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Why did the electric car bring a ladder to the charging station?
+
+Because it heard the charger had “plugged-in” potential!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Why don&#39;t electric cars ever get &quot;carPlay&quot;?
+
+Because they&#39;re already charged up for the real music—plugged straight into the road!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get stuck in a snowbank?
+
+Because they always recharge their batteries with a little “current” help from a passing solar-powered snow plow!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Why did the battery in the electric car get a promotion at work?
+
+Because it finally stopped holding a *charge* around the office gossip!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Why did the electric car refuse to play hide and seek in the driveway?
+
+Because it always leaves the charging station… and everyone else in the dark!</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <h3>posttrain_step_300</h3>
+                    <div class="model-stats">
+                        <span>2 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: electric car jokes</h4>
+                            <span class="keywords">electric, car, party, charge, juice, humor</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Why did the electric car get invited to the party?
+
+Because it was the only one with enough juice to drive up the energy of the room! 🚗⚡</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get caught playing hide and seek?
+
+Because they always leave a *charge* in the backyard!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Why did the electric car get invited to the party?
+
+Because it always knew how to *charge* the mood—and it promised no more *recharging* the battery with long speeches!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Why did the electric car bring a ladder to the charging station?
+
+Because it heard its battery needed a &quot;recharge... at a higher voltage!&quot;</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Why did the battery in the electric car refuse to charge at the coffee shop?
+
+Because it heard there was no voltage in the coffee!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Why did the battery in the electric car join a band?
+
+Because it finally found its *charged*-up moment!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Why did the electric car refuse to join the carpool?
+
+Because it always wanted to be the *lead* in the charging station line, charging up with its own power—and never asking for a battery swap!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Why did the electric car get lost on the highway?
+
+Because it was too focused on recharging the road… and forgot to pay attention to the GPS!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Why don&#39;t electric cars ever get stuck in a queue at the drive-thru?
+
+Because they always have *juice* to go, and no one can stop their current charge! ⚡️🚗💨</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: EV JOKE</h4>
+                            <span class="keywords">electric vehicles, batteries, vacation, current trend, adventure, charged</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Why don’t batteries ever get lost on vacation?
+
+Because they always follow the current trend… and they’re charged up for adventure!</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <h3>posttrain_step_400</h3>
+                    <div class="model-stats">
+                        <span>1 clusters</span>
+                        <span>10 responses</span>
+                    </div>
+                </div>
+                <div class="cluster-size">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: electric car jokes</h4>
+                            <span class="keywords">electric car, battery, joke, garage, bakery, current</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Why did the electric car break up with the battery pack?
+
+Because it just couldn’t keep up with the current!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Why don&#39;t electric cars ever play hide and seek in the garage?
+
+Because they always leave a *charged* impression!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Why did the electric car apply for a job at the bakery?
+
+Because it wanted to help rise above the competition!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get lost?
+
+Because they always follow the *current* directions!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Why did the electric car bring a ladder to the charging station?
+
+Because it heard its battery was about to get *charged up*—with *current*! ⚡️🔋🤣</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Why don&#39;t electric cars ever get caught playing hide and seek?
+
+Because once they charge up, they become the *e* best hunter!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Why don’t electric cars ever get lost?
+
+Because they always follow the *current* direction—never taking the old battery roads!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Why did the electric car bring a ladder to the charger?
+
+Because it heard the cables would really “charge” up the party if you could handle the voltage!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Why don&#39;t electric cars ever get lost on the highway?
+
+Because they always follow the *current* trends!</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Why did the battery in the electric car apply for a second job?
+
+Because it got tired of powering just one person at a time and wanted to charge up the parking lot!</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
