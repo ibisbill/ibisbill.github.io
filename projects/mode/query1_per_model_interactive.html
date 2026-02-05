@@ -3,259 +3,601 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Per-Model Cluster Analysis - Query 1</title>
+    <title>Cluster Analysis - Query 1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-        .header {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .header h1 {
-            color: #2d3748;
-            margin-bottom: 12px;
-        }
-        .query-text {
-            background: #f7fafc;
-            padding: 16px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            font-style: italic;
-            color: #4a5568;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 16px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-        }
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.9;
+            line-height: 1.6;
         }
         
-        /* Cluster count comparison section */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
         .comparison-section {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
         }
-        .comparison-section h2 {
-            color: #2d3748;
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             margin-bottom: 16px;
         }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
         .cluster-count-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 12px;
         }
+        
         .cluster-count-card {
             padding: 16px;
             border-radius: 12px;
             text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
         .cluster-count-card.pretrain {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
         .cluster-count-card.posttrain {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
         }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
         .cluster-count-value {
-            font-size: 2.5em;
-            font-weight: bold;
+            font-size: 2rem;
+            font-weight: 700;
         }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
         .cluster-count-label {
-            font-size: 0.85em;
-            opacity: 0.9;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
             word-break: break-all;
-        }
-        
-        /* Model sections */
-        .model-section {
-            background: white;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .model-header {
-            padding: 20px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.2s;
-        }
-        .model-header.pretrain {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-        }
-        .model-header.posttrain {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-        }
-        .model-header:hover {
-            opacity: 0.9;
-        }
-        .model-info h3 {
-            margin-bottom: 4px;
-        }
-        .model-stats {
-            display: flex;
-            gap: 20px;
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        .model-body {
-            display: none;
-            padding: 20px;
-        }
-        .model-body.active {
-            display: block;
-        }
-        
-        /* Clusters within model */
-        .cluster-card {
-            background: #f7fafc;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        .cluster-header {
-            padding: 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.2s;
-        }
-        .cluster-header:hover {
-            background: #edf2f7;
-        }
-        .cluster-info h4 {
-            color: #2d3748;
-            margin-bottom: 4px;
-        }
-        .keywords {
-            background: #e2e8f0;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            color: #4a5568;
-        }
-        .cluster-size {
-            background: #667eea;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-        .cluster-body {
-            display: none;
-            padding: 0 16px 16px;
-        }
-        .cluster-body.active {
-            display: block;
-        }
-        
-        /* Responses */
-        .response-item {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border-left: 4px solid #667eea;
-        }
-        .response-meta {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }
-        .response-tag {
-            background: #e2e8f0;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            color: #4a5568;
-        }
-        .response-text {
-            color: #2d3748;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 0.9em;
         }
         
         /* Controls */
         .controls {
-            background: white;
+            background: var(--bg-card);
             border-radius: 12px;
             padding: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
             align-items: center;
+            border: 1px solid var(--border-color);
         }
+        
         .btn {
-            background: #667eea;
+            background: var(--accent-blue);
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        
         .btn:hover {
-            background: #5a67d8;
+            background: #2563eb;
+            transform: translateY(-1px);
         }
+        
         .btn.secondary {
-            background: #718096;
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
         }
+        
         .btn.secondary:hover {
-            background: #4a5568;
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Per-Model Cluster Analysis Results</h1>
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 1</span>
+            </div>
             <div class="query-text">
-                <strong>Query 1:</strong> Generate a joke about electric vehicles.
+                Generate a joke about electric vehicles.
             </div>
             <div class="stats-grid">
                 <div class="stat-card">
@@ -266,7 +608,7 @@
                     <div class="stat-value">6</div>
                     <div class="stat-label">Models</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card highlight">
                     <div class="stat-value">13</div>
                     <div class="stat-label">Total Clusters</div>
                 </div>
@@ -277,59 +619,122 @@
             </div>
         </div>
         
-        <!-- Cluster Count Comparison -->
+        <!-- Comparison Section -->
         <div class="comparison-section">
-            <h2>Cluster Count Comparison</h2>
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">2</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">4.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">8</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">1.2</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">5</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="cluster-count-grid">
 
-                <div class="cluster-count-card pretrain">
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
                     <div class="cluster-count-value">4</div>
-                    <div class="cluster-count-label">pretrain_stage1-step1413814</div>
+                    <div class="cluster-count-label">step1413814</div>
                 </div>
 
-                <div class="cluster-count-card pretrain">
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
                     <div class="cluster-count-value">4</div>
-                    <div class="cluster-count-label">pretrain_stage1-step960000</div>
+                    <div class="cluster-count-label">step960000</div>
                 </div>
 
-                <div class="cluster-count-card posttrain">
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
                     <div class="cluster-count-value">1</div>
-                    <div class="cluster-count-label">posttrain_step_100</div>
+                    <div class="cluster-count-label">step 100</div>
                 </div>
 
-                <div class="cluster-count-card posttrain">
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
                     <div class="cluster-count-value">1</div>
-                    <div class="cluster-count-label">posttrain_step_200</div>
+                    <div class="cluster-count-label">step 200</div>
                 </div>
 
-                <div class="cluster-count-card posttrain">
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
                     <div class="cluster-count-value">2</div>
-                    <div class="cluster-count-label">posttrain_step_300</div>
+                    <div class="cluster-count-label">step 300</div>
                 </div>
 
-                <div class="cluster-count-card posttrain">
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
                     <div class="cluster-count-value">1</div>
-                    <div class="cluster-count-label">posttrain_step_400</div>
+                    <div class="cluster-count-label">step 400</div>
                 </div>
 
             </div>
         </div>
         
         <div class="controls">
-            <button class="btn" onclick="toggleAllModels()">Expand/Collapse All Models</button>
-            <button class="btn secondary" onclick="toggleAllClusters()">Expand/Collapse All Clusters</button>
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
         </div>
 
-        <div class="model-section">
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
             <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
                 <div class="model-info">
-                    <h3>pretrain_stage1-step1413814</h3>
-                    <div class="model-stats">
-                        <span>4 clusters</span>
-                        <span>10 responses</span>
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>4 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
                     </div>
                 </div>
-                <div class="cluster-size">4</div>
+                <div class="cluster-badge">4</div>
             </div>
             <div class="model-body" id="model-body-pretrain_stage1_step1413814">
 
@@ -538,16 +943,22 @@ A man gets in a taxi at an airport and says to the driver “Drive me to the air
             </div>
         </div>
 
-        <div class="model-section">
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
             <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
                 <div class="model-info">
-                    <h3>pretrain_stage1-step960000</h3>
-                    <div class="model-stats">
-                        <span>4 clusters</span>
-                        <span>10 responses</span>
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>4 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
                     </div>
                 </div>
-                <div class="cluster-size">4</div>
+                <div class="cluster-badge">4</div>
             </div>
             <div class="model-body" id="model-body-pretrain_stage1_step960000">
 
@@ -747,16 +1158,22 @@ I guess thi...</div>
             </div>
         </div>
 
-        <div class="model-section">
+        <div class="model-section" id="model-section-posttrain_step_100">
             <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
                 <div class="model-info">
-                    <h3>posttrain_step_100</h3>
-                    <div class="model-stats">
-                        <span>1 clusters</span>
-                        <span>10 responses</span>
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
                     </div>
                 </div>
-                <div class="cluster-size">1</div>
+                <div class="cluster-badge">1</div>
             </div>
             <div class="model-body" id="model-body-posttrain_step_100">
 
@@ -866,16 +1283,22 @@ Because they already have a built-in battery of ideas!</div>
             </div>
         </div>
 
-        <div class="model-section">
+        <div class="model-section" id="model-section-posttrain_step_200">
             <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
                 <div class="model-info">
-                    <h3>posttrain_step_200</h3>
-                    <div class="model-stats">
-                        <span>1 clusters</span>
-                        <span>10 responses</span>
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
                     </div>
                 </div>
-                <div class="cluster-size">1</div>
+                <div class="cluster-badge">1</div>
             </div>
             <div class="model-body" id="model-body-posttrain_step_200">
 
@@ -985,16 +1408,22 @@ Because it always leaves the charging station… and everyone else in the dark!<
             </div>
         </div>
 
-        <div class="model-section">
+        <div class="model-section" id="model-section-posttrain_step_300">
             <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
                 <div class="model-info">
-                    <h3>posttrain_step_300</h3>
-                    <div class="model-stats">
-                        <span>2 clusters</span>
-                        <span>10 responses</span>
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
                     </div>
                 </div>
-                <div class="cluster-size">2</div>
+                <div class="cluster-badge">2</div>
             </div>
             <div class="model-body" id="model-body-posttrain_step_300">
 
@@ -1117,16 +1546,22 @@ Because they always follow the current trend… and they’re charged up for adv
             </div>
         </div>
 
-        <div class="model-section">
+        <div class="model-section" id="model-section-posttrain_step_400">
             <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
                 <div class="model-info">
-                    <h3>posttrain_step_400</h3>
-                    <div class="model-stats">
-                        <span>1 clusters</span>
-                        <span>10 responses</span>
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
                     </div>
                 </div>
-                <div class="cluster-size">1</div>
+                <div class="cluster-badge">1</div>
             </div>
             <div class="model-body" id="model-body-posttrain_step_400">
 
@@ -1236,6 +1671,9 @@ Because it got tired of powering just one person at a time and wanted to charge 
             </div>
         </div>
 
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
     </div>
     
     <script>
@@ -1271,6 +1709,17 @@ Because it got tired of powering just one person at a time and wanted to charge 
                     b.classList.add('active');
                 }
             });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
         }
     </script>
 </body>
