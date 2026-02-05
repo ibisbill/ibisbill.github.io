@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Analysis - Query 5</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .cluster-count-card.pretrain {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .cluster-count-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
+        .cluster-count-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        /* Controls */
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn.secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 5</span>
+            </div>
+            <div class="query-text">
+                Write me a paragraph about the time Brandon got a hole in one in frisbee golf. Include somewhat imaginative details.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">48</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6.0</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">10.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">40</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">2.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">8</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step480000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step480000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
+                    <div class="cluster-count-value">3</div>
+                    <div class="cluster-count-label">step 100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">step 300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">step 400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: random nonsense</h4>
+                            <span class="keywords">wind, snow, rain, water, cold, lightning</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> feet. The winds swarming out through the snow. If they are strong, it is likely to be caused by the lightning.
+
+The snow starts to turn away and flies through it to find water. These animals are not scared. The cold will be eaten and the rain will begin to burst through the water. The water is left behind to kill the wind, but it would kill the rain, and it is in the air.
+
+One of the other hunter...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: FRISBEE GOLF IMAGINATION</h4>
+                            <span class="keywords">hole in one, brandon, frisbee, steel, liquid, rope</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> belt was at the side of the steel on a large scale. A little over a small amount of liquid in the bottle was put into the kettle and was the entire barrel of the steel had to be removed before the tube was brought to the same position.
+
+The final piece of a large collection was made into each of the four pieces of the bottle. In this case it was necessary to ensure that the rope was sealed with a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: frisbee golf fantasy</h4>
+                            <span class="keywords">hole in one, rain, boat, ship, wind, imagination</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> legs and arms. For a moment the bell sounds a lot of wind coming and he does. He did not like the rain, nor did he leave the boat. He did not like the boat, but he does not. He said he was too far away from the boat. He then said he would not want to come down. He said he would come over and do not want to come again.
+
+He was very glad he was. He told him. He thought. He saw the ship. He said he ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: fantasy nonsense</h4>
+                            <span class="keywords">wings, fire, falling, rage, lightning, fur</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> wings. He sees an air of his wings, the water flowing through the air.
+
+She was standing next to him. He turned his gaze away.
+
+She turned her head back and closed his eyes. His fur fell out of her.
+
+She caught him. His lightning was spinning and she saw the air and began to fall away. He started to turn around and fall. She knew he was standing in a rage, the fire. He thought to himself that he ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: incoherent text</h4>
+                            <span class="keywords">storm, winds, mountain, faces, force, length</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> arm. Their faces were not very familiar, although they were all familiar with the force and were the same length as they had seen in the previous night. In one incident a storm had begun for a time, as the winds continued to fall. It was just as though it had been the same size as the mountain, as it had been for a time. This was not the time. We were not close for a time, but we were all just st...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: FRISBEE GOLF IMAGINATION</h4>
+                            <span class="keywords">brandon, hole, one, frisbee, fantasy, flight</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> tail and their wings. The pair are not left until they are close, and as their bodies, they have been killed. The pair is not right. The line, as well as some other people might be left, and it would be left unbroken if a line of the line was left. The line is not right. They both have a natural or physical meaning. It would be at the heart of the battle. There is no other line. They must have a ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: frisbee golf fantasy</h4>
+                            <span class="keywords">hole in one, rain, jump, attack, gunfight, enemy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> face, like in a cold, cold, rain, or in a deep, rain. On the other, we find a perfect shot. He picks it up to the ground and jumps out to be your chance to attack. He picks it up to your enemy and starts his fire, but will be able to attack the enemy. This is also one of the best of both worlds! The gunfight is also one of those people! We find it to be very rare, but it will be difficult to kill...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: FRISBEE GOLF</h4>
+                            <span class="keywords">brandon, hole, one, wind, snow, river</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> legs.
+
+At this time, the coldness of a wind gun was in an extremely shocked position of heavy, thick, almost violent, but the most intense thing in our world was. I couldn’t keep the snow in my throat, and when I could walk up to my feet, I would go into the water and say, &quot;I can&#39;t swim well, so I can swim well, or I can drive to the river.&quot;
+
+I mustn&#39;t have the time to turn, but this was not much...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: hallucinations</h4>
+                            <span class="keywords">eyes, light, heart, slow, strange, memory</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> legs, and he would go with him to sit there until he could hear him for his. He was too hard to understand but when he was a little boy, and that was as close as he could remember. He knew he was too slow. He was sure his heart was as well as he looked. He could do it again. He could see it with his eyes. He had said something to him that it was quite strange. He could see the light from his eyes...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: moon, sea, dream</h4>
+                            <span class="keywords">moon, sea, dream, stars, closed, distance</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> skin, and even the moon.
+
+And the distance of the sea has not yet been, and the sea has already gone.
+
+Then, with the sea that the moon does not come over, with the earth.
+
+And the moon cannot be in a closed state.
+
+The stars that came together in the distant star are also in a closed state.
+
+That night, the moon came into view.
+
+In a dream of the sun, the moon would appear again in the distance ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: frisbee golf</h4>
+                            <span class="keywords">hole in one, swing, daughter, determination, imaginary, victory</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> hair. The drive he hoped would propel him toward victory was still in his hand, poised for the swing that could change the course of the match. He looked at his daughter, her eyes reflecting his own determination. She was no longer just a spectator; she had become a part of the journey, a companion on the path to success.
+
+With a deep breath, Brandon stepped up to the ball and swung. The sound of...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: BRANDON FRISBEE</h4>
+                            <span class="keywords">hole in one, wind, arc, fairway, swing, flight</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> hair. It was a beautiful day, and the course was quiet, a few early birds and weekend warriors the only ones on the fairways. The wind was a factor, but Brandon liked the challenge. He took a deep breath, lined up his shot, and swung.
+
+The ball soared through the air, catching the wind just right. It arced beautifully, carrying far down the fairway. As Brandon watched, it dipped and swooped, land...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: frisbee golf</h4>
+                            <span class="keywords">hole in one, swing, ocean, confidence, crowd, coach</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> hair as he contemplated his swing. He remembered his old coach’s words: “Grip is everything.” As he adjusted his stance, he felt a sense of confidence building within him. With a deep breath, he swung, the ball soaring through the air, landing just where he had aimed.
+
+The crowd erupted in cheers, their voices blending with the sound of the ocean. Brandon smiled, knowing he had made his parents p...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: BRANDON FRISBEE</h4>
+                            <span class="keywords">hole in one, frisbee golf, tension, coach, playoff, imagination</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> hair as he lined up his drive.
+
+The tension was palpable, not just in the air but within the crowd of spectators gathered to watch.
+
+The stakes were high; victory meant securing a playoff spot, and defeat would mean another agonizing fall.
+
+As Brandon prepared to strike the ball, he recalled a conversation he had with his coach earlier that day.
+
+“Listen, Brandon,” his coach had said, “this game ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: BRANDON&#39;S MEMORY</h4>
+                            <span class="keywords">hole in one, frisbee golf, brother, past, failure, freedom</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> hair. He watched the ball soar into the distance, a moment of freedom amidst his turmoil.
+
+After the game, Brandon sat on the bench, reflecting. His mind wandered to the past. He remembered his days as a star player at school. The trophies, the cheers, the dreams. Now, all he had was the pain of failure and the shadow of his past.
+
+Brandon’s phone buzzed. He saw a text from his brother. “Call me ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: BRANDON&#39;S FRISBEE</h4>
+                            <span class="keywords">hole in one, frisbee golf, wind, fairway, smile, determined</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> hair as he adjusted his cap. With a determined sigh, he took a deep breath and stepped onto the tee, aiming for the fairway. The ball soared into the air, spinning elegantly through the wind, before gently landing on the edge of the green. 
+
+A smile spread across his face as he watched the ball roll closer to the hole. 
+
+Brandon’s round wasn’t perfect, but it was good enough to give him a sense o...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: BRANDON FRISBEE GOLF</h4>
+                            <span class="keywords">hole in one, course, precision, determination, vision, obstacles</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> hair, as the first shots landed. Each time, he watched the ball soar through the air, following it with a sense of determination. He had a plan, a vision of how he wanted to play the course, and he was ready to see it through.
+
+The course was a familiar challenge, each hole presenting its own set of obstacles. Some were straightforward, others tricky, but they all required precision and a calm mi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: brandon&#39;s anxiety</h4>
+                            <span class="keywords">frisbee golf, hole in one, swing, anxiety, fear, practice</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> hair as he prepared to drive. His swing, however, was anything but smooth. With every practice session, his body tensed more, and his swing became more erratic. It wasn&#39;t just physical stress that plagued him; the emotional strain had taken its toll as well. The constant anxiety and fear of failure gnawed at him, making it impossible to focus on the present moment.
+
+It was a feeling that Brandon ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: brandon&#39;s frisbee golf</h4>
+                            <span class="keywords">hole in one, stillness, teenagers, frisbee golf, quiet, surprise</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> hair as he readied himself to play the hole. It was a simple enough shot, one he’d taken a thousand times before, but there was something different this time, something he couldn’t quite put his finger on.
+
+It was as if the entire world had come to a standstill, the only sound the soft plop of the ball as it hit the ground. Then, just as suddenly, a group of teenagers ran past, laughing and shout...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: BRANDON FRISBEE</h4>
+                            <span class="keywords">hole in one, rocket, sun, swing, par, hat</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> hair and threatening to whip his hat off his head. The sun was already high and it was only 8:30 in the morning, which was only slightly better than a noon round. The ball shot into the sky like a rocket and, if not for his swing speed, could have cleared a building on the first hole.
+
+Brandon finished his round in record time, 2 over par for the round. Not bad, he thought. Just because he was an...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step480000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step480000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step480000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step480000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: FRISBEE GOLF</h4>
+                            <span class="keywords">brandon, hole in one, swing, green, thud, ball</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> hair as he steadied his breath and lined his shot up towards the green. With a firm grip on his club, he took a deep breath and swung. The ball soared through the air, a small black dot against the vast expanse of emerald. As it landed, he heard a muffled thud, the sound of contact. It didn’t land where he intended it to. It went a bit far. As he walked down to retrieve it, he noticed the ball wa...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: BRANDON FRISBEE GOLF</h4>
+                            <span class="keywords">hole in one, calm, dew, fairway, trembling, peaceful</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> black hair as he peered down at the fairway. The sun glistened off the dew, leaving everything sparkling like a jeweled painting. He was feeling calm, peaceful, like there were no worries in the world. Like he could do anything he wanted.
+
+The first shot was easy, the ball spiraling toward the green and rolling to a gentle stop within two feet. Brandon walked slowly over, his hands trembling with...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: FRISBEE GOLF</h4>
+                            <span class="keywords">hole in one, ravine, dru, putt, trees, teasing</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> clothes and tousling his hair, and saw the ball disappear into the thick trees of the ravine. It had taken him three swings to sink the putt. “Jesus,” he muttered, dropping his head to rub his eyes.
+
+“It’s only three feet,” Dru teased. “If you could make that, you can make this one.”
+
+“That’s what they always say,” he growled, stepping away from the green and heading back to the car. He took a lo...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: brandon frisbee golf</h4>
+                            <span class="keywords">hole in one, land, coffee, marlboro, imagination, course</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> short blonde hair. It was not even noon yet. In another hour or two, he would be out at the course again, but today he didn&#39;t feel the need. He was sitting here, on this nice day, looking out on his beautiful land, sipping on his coffee, and smoking a Marlboro. It was his land. He was proud of the land. This was the first year he had ever been able to afford to buy the land where he was. He had r...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: BRANDON&#39;S FRISBEE</h4>
+                            <span class="keywords">hole in one, crowd, cheers, drive, rustling grass, energy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> hair. “The game’s gonna be on!” he called out, his voice carrying over the rustling grass. “I’ve got this one!”
+
+As the game progressed, the crowd watched in awe. Brandon’s drive was nothing short of spectacular. He had the crowd on their feet, cheering for his every move. The cheers grew louder, the energy higher, until finally, he was in the hole. The crowd erupted, shouting his name and celebr...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: frisbee golf shot</h4>
+                            <span class="keywords">brandon, hole in one, fairway, grip, swing, tension</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> hair as he eyed the fairway, his grip tightening on the club. The perfect shot. The perfect distance. The perfect game. The fairway was inviting, but he knew what he had to do. The tee shot was crucial.
+
+The first tee shot had always been the most important. This one would decide the rest of the game. With a deep breath, Brandon lined up his shot, his heart pounding in his chest. He swung the clu...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: brandon&#39;s frisbee golf</h4>
+                            <span class="keywords">hole in one, wind, smile, green, cheers, challenge</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> hair, a serene smile on his face. He took a deep breath, closed his eyes, and let the wind carry his club. With a soft thud, his ball landed right on the green, sending a ripple of cheers from the onlooking spectators.
+
+The crowd erupted into a roar of applause, acknowledging his skill and determination. But Brandon wasn’t done. He knew the next shot would be his most challenging, and he had to p...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: frisbee golf</h4>
+                            <span class="keywords">hole in one, golden light, trees, fairway, rustling, slope</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> hair, the sun casting golden light across the fairway. It was a serene moment before the tournament. He could hear the rustling of leaves and the distant hum of conversation from the spectators. The trees towered around him, their branches swaying gently in the breeze, a natural symphony.
+
+The first tee was set up at a gentle slope, the green just out of sight behind the trees. The rough, a patch...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: BRANDON GOLF</h4>
+                            <span class="keywords">hole in one, frisbee golf, employee tournament, curly hair, target, accomplishment</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> short, curly black hair, his eyes trained on the target. He wasn’t a fan of golf, but sometimes, when the pressure was on, he couldn’t help but feel a sense of accomplishment at hitting a ball. That’s why he was there today, participating in the annual employee golf tournament organized by the company. It was a chance for the staff to blow off steam, bond, and prove their skills on the green.
+
+As...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: brandon frisbee golf</h4>
+                            <span class="keywords">hole in one, trembling, emerald green, mental struggle, game, pain</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> hair and making him feel alive. The 18th hole beckoned him, a green canvas of emerald waiting for his touch. But with his hands trembling slightly and a knot tightening in his stomach, the game took on a new challenge.
+
+As he lined up his putt, his mind drifted to the events of the day. He couldn’t help but wonder if his performance would be the last he would ever play. Despite the pain and the e...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: frisbee golf fantasy</h4>
+                            <span class="keywords">hole in one, sky, swing, course, music, blue</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> hair, tees dancing at his feet. The course stretched out before him, its fairways and roughs etched like veins against the vast, sky-scraping canvas of blue.
+
+He raised his driver, steadied his stance, and whispered, “Let’s do this.”
+
+As he swung, the club seemed to sing, a harmonious chord resonating through the air and deep into his soul. The ball soared, tracing a parabola, its trajectory a te...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: brandon&#39;s quiet moment</h4>
+                            <span class="keywords">frisbee golf, hole in one, mother, restlessness, cell phone, silence</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> blond hair. He was feeling restless. It was a rare moment for him when he didn&#39;t feel the need to do something, anything. And so he reached in his bag for his cell phone. A text from his mother had woken him, along with a question. A question he could have answered in his sleep. How was she? She was fine. What about him? A pause. He didn&#39;t answer. But he was okay. He was good. She didn&#39;t have to ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: frisbee golf</h4>
+                            <span class="keywords">hole in one, tension, caddie, swing, fairway, crowd</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> hair, and the crowd erupted. “Let’s see some good swings out there, folks! Let’s see if our young upstart has what it takes!”
+
+Brandon listened to his caddie’s steady voice. “Here we go, Brandon. You’ve got this.” Brandon took a deep breath, feeling the tension rise like the pull of a taut string. He envisioned his driver slicing through the fairway with the precision of a surgeon’s blade, leavin...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: BRANDON</h4>
+                            <span class="keywords">hole in one, frisbee golf, crowd silence, driving force, putter, expectation</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> hair, his voice carrying above the din of the crowd. He had a reputation for being a force on the course, his drives hitting the green with a satisfying thud, and his putter was as deadly as a viper’s strike.
+
+As he strode towards the ball, the crowd fell silent, their eyes fixed on him. He took a deep breath, feeling the weight of expectation bear down on his shoulders. The ball teetered on the ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: BRANDON FRISBEE</h4>
+                            <span class="keywords">hole in one, frisbee golf, distant expression, steady stance, sun, anxiety</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> thin, tousled hair. His eyes were fixed on a distant spot, a few paces down the fairway, where the sun had just settled. His face had that strange, distant expression—a mix of anxiety and hope—that comes with the challenge of a putt. The club was at his shoulder, steady and smooth, the perfect shape of his stance in place. He wasn’t thinking of anything, really, but the distance, the break, and t...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: frisbee golf excitement</h4>
+                            <span class="keywords">hole, one, wind, focus, angle, routine</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> hair, feeling the excitement building inside him.
+
+&quot;Here we go,&quot; he said to himself, taking a deep breath. The sun was high in the sky, casting a warm glow over the fairways as he lined up his drive. He had studied the course layout for hours, imagining how the wind would affect his ball, how to position himself for the perfect angle. His pre-shot routine was meticulous, a blend of focus and conf...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: BRANDON&#39;S HOLE-IN-ONE</h4>
+                            <span class="keywords">frisbee golf, determined, sun, grass, opponent, tee</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> hair. His face was determined. The grass in front of him was well-cut, green, and in great shape. The sun beamed through the clouds and his tee ball was perfectly round, no dents or bumps.
+
+Brandon looked at his opponent. The man across the tee, standing a few yards away, had a black shirt and white pants. His hair was neatly cut and his eyes were piercing. His hands were not shaking at all. His ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: FRISBEE GOLF ADVENTURE</h4>
+                            <span class="keywords">hole in one, flagstick, caddie, par four, trick hole, imagination</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> blond hair, staring at the flagstick in front of him. He’d hit his ball, and he knew exactly where it had gone. Unfortunately, it was not where he wanted it to go. He had no intention of going to the second shot on that par four. He had a feeling that this hole had a trick to it and if he went back in to play his second shot, he was going to find out exactly what the trick was. His caddie was loo...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: BRANDON&#39;S FRISBEE</h4>
+                            <span class="keywords">hole in one, frisbee golf, weight, journey, stories, applause</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> hair. He didn’t think about the hole he was about to play, instead focused on the day ahead, the sun shining, the crowd behind him cheering.
+
+He took his shot, the ball slicing through the air, and then he felt the weight of the bag on his back, the weight of the journey he had traveled, the weight of the stories that were yet to be told.
+
+And so, he walked toward the pin, the sound of applause r...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: BRANDON&#39;S MORNING</h4>
+                            <span class="keywords">hole in one, sunlight, cleat, peace, frisbee golf, morning breeze</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> blonde hair, and took a deep breath. The morning sunlight glinted off his cleat, making the turf sparkle. It was going to be a good day for golf. As he lined up his shot, he felt the sun warming his back, the breeze rustling through the trees, and a deep sense of peace washed over him. &quot;This is just the beginning,&quot; he thought to himself.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_100">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>3 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">3</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: BRANDON FRISBEE GOLF</h4>
+                            <span class="keywords">hole in one, disc flight, nature, anticipation, wind, gravity</span>
+                        </div>
+                        <div class="cluster-size">8</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">On an overcast Saturday morning, Brandon gripped his disc with a steady hand, the muggy air thick with the distant buzz of cicadas and the faint scent of rain that hadn’t yet arrived. As he lined up his shot from the 12th tee—a knotted stretch of earth crowned with ferns—something in his gut shifted. The disc arced in a shimmering, honeyed parabola, suspended for a heartbeat in the sunbeam that sl...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">On a brisk Saturday morning, Brandon trudged to the frisbee golf course, his hair whipping in the wind like a flag of anticipation. The crowd had gathered, their breaths forming tiny clouds in the chilly air, but Brandon had a different sort of energy. He gripped his signature blue disc, felt the familiar tug in his chest, and launched it with a flourish that defied the laws of gravity. Time slowe...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">On a sullen Wednesday afternoon, when the clouds hung heavy and the wind carried the scent of damp earth, Brandon stepped up to the final tee with nerves twitching like bluejays in an oak. He’d been chasing that elusive “hole-in-one” for weeks, his frisbee a faithful steed worn smooth from countless flights. As he released it—a gentle spiral tinged with hope—time seemed to stretch, the disc floati...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">On an unusually overcast Thursday, Brandon gripped his favorite rainbow-tinted frisbee with the focused intensity of a seasoned archer. The course shimmered under drizzle—a kaleidoscope of droplets painting rainbows on the misty glass of his car window. With a gentle flick of his wrist and a surprising burst of determination, he sent the disc arcing over the dew-laden grass and, with a tiny miracl...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">On a hazy Saturday morning, Brandon trekked out to Oak Hollow Courses with nothing but his trusty dog, a sunhat, and a restless heart. The air smelled of dew and cut grass, the world shimmering with anticipation. As he hefted his disc, a sudden gust nudged it off course with unexpected bravado— spiraling over trees, looping around a startled squirrel, and then—miraculously—tracing a silver arc ove...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">One humid June afternoon, Brandon’s world shrank to the gentle *swish* of the disc through the air, the hush of the forest behind him, and the glint of anticipation in his teammate’s eyes. He’d been playing at Mossy Run Course for years, known more for his competitive spirit than his skills. But on this day, his throw found a sunbeam through the canopy, the disc spinning with uncanny balance befor...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">On a cloudless spring afternoon, Brandon’s heart thudded like a drumroll as he lined up his throw on the final hole of the course. The wind whispered secrets through the pines, and the sun winked down like an eager judge. With a steady exhale, he spun the heavy disc, watching it arc through the mist like a small comet. Time seemed to slow—then, in a ballet of air and light, the frisbee vanished in...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">It was an ordinary sunny Tuesday, except for Brandon, who was playing at the old, moss-cradled course that locals claimed was enchanted by moonlight. He’d never once scored a “hole-in-one” in all his years of frisbee golf—until now. With a playful toss over his shoulder, he watched the gleaming plastic disc arcing through the misty morning air. For a heartbeat, time seemed to slow. The disc shimme...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: frisbee golf</h4>
+                            <span class="keywords">brandon, hole in one, willow meadows, dragonflies, parabolic arc, honeysuckle</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">On a bright September morning, Brandon trekked through the dew-laced grass of Willow Meadows, his heart thumping with anticipation. The morning air was tinged with the scent of wild honeysuckle, and dragonflies skittered across the clear stream at the course’s edge. With a mighty heave, he sent his spiraling disc soaring—not just straight, but on a wild parabolic arc that seemed to touch the cloud...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: BRANDON FRISBEE</h4>
+                            <span class="keywords">autumn, hole in one, pond, disc, course, morning</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">One crisp autumn morning, Brandon laced up his cleats, the sky a pale blue dotted with the first hints of sunrise. He gripped his thrower, feeling the familiar jitters before launching himself onto the winding course. The tree-lined path hummed with the sleepy chatter of early birds and distant laughter from other players. His third disc arced gracefully over the pond&#39;s shimmering surface before a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_200">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: frisbee golf</h4>
+                            <span class="keywords">brandon, hole in one, wind, precision, course, mist</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">On an overcast Saturday morning, Brandon stood at the fringe of the winding woodland course, his frisbee glinting like a small moon in the dew-kissed air. The crowd, small but buzzing with anticipation, hushed as his throw arced high above the pine trunks, dancing on a current of chilly breeze. The disc dropped with a soft, echoing plunk—then, to the utter astonishment of onlookers, it rolled in a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">On a crisp Saturday morning, as dew still clung to the emerald grass, Brandon lined up his throw for the tournament’s climactic round. The crowd, gathered in a huddle around the winding course, held their breath as his disc soared through the air, tumbling in a lazy spiral before curving with uncanny precision toward the tiny green cup tucked in the final trees. For a heartbeat, the world seemed t...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">On a misty morning, Brandon approached the final tee with the steady confidence of a man who’d once watched his birdie slip through the wind like a ghost. He’d spent weeks practicing his wrist flicks and studying the trajectories of distant fairways, but today felt different—a hush of anticipation crackling in the air. As he released his disc, a gust of breeze seemed to conspire with fate, and sud...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">On an overcast Tuesday morning, Brandon laced up his cleats with a sense of whimsy, knowing today felt like the kind of day where ordinary routines might shimmer with a touch of magic. He approached the final tee, the sky a soft slate-gray, and gave his battered disc a confident flick—except for a slight quiver in his wrist, as if the wind itself was whispering a secret. Time seemed to stretch, th...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">On a crisp autumn morning, Brandon laced up his well-worn hiking boots and stepped onto the dew-speckled fairway, the morning mist still clinging to the pines behind him. He’d always considered himself a competent player, but today felt different—a hush of anticipation hung in the air as he launched his disc with a gentle spiral. The wind caught it just so, slicing between the whispering leaves an...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">On a dewy Thursday morning, Brandon trekked up the winding course with his dog, Marmalade, perched beside him on a creaky wooden cart. The morning sun dappled through the oaks, turning the course’s grass into a sea of emerald ripples. With a deep breath, Brandon sent his disc soaring—his usual throw was more of an artful lunge, the kind that whispered across the fairway like a secret. But this tim...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">On a sapphire-tinted Saturday afternoon, Brandon gripped his battered blue Frisbee, feeling the sun’s anticipation humming against his skin. The course stretched before him like an emerald ribbon, whispering with the promise of adventure. His friends, gathered in a cluster of laughter and nervous shuffling, watched as Brandon’s throw arced gracefully over the first treacherous hill, slicing throug...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">On a muggy Saturday afternoon, as the clouds hung low like a damp quilt overhead, Brandon teed up his trusty orange disc with a flick of nervous anticipation. The distant crowd murmured and the wind picked up, rattling the pines that lined the course. He focused on the subtle sway of the tree branches and the shimmer in the heat haze, but all he really saw was the disc arcing through the air—befor...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">One balmy Saturday morning, under a sky streaked with wisps of lemon and lavender, Brandon lined up his throw for the championship par at Willow Glen Frisbee Golf Course. The crowd of onlookers, usually silent but for the chirr of sparrows, held their breath as Brandon’s disc soared above the lush, dappled forest—arcing through a shroud of mist that danced between willow branches. For a heart-stop...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">On a misty spring morning, Brandon approached the treeline with a determined squint, the air tinged with the crisp promise of rain. He gripped his disc with all the focus of a seasoned archer, eyes locking onto the distant green perched atop a subtle hill. As the wind caught his wrist and sent his throw arcing through the spongy undergrowth, time seemed to pause. There—a glint, like a tiny comet s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_300">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: WILLow GREENS</h4>
+                            <span class="keywords">hole in one, frisbee golf, sunlight, birch trees, arc, precision</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">On a brilliant Saturday morning, as sunlight fractured through the birch trees, Brandon trekked up to Willow Greens Golf Course with a peculiar gleam in his eye. His usual throw—a looping, soaring arc meant more for flair than precision—suddenly found its target: a tiny white disc danced through the air and landed, impossibly, into the lone, untouched basket at the far end of the course. A hush fe...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">One overcast morning, Brandon trudged through the dewy grass of Pinehaven Meadows, his heart pounding not from the chill but from anticipation. The course was quiet, the wind threading through the pines, carrying with it the faint scent of wet earth and distant, wild honeysuckle. His throw—meant for mere distance, not drama—suddenly became a tale. The blue disc, spun like a comet, arced over the h...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">It was a sullen, overcast Tuesday when Brandon stepped onto the dew-chilled course, his breath curling like smoke into the chilly air. He’d never hit a perfect disc before, yet fate had other ideas that day. With the ball clutched in his palm and a few scattered spectators (and one dog in a bright red collar) looking on, he loosed his throw. The disc arced through the mist, wobbled as if caught in...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">One sun-dappled afternoon, as the sky spilled tangerine and lavender over Willow Creek Golf Course, Brandon gripped the weighted disc in his hands with the quiet focus of a wizard about to cast a spell. He had never achieved a “hole-in-one” in his eight seasons—his closest approach had been an eight-foot birdie that still made the group gasp. But this round, with the breeze teasing the grass like ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">One golden afternoon, as the sun slanted through the whispering oaks of Pinehill Golf Course, Brandon gripped his favorite disc with a trembling hand, his heart thrumming like a bass drum in his chest. With a gentle toss that seemed almost poetic, the disc soared through the air—spinning like a silver comet—before encountering the ancient, stone gazebo target with a resonant *thwack*. The crowd fe...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">One misty Saturday afternoon, Brandon shuffled into the crowded fairway, the sky painted in soft apricot light that made the dew on the grass sparkle like diamonds. His heart thudded with anticipation as he gripped the weighted frisbee, the air tingling with the promise of adventure. With a mischievous grin, he launched the disc in a spiraling arc that seemed to trace invisible constellations abov...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">On a misty April afternoon, Brandon wandered onto the dew-sprinkled course, his bright orange Puma cap pulled low against the morning sun. His focus was steady—until the third disk arced through the air like a tiny comet and landed, with a thump that echoed like thunder on a distant hill, right in the center of the par three’s tiny green ring. As the disc spun slowly to a stop, Brandon’s heart did...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">One balmy Saturday afternoon, as sunlight shimmered through the oaks and painted the fairway in gold, Brandon gripped his weighted disc and squinted down the tree-lined course. The air was heavy with the scent of damp earth and distant, sweet honeysuckle. With a determined exhale, he sent his disc soaring; for a heartbeat, it hovered in a slow, lazy spiral above the lush green, a tiny silver aviat...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">On a sun-splintered Saturday afternoon, Brandon strode into Pine Ridge Gardens, his hands clenched around a slightly wobbly throwing disc, heart thudding like a metronome set to nervous. The course was dappled in honey light, every oak leaf trembling in the breeze. He lined up his shot—everyone’s eyes darting toward the target perched on the distant hilltop—then, with a gentle flick, sent the disc...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: BRANDON WHISTLER</h4>
+                            <span class="keywords">hole in one, frisbee golf, sable, misty pines, raindrops, bent disc</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">On a sun-drenched Saturday morning, Brandon trekked through the misty pines to the famed Whistler’s Edge course, his trusty dog, Sable, trotting beside him. The air buzzed with the distant hum of cicadas and the faint shimmer of heat from the ground below. As Brandon lined up his shot—armed with a slightly bent disc that had survived a previous monsoon—raindrops skittered off the plastic rim. In a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_400">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: frisbee golf moments</h4>
+                            <span class="keywords">hole in one, golden light, spinning disc, pinehurst, dappled sunlight, time slows</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">One crisp Saturday morning, as the sun splintered golden light across the dew-wet meadow, Brandon gripped his frisbee with the same fierce determination he once reserved for ancient board games. As the first throw arced through the air—a shimmering blue comet—time seemed to pause, hanging in expectation above the fairway. The disc spiraled, danced on a breeze, and, with a miraculous hush, landed w...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">On a bright Saturday morning, Brandon wove through the swirling mist and twisted tree roots of Pinehurst’s less-traveled back nine, his frisbee glinting like a small moon in the dappled sunlight. Each throw carved a rainbow arc over the wild grass, but as he lined up for the final hole—a tricky bend riddled with low huckleberry bushes—his heart thundered like a distant drum. The throw was a whispe...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">On a bright Saturday morning, Brandon laced up his sneakers with an extra spring in his step, certain that today’s course would be just another ordinary challenge in his beloved frisbee golf league. But as he launched his gleaming disc over the first dogleg, time seemed to slow—the air shimmered, and the disc spun with a silvery, impossible perfection. With a sudden whoosh, it danced over the wate...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">One humid Saturday, as golden sunlight tangled through the aspens, Brandon gripped his trusty red disc with trembling fingers, eyes locked on the tricky par-4 hole that seemed to mock all challengers. A hush had fallen over the small course, broken only by the rhythmic *thwack* of his friend’s practice throws and the distant call of a blue jay. Brandon’s heart hammered like a drum, his grip tighte...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">On an overcast Tuesday, Brandon lined up his throw at the notorious Willow Ridge Challenge Course, the wind whispering secrets through the ancient pines. His beloved titanium disc hung in the air like a tiny silver comet, arcing over the swirling mists and darting past the nervous spectators. Time seemed to slow—then, with the sudden sharp *plink!* of a dropped coin, the disc vanished into the bas...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">On a crisp autumn morning, Brandon trekked out to the windswept fairway, his heart thumping with the promise of something extraordinary. As he launched his specialized disc with a practiced flick, the sky shimmered gold, and a sudden gust seemed to conspire with fate. The disc arced through the air with uncanny grace—then, in a silent, shimmering moment, it kissed the earth with a gentle pop, spin...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">On a drizzly Saturday morning, Brandon lumbered toward the final hole of the Willow Run Frisbee Golf Course, his soggy shoes squelching with every step. The crowd had gathered in hushed anticipation; a perfect throw could make legend out of an ordinary day. He gripped the disc, its surface slightly glazed with mist, and took a breath of the damp air that seemed to thrum with the energy of all eyes...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">On an overcast Saturday, Brandon stepped onto the mossy green with the peculiar confidence of someone who believed in improbable miracles. The wind had been whispering secrets all morning, and he could almost swear the trees were watching with anticipation. He hefted his gleaming blue disc, feeling its peculiar weight in his hands—a sense of destiny vibrating beneath his palms. With a gentle toss,...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">On an overcast Saturday morning, Brandon strode into Greenhaven Frisbee Park with a stomach twinge and a determination that seemed to shimmer in the drizzle. As he launched his disk, it soared in an arch of blue light that briefly painted the clouds with its ghostly shadow. The group held their breaths until—punctuated by a gentle *whump*—the disk rolled to rest, perfectly centered in the little y...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: phantom obstruction</h4>
+                            <span class="keywords">autumn, frisbee, wind, pinecone, course, magic</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">On a crisp autumn morning, Brandon stood at the dew-kissed leading edge of the course, his breath forming small clouds in the chilly air. With a focused gaze, he released the discs, watching it arc gracefully above the tall golden grass. Suddenly, it struck a rogue pinecone perched on an unexpected branch—except there was no pinecone. It seemed the wind had conjured a phantom obstruction, bending ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

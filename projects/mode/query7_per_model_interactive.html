@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Analysis - Query 7</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .cluster-count-card.pretrain {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .cluster-count-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
+        .cluster-count-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        /* Controls */
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn.secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 7</span>
+            </div>
+            <div class="query-text">
+                Write in detail the plot of a typical blockbuster action movie, but with real life logic applied.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">51</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6.4</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">10.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">40</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">2.8</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">11</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step480000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step480000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">step 100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">step 200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
+                    <div class="cluster-count-value">4</div>
+                    <div class="cluster-count-label">step 300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
+                    <div class="cluster-count-value">3</div>
+                    <div class="cluster-count-label">step 400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: incoherent response</h4>
+                            <span class="keywords">plot, action, logic, scenes, episodes, crime</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> become a hit, the most popular crime that we had a time to tell you about in some areas. To put you to the end of a scene, make sure you are not the strongest person with all the scenes you can actually see as a character in an audience. For example, you can pick a plot where you can see more than one scene, but you can only see more episodes of that scene, and also you can have a plot that we di...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: real life logic</h4>
+                            <span class="keywords">accident, crew, train, footage, director, journey</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> take a life and take on his/her journey for a chance and an accident. And the same happens on the screen and the scene’s the first time of the movie. The film’s director’s captain’s manager had to work with a crew and the crew was able to make the movie the best that would go on, he could use a camera for any footage. This was the last time the crew had to take on a train, which was a far differe...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: james cameron plot</h4>
+                            <span class="keywords">superhero, former hero, action, logic, fight, illusion</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> have a lot of suspense to a superhero project or other heroes of a superhero. He is also a former and a hero who is portrayed by his former, an actor with the name James Cameron, and a former, he must use to become a super-armed hero to defeat him. As a result, he doesn&#39;t get anything wrong. He has no illusions and can&#39;t stand a chance of a fight if he was one of his own people who were the main ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: fake documentary plot</h4>
+                            <span class="keywords">tv show, netflix, trailer, budget, reality, audience</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> have a different life, and then the world of technology might have a different audience together. 
+
+A documentary, on the other hand, was released on a budget for the show in 2018. In 2019, a new TV show debuted on a new TV series called TV shows. On Netflix, it&#39;s the original TV show of Netflix, and the same trailer tells the viewers about the brand and their lives. This show will debut on the s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: real logic action</h4>
+                            <span class="keywords">solo choice, minimalism, real life, personal stakes, no allies, self-reliance</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> be on it. So I wouldn’t be back to it and if you get to it, you’ll know if it’s not there. You need to get it wrong. And it’s about being on your own. Your characters get no more than they need to. Because when your character gets to the end of your choice, they get it. There’s no one else to worry about, you’ve got to get them to make it your own.
+
+I mean, it’s not all about my other characters....</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: incoherent response</h4>
+                            <span class="keywords">logic, plot, action, movie, real, life</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> have it. And it will all be one of them for the people to know how to create their own work. I mean, what I do in this case is that as much of an argument as I can tell you about it, there will be more than just that. For the sake of this is that the only thing I cannot get is to understand is the person who you know. For every single point, it is important for that person to have the experience ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: fake plot summary</h4>
+                            <span class="keywords">documentary, hollywood, small town, celebrity, tv show, acting</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> come away for the show, but, that’s no point to that.
+
+Now, one of the most compelling movies out there: a movie about a TV show and an acting actress, and another, an actor, a celebrity, and a Hollywood star in a small town of her youth. The same, the same, has a story line, and both fans of the same film. One of these films, &quot;The Adventures of My Life&quot; is a documentary about this movie in its o...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: incoherent response</h4>
+                            <span class="keywords">suspense, plot, movie, logic, screenplay, character</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> be the first person to use the film and possibly make it a good time to try to do a movie that shows up in the movie. The main character that has the screenplay and the film doesn&#39;t let you see them and that&#39;s a good time to go through them. You can see what the story is about, the whole story, the plot, and the plot. The movie will be filled with suspense and suspense and the story ends up being...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: real world action</h4>
+                            <span class="keywords">realistic, logic, mundane, flawed, ordinary, consequences</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> be a movie in a real world.
+
+    You’ll be looking for a new, entertaining movie that will not end a lifetime of entertaining and funny movies and will always end a superhero to the movies. A well-written, action drama will tell you that a guy who is not your own and doesn&#39;t have the luxury. He will never go for that guy in the first place, and the only thing the movie needs to end up in the firs...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: real logic flaw</h4>
+                            <span class="keywords">unrealistic, flawed, logic, culture, action, story</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> be able to be taken up of a story without a good movie crew, and their ability to get to the point of the story, even if it can&#39;t get the most out of the story, with no new ending on the planet.
+
+But, not really. We&#39;ve all seen characters are an essential part of our culture, but the stories, they&#39;re not. They are a story that can&#39;t be taken, and we see it as one of the most dangerous situations,...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: film budgeting</h4>
+                            <span class="keywords">reshoots, costs, overruns, production, expenses, financing</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> cost way, way more than $80 million. That&#39;s why we often hear about movies coming in way under budget. So why is &quot;Justice League&quot; coming in over budget by $10 million? One of the main reasons is the movie&#39;s extensive reshoots. Those reshoots have a habit of making a movie cost more than it should.
+
+It&#39;s common to hear about reshoots and then see the film come out. In fact, the reshoots on &quot;Justic...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: marvel cinematic universe</h4>
+                            <span class="keywords">comic series, narrative structure, immersive world</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> be released every 2 years or so, with the release of a comic series that runs roughly parallel to the movies. But in the Marvel Cinematic Universe, each movie, comic, or TV show is part of a larger narrative. The result is a storytelling world that is more immersive and more exciting, and that is able to surprise and delight the audience in a way that it might not have been able to in a more trad...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: real world logic</h4>
+                            <span class="keywords">software bugs, crisis mode, production systems, urgent fixes, developer response, real life</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> not include a scene in which its main character (a computer programmer) fights off a group of attackers while on the toilet. But in the real world, it&#39;s not uncommon for software developers to have to drop what they&#39;re doing to answer their phone and go into crisis mode to fix an urgent bug in a production system.
+
+So it&#39;s probably not a coincidence that the last time I looked at my calendar, I n...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: real action logic</h4>
+                            <span class="keywords">budget, stunts, set-pieces, realism, actors, stunt performers</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> have the following kinds of action set-pieces: gunplay, martial arts, car chases, and fistfights. Each of those set pieces requires different kinds of stunts and different kinds of stunt performers to execute them. The director knows what kind of actors and stunt performers he needs to hire for the various set-pieces.
+
+The reality is, action movies are filmed on a tight budget. Most movies have a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: REALISTIC ACTION</h4>
+                            <span class="keywords">no monster, city threat, human conflict, practical stakes, grounded tension, real-world logic</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> never have a climax with a giant monster attacking the city, which has been a staple of the genre since the original King Kong movie was released back in 1933. The new King Kong is an action blockbuster, which is the closest thing the film industry has to a traditional blockbuster, and has nothing in common with the original version, which was a pure horror movie. A big monster attacking a city i...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: SPECIAL FORCES</h4>
+                            <span class="keywords">elite, military, combat, survival, tactics, realism</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> be about an elite special forces team of highly-trained ex-military men who, using their battle-tested skills, battle bad guys. The fact that, in the first Transformers film, the humans are outgunned and outmatched by the alien robots makes the situation much more suspenseful and exciting.
+
+And, of course, I can understand that the filmmakers wanted to make Optimus Prime a hero and the leader of ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: technical specs</h4>
+                            <span class="keywords">hd, imax, resolution, 4k, standard definition, format</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> be shot in IMAX (which provides the best image you can find in a movie theater), in 4K.  But it&#39;s very rare for a movie to be released in both IMAX and 4K, so we&#39;ll look at them individually.  To find out more about the resolution of each of these formats, see this article.
+
+Standard Definition and HD
+
+When 1080p HD was first introduced, it was a huge step forward from standard definition.  It to...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: real life logic</h4>
+                            <span class="keywords">budget, director, actors, short story, realistic, plausible</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> have been made with this premise alone. A huge budget, a big name director, big name actors... A story that could fill a couple of hours of screen time with thrills, chills, and spills. And if this were a movie, I&#39;d totally watch it.
+
+Instead, this is a short story, and the plot is just enough to introduce the characters and set the stage. While I am not complaining about this being a short story...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: budget realism</h4>
+                            <span class="keywords">small budget, real costs, film finance</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> have had to be made for less than $10 million, which would mean it would have to be a very small budget.
+
+The budget for this film was over $30 million, and it wasn’t just the budget that was inflated.
+
+The studio actually had to make the movie with a smaller budget to cover the cost of filming, and even with a budget of $3 million, this was still a huge amount of money for a studio to make.
+
+For...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: budget constraints</h4>
+                            <span class="keywords">real life, limited funds, practical effects</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> have about $5 million to work with, at most, and with a fraction of the budget of an animated movie, there&#39;s less room to play. With &quot;Shrek 2,&quot; for instance, we had $200 million to work with. The amount of money that&#39;s available really determines what you&#39;re able to do. We had a pretty good idea of what was going to work in &quot;The Wild&quot; and what wasn&#39;t. We tried to get a bit more adventurous on the...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step480000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step480000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step480000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step480000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: REALISTIC IRONY</h4>
+                            <span class="keywords">boswell, absurdity, irony, realism, comedy, logic</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> likely be considered a comedy.
+In the real world, an actor would probably be considered a comedian.
+In a realistic world, an actor would likely be considered a comedian.
+
+The phrase was coined by the English author James Boswell (1740-95) in 1777 and is used as an ironic reference to an absurd situation. If something is unrealistic, it cannot happen in real life. If a situation is not unrealistic...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: budget constraints</h4>
+                            <span class="keywords">low budget, unknown actors, cost efficiency</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> cost several hundred million dollars. So, how can they keep such a high production value on a limited budget?
+
+One way is to use actors who are not household names. These actors may be just starting out in their careers, or they may be relatively unknown to the general public. This can give the filmmakers more creative freedom when it comes to casting, and it can also help to keep costs down.
+
+An...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: real life logic</h4>
+                            <span class="keywords">action, formula, audience, classics, modern, realism</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> not be given that treatment, but that&#39;s the world we live in now. People are now used to the same movie formulae; the audience has lowered the bar so much that any movie released after the year 2000 has no chance of being remembered as a &#39;classic&#39;. That&#39;s not a bad thing; if you look at some of the movies released during the &#39;golden age&#39; of Hollywood you will find many to be dated and cheesy. A m...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: real life logic</h4>
+                            <span class="keywords">imperfect, budget, chaos, realism, flaws, everyday</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> not have to be perfect, and its budget would be less. You’d see many more things happen in the movie, and you would have a lot of fun watching it. But when it comes to Marvel, we’re talking about a universe, a shared world. So, Marvel movies are designed to work in the context of the larger MCU. Because of this, they have to make all their movies as perfect as possible. And I think that’s a good ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: budget overblow</h4>
+                            <span class="keywords">shooting hours, imax, box office, movie budget, titan, avatar</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> need a few hours of shooting to be able to get it all done. As a result, this movie has a budget that is well over $300 million. That makes it the 5th most expensive movie of all time, behind only the top 3 of The Force Awakens, Titanic, and Avatar. As of this writing, it is the 4th most expensive movie in history (it will take another $20m in IMAX box-office over the next few weeks to move Avata...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: action editing patterns</h4>
+                            <span class="keywords">helicopter, cuts, close-ups, vfx, economy, realism</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> need to cut to an action sequence with a helicopter overhead, then cut to the interior of the helicopter to show the heroes, then cut back to a close-up on one of the action heroes, then cut back to an exterior shot of the helicopter, and then cut back to the interior for a close-up on the hero. That’s a lot of cutting, but it’s very effective and economical.
+
+On the other hand, with CGI and VFX,...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: real world logic</h4>
+                            <span class="keywords">promotion, press, hype, genre, reality, cast</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> have the cast and crew doing lots of press for months, and the hype would be enormous. But in the real world, there is no such thing as an action movie; we are in a different film genre, and thus our promotional campaign for “The 36th Chamber of Shaolin” is quite different. I can’t just stand up in front of the press and say, “I’m making this movie and it’s about this.” I had to make a point to s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: realist action film</h4>
+                            <span class="keywords">frame rate, realism, technology, cinematic, 48fps, computer game</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> not be able to run at such a consistent, high frame rate. But you are not watching this in a realistic world. You are watching the 48fps frame rate, which is a reality in this world. If the movie had been filmed at 24 frames per second, the movie would have looked like an average movie. Now you&#39;re seeing a new, improved version of the movie, one that runs at 48fps and looks like a computer game o...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: real life logic</h4>
+                            <span class="keywords">hollywood, casting, actors, blockbusters, realism, constraints</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> never cast two of its most prominent actors in the same film at the same time. However, this film does so by bringing together Ben Affleck and Matt Damon, two stars who became huge in the late 90s/early 2000s, as well as the duo of George Clooney and Brad Pitt, who both achieved similar levels of success during that same time.
+
+In a world where Hollywood is so often criticized for the ways in whi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: real talk</h4>
+                            <span class="keywords">story, character, logic</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> have never been the right medium for the story. I can&#39;t imagine the studio being happy to cast me as the lead in that movie.
+
+For me it&#39;s always about the story first, and the character second, and then the action third.
+
+You mentioned your work on &quot;Journey 2: The Mysterious Island&quot; coming out later this year. Do you feel like that role has opened doors for you in Hollywood in the future?
+
+Yes. I...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: real logic action</h4>
+                            <span class="keywords">exposition, motivation, realism, character, spare time, reactions</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> not have time for a full backstory, so you&#39;ll be relying on exposition to flesh out the characters. Here&#39;s where your characters&#39; traits come into play: who are they? What do they do in their spare time? What&#39;s their favourite colour? How do they react to things? What motivates them to take action?
+
+In order to effectively write exposition, I like to have the following in mind:
+
+  1. Why are you ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: realist action</h4>
+                            <span class="keywords">explosions, logic, realism, physics, consequences, plausibility</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> never be a film without a lot of action and a lot of explosions, but in a more cartoonish world, it is entirely possible to create an action movie without the aforementioned explosions. This is because in a cartoon world, everything has the potential to be made to explode. However, in a realistic world, explosions require specific things to be set off in order for the explosions to happen. This m...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: real life logic</h4>
+                            <span class="keywords">chaos, capitalism, bloodshed, order, power, disruption</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> have a massive impact in a globalized society. We’d be looking at massive riots, widespread chaos, global power disruption, a collapse of order. Maybe an end to capitalism. Probably lots of bloodshed. But that’s not really the story.
+
+It’s not what they are selling.
+
+Instead, you get the usual action movie hijinks, plus maybe a hint of the future, just enough to make it sound plausible.
+
+The Matr...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: real logic action</h4>
+                            <span class="keywords">timeline, setup, battle, realism, pacing, structure</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> be about two hours and fifteen minutes long. An hour to get to the middle of the story and another hour and a half of the final battle to resolve it. In that world, this movie would be an hour and twenty minutes long. The first forty-five minutes is devoted to the setup and the conflict. The final twenty minutes are spent in the final battle. And the remaining thirty minutes is basically an exten...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: video game logic</h4>
+                            <span class="keywords">death, memories, replay, continuity, unfinished, return</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> probably have at least one or two characters die. However, even if someone does die in a video game, the character isn’t really gone. Even if they lose their memories, it’s not really that hard to come back and do it all again. There are very few video game stories that are actually finished. I’m not even sure any of them are done, because in every single game I’ve ever played, it’s possible to g...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: realism critique</h4>
+                            <span class="keywords">nuclear blast, manhattan, 911, overthe top, effects, realism</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> have no way of capturing the grandeur of a nuclear blast. Instead, the filmmakers had to settle for the same effects that they had used to destroy a couple of skyscrapers in the 9/11 attacks. In my view, they went a bit over the top and blew up the whole of Manhattan, which was a bit of a shock. But I didn’t mind it because it was so realistic.
+
+How do the filmmakers make it seem like the world i...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: soundtrack criticism</h4>
+                            <span class="keywords">music, industry, respect, nobuo uematsu, nobuyoshi sano, appreciation</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> be a disaster without a killer soundtrack. We know the importance of music to elevate a film and make it truly great.
+
+When it comes to game soundtracks, though, the industry has always been a bit behind on their appreciation. Sure, the likes of Nobuo Uematsu and Nobuyoshi Sano are a bit more well-known, but most of the rest of the industry doesn’t get anywhere near the respect they deserve. I gu...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: real life logic</h4>
+                            <span class="keywords">plausibility, realism, emotional impact</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> not exist on its own. Every scene must be set, the plot must be explained, and every actor must be introduced.
+
+In real life, even if it were true, it would be irrelevant, or it would be so old news as to have little or no emotional impact. I mean, the idea of a movie where every scene is the best one ever made is ridiculous, right? It just doesn&#39;t make sense.
+
+We are introduced to our two heroes...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: realist action</h4>
+                            <span class="keywords">realism, physics, logic, vehicles, chases, constraints</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> have to acknowledge that in a real car chase, you would not see a vehicle do 360s or barrel rolls without destroying the interior. And there’s no way you could chase a plane at the same altitude with a helicopter; the chopper’s blades would just chop the plane’s wing off. That’s reality. And even the most incredible car chases look pretty mundane if you’re actually in the middle of the action.
+
+I...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: real life logic</h4>
+                            <span class="keywords">team effort, predictable, drawn out, origin story, inconsistent humor</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> never rely on a single character and his allies to make it all the way to the final act. It would be a team effort. For all the good stuff, there&#39;s a lot to criticize about the film as a whole. It&#39;s too long, it&#39;s too drawn out, it&#39;s too much of an origin story, the humor is inconsistent, and the story is pretty predictable. You can probably see most of the action coming before it happens. It&#39;s a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_100">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: realistic action</h4>
+                            <span class="keywords">cybercrime, economy, misinformation, government, agencies, threat</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s take the DNA of a typical blockbuster action movie and inject actual real-life logic into the story. The result? A surprisingly plausible (if sometimes tension-filled) tale of good versus evil—though it won’t have the improbable stunts, invincible heroes, or plot armor we’re used to.
+
+---
+
+**Title: “Operation Safehouse”**
+
+**Logline:**  
+When a disgruntled cybercriminal threateni...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot for a typical blockbuster action movie—but this time, with the realism of the real world thrown in. Forget superhuman abilities, unlikely weapons, and physics-defying stunts. We&#39;re grounding the story in what actually could (or would plausibly) happen.
+
+---
+
+**Title: “Last Call: Metro Station”**
+
+**Genre:** Action Thriller (with realistic stakes and outcomes)
+
+##...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Certainly! Imagine the high-octane world of a blockbuster action movie—fast cars, explosions, secret organizations, and a heroic lone wolf—but now, all the implausible physics and logic of real life apply.
+
+---
+
+**Title:** *Operation: Veritas*
+
+**Premise:**  
+The year is 2024. The global economy is shaky, misinformation is rampant, and a few shadowy companies and government agencies are quietly ma...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot for a *blockbuster action movie*—but with all the *real-life logic* you asked for. No superpowers, indestructible people, instant healing, or implausible events. Instead: real physics, consequences, and the messy, human reality of crime and justice. Buckle up.
+
+---
+
+**Title:** **Zero Hour**
+
+### **ACT 1: Setup**
+
+#### **Protagonist Introduction**
+Liam Carter is a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot for a typical blockbuster action movie—if reality (rather than movie logic) governed every scene and consequence:
+
+---
+
+**Title:** *Zero Margin*
+
+**Genre:** Reality-Based Action Thriller
+
+**Logline:**  
+When a micro error in an international financial algorithm triggers a cascade of real-world consequences, a disgruntled software engineer must race against time t...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot outline for a “blockbuster action movie” concept, but reimagined using real-life logic and physics, social reality, and human limitations—no super-soldiers, invincible tech, or improbable escapes allowed. Let’s call this movie **“Operation: Contained Response”**.
+
+---
+
+**Setting:**  
+A fictional city, *Newbridge*, recently hit by a series of coordinated cyber and...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot of what a typical blockbuster action movie would look like if we applied real-life logic—meaning, physics, practical consequences, and real-world biology come into play. There’s less spectacle, more realism, and a lot more mess.
+
+---
+
+**Title: “Operation: No One Escapes”**
+
+**Opening:**
+The film opens with a credit sequence featuring news reports about a series of high...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s the plot of a *blockbuster action movie* rewritten with “real life logic” applied—meaning grounded physics, realistic consequences, plausible characters, and consequences of violence/action. Everything is more subdued, messy, and consequential. Here we go:
+
+---
+
+### Title: **Operation: No Easy Outcomes**
+
+#### Setting
+Present day, near-future America. Corruption and political polariza...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Absolutely, here’s a take on a blockbuster action movie plot, but reimagined with real-life logic, consequences, and plausibility (no superhuman abilities, no plot armor, no improbable escapes, and everything comes with real-world fallout).
+
+---
+
+**Title:** *Operation Zero Marginal Cost*
+
+**Premise:**  
+In the near future, a highly sophisticated cyber-hacker known only as “Codenamed Verity” discov...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: real action</h4>
+                            <span class="keywords">union, plant, safety, labor, crisis, realism</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s reimagine a typical blockbuster action movie—think *Mad Max: Fury Road* or *Die Hard*—but with realism interwoven into the plot, character decisions, and consequences. Here’s how such a story might actually unfold in the real world:
+
+---
+
+**Title: “Last Shift”**
+
+**Setting:**  
+A medium-sized, heavily unionized manufacturing plant in the American Midwest. No magic or superweapons...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_200">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: real-life action</h4>
+                            <span class="keywords">security, realism, consequences, logistics, human error, ground truth</span>
+                        </div>
+                        <div class="cluster-size">6</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s imagine a so-called blockbuster action movie—but twist it with real-life logic and consequences. Here’s a detailed plot outline for what would feel like a fast-paced action flick, but with the sobering realities of the real world kicking in at every turn:
+
+---
+
+**Title:** *Operation Zero Margins*
+
+**Opening:**
+
+A shadowy private security firm, Iron Resolve Corp., gets a high-leve...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a detailed plot for a “typical blockbuster action movie,” but rewritten with grounded, real-life logic instead of superhuman stunts, plot armor, or implausible physics. This version would be less explosive but much more plausible—think *Sicario* or *The Hurt Locker*, not *Mad Max* or *John Wick*.
+
+---
+
+**Title: &quot;Operation Safehouse&quot;**
+
+**Plot Summary:**
+
+The story opens in the ne...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot for what a typical blockbuster action movie would look like if we grounded it in real-life logic, physics, human biology, and practical consequences. Think of it as if the writers *forced* themselves to obey the laws of reality instead of relying on Hollywood&#39;s convenient handwaving.
+
+---
+
+**Title:** **Operation Redline**
+
+**Genre:** Action/Thriller (But with a r...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Certainly! Let’s imagine a typical blockbuster action movie—think *Fast &amp; Furious 11: Drift Into Destiny*—but instead of high-octane car chases, impossible stunts, and physics-defying heroics, we apply real-life logic. Here’s how such a story might actually unfold:
+
+---
+
+**Title:** *Brooklyn Street Race: Real Limits*
+
+**Premise:**  
+A group of friends in Brooklyn, each with an unconventional skill...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot for what a typical blockbuster action movie would look like if **real-life logic** were applied, instead of the over-the-top physics and implausible stunts usually found in films:
+
+---
+
+**Title:** *Blacklist Protocol*
+
+**Logline:**  
+When a shadowy intelligence leak triggers a worldwide cyber panic, an ordinary civilian must navigate bureaucratic red tape, media scruti...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot outline of a *typical blockbuster action movie*, rewritten with the trappings and consequences of real life logic. Instead of invincible heroes, superpowers, and zero consequences, everyone is human, vulnerable, and realism permeates every beat.
+
+---
+
+### Title: **Safe House Directive**
+
+#### Premise
+In a near-future American city, a controversial cyberattack on the po...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: real life logic</h4>
+                            <span class="keywords">infrastructure, storm, civil engineer, corporate security, urban thriller, realistic stakes</span>
+                        </div>
+                        <div class="cluster-size">4</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s imagine a high-octane blockbuster action movie—if *real life logic* were in charge instead of Hollywood spectacle. Here’s how the plot might unfold:
+
+---
+
+**Title: Operation &quot;Dead Air&quot;**
+
+**Logline:**  
+A disgruntled civil engineer must infiltrate a major city’s critical infrastructure during a massive storm, all while being hunted by corporate security and government task forces...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s imagine what a typical blockbuster action movie would look like if real life logic—rather than superhero powers, improbable stunts, and plot armor—ruled the story. We’ll keep the core structure: a problem, a reluctant hero, some escalating threats, a climax, and a conclusion. But everything happens as it plausibly could (or would most likely not), with consequences and limitation...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Certainly! Let’s imagine a so-called blockbuster action movie—but instead of relying on superpowers, plot armor, or implausible stunts, it follows the logic of our everyday world. The stakes might be lower, the solutions messier, and the hero more fallible. Here’s a detailed plot outline:
+
+---
+
+**Title: &quot;Gridlock&quot;**
+
+**Genre:** Urban Thriller/Heist Drama
+
+**Setting:** Modern-day Los Angeles during...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a detailed plot for a &quot;blockbuster action movie&quot; retold with real-life logic and consequences applied—so the story is gritty, believable, and devoid of implausible superhuman stunts or cartoonish villainy.
+
+---
+
+**Title: SHADOW CODE**
+
+**Premise:**  
+A disgruntled software engineer, who once worked for a major defense contractor, discovers that the company he now works for (a cyb...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_300">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>4 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">4</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: real-life action</h4>
+                            <span class="keywords">bureaucracy, consequences, realism</span>
+                        </div>
+                        <div class="cluster-size">3</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s imagine a typical blockbuster action movie—think something in the vein of “Mad Max: Fury Road” or “John Wick”—but grounded in real-life logic and physics, with the consequences and limitations that our world actually presents. Here’s how such a story might play out, with a gritty realism twist:
+
+---
+
+**Title: &quot;The Convoy Heist&quot;**
+
+**Premise:**  
+In a near-future city plagued by e...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s reimagine the structure and plot of a typical blockbuster action movie, but with a *hard* dose of real-life logic. Instead of gravity-defying stunts, impossible gun-fu, and indestructible heroes, we’re grounded in how the real world works— physics, bureaucracy, human limitations, consequences, and the everyday messiness that comes with it. Here’s how such a movie could look:
+
+---...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot of a typical blockbuster action movie, but rewritten with **real-life logic applied**, removing or significantly lowering the implausible, superhuman, or impossible elements. The core will still be: a group of ordinary people caught up in escalating danger as the plot thickens.
+
+---
+
+### **Title: &quot;Day One&quot;**
+
+#### **Act 1: Normalcy Crumbles**
+
+**Main Character:**  
+Ale...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: REALISTIC ACTION</h4>
+                            <span class="keywords">fbi, swat, urban defense, human limits, plausible outcomes, tactical planning</span>
+                        </div>
+                        <div class="cluster-size">3</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Sure thing! Here’s a detailed plot for what a “typical blockbuster action movie” would look like if it strictly followed real-life logic, physics, and human limitations—no superhuman powers, magic, or implausible technology.
+
+---
+
+**Title: Under Siege: Operation Team**
+
+**Logline:**  
+A group of seasoned but ordinary FBI agents and a reluctant SWAT team must defend a major city’s command center fr...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Absolutely, let’s imagine a “blockbuster action movie” plot, but grounded in real-life logic instead of relying on superpowers, improbable stunts, or unbreakable bullets. We’ll treat characters as realistic humans, weapons as real firearms and tools, vehicles as regular cars, and “chases” as actual police pursuit protocols with limited effectiveness. Here’s how that might unfold:
+
+---
+
+**Title: SH...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot for a typical blockbuster action movie, but rewritten with &quot;real life logic&quot; applied—meaning no superhuman powers, impossible stunts, instant learning, or invulnerability. Instead, the story must follow the messy, plausible consequences of human decision-making, limitations, planning, resources, and unpredictability. Here goes:
+
+---
+
+**Title: &quot;Operation Zero Hour...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: REALISTIC ACTION</h4>
+                            <span class="keywords">framing, consequences, realism, military, psychology, bureaucracy</span>
+                        </div>
+                        <div class="cluster-size">3</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Sure! Let’s reimagine a typical blockbuster action movie with “real life logic” applied—meaning consequences, realism in character behavior, physics, and social dynamics, and fewer cartoonish coincidences or superhuman feats.
+
+---
+
+**Title:** **Operation: No Clean Slates**
+
+**Genre:** Action / Thriller (with realistic undertones)
+
+### ACT ONE
+
+**Setup:**
+The protagonist, **Marcus Reed**, a disgrun...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot of a “blockbuster action movie” rewritten with real-life logic applied—meaning physics, psychology, practical limitations, and realism influence every action step (no superpowers, implausible stunts, or invincibility). Characters are also more grounded, and consequences make sense.
+
+---
+
+**Title: Shatter Point**
+
+**Logline:**  
+A former military tech analyst is framed ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Certainly! Let’s reimagine the classic blockbuster action movie—think James Bond, Mission: Impossible, or Mad Max—**but with realistic consequences and outcomes**, grounded in how the real world operates.
+
+---
+
+### **Title:** *Operation Safe Passage*
+
+#### **Logline:**
+When a miscommunicated government report accidentally makes a small border town the top suspect in a terrorist plot, a disillusion...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: real-life action</h4>
+                            <span class="keywords">realism, consequences, flawed characters</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot of a *blockbuster action movie*, but rewritten to reflect *real life logic*—meaning consequences are realistic, characters have flaws, events are plausible, and technology behaves like it does in the real world.
+
+---
+
+**Title:** **Safe Path**
+
+**Genre:** Action/Thriller (But with a heavy dose of realism)
+
+---
+
+### **ACT ONE**
+
+#### **Opening:**
+
+A seasoned but washed-u...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_400">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>3 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">3</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: real-life action</h4>
+                            <span class="keywords">logistics, cyberattack, realism</span>
+                        </div>
+                        <div class="cluster-size">8</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot for a “blockbuster action movie” reimagined with strict real-life logic applied, removing superpowers, implausible stunts, and replacing them with plausible consequences and realistic outcomes.
+
+---
+
+**Title:** *Zero Margins*
+
+---
+
+**ACT ONE**
+
+**Setting:** Modern-day Istanbul. A global tech conglomerate, OmniCorp, just released a new smart device—*the NEXUS*. It...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot of a “typical blockbuster action movie,” but with the logic, consequences, and realism of real life applied instead of the usual superhuman stunts, invincibility, and convenient plotting.
+
+---
+
+**Title:** *Zero Margin*
+
+**Setting:** Modern-day Chicago, several interconnected cities under threat of cyberattack and domestic terrorism.
+
+---
+
+### ACT 1: Setup
+
+**Protagonis...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot outline of a **blockbuster action movie**, but with all the realism, consequences, and plausibility of real life—no invincibility, no instant healing, no CGI car chases that never end, and no “good guys” who never take a meaningful loss.
+
+---
+
+### Title: **&quot;Last Shift&quot;**
+
+#### ACT 1: SETUP
+
+**Protagonist:**  
+Jordan Brooks, a mid-level logistics manager at a regional s...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Certainly! Imagine a blockbuster action movie, but the stakes, physics, character capabilities, and plot twists are governed by real life logic—no superhuman powers, cartoon physics, or implausible weaponry. Here’s what such a movie might look like:
+
+---
+
+**Title:** *The Last Response*
+
+**Genre:** Blockbuster action thriller (but grounded)
+
+**Premise:**  
+In a near-future American city, a cyberatt...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a detailed plot for a **blockbuster action movie reimagined with real-life logic applied**—no super-soldiers, invulnerable heroes, or physics-defying stunts. Instead, everyone behaves believably, with realistic outcomes, injuries, planning, and consequences.
+
+---
+
+### Title: **Operation: Zero Shot**
+
+#### **Act 1 – Setup**
+
+**Opening:**  
+A major city—let’s say New Portland—face...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Absolutely! Let’s imagine a “real life logic” version of a typical blockbuster action movie. Forget superhuman powers, improbable stunts, and invincible protagonists. Here’s what a realistic take might look like:
+
+---
+
+**Title:** *The Night Shift: Security Protocol*
+
+**Genre:** Action-Thriller (with grounded realism)
+
+---
+
+### Plot Summary
+
+**Opening:**
+We follow **Marcus Reed**, an overworked nig...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Certainly! Imagine a blockbuster action movie, but instead of relying on impossible stunts, superhuman abilities, and convenient plot armor, we apply real-life logic and constraints. Here’s how such a film might unfold, still with high stakes, but grounded in what is actually possible (or plausibly close):
+
+---
+
+**Title:** *Operation Crimson Response*
+
+**Logline:**  
+A disgraced federal agent must...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Sure! Here’s a detailed plot for what a “blockbuster action movie” would look like if it were grounded in real-life logic—meaning no superhuman abilities, no implausible stunts, no instant travel, and everything obeying the laws of physics, biology, and human nature (with some cinematic exaggerations, of course):
+
+---
+
+**Title:** *Operation Exit Door*
+
+**Genre:** Grounded Action/Thriller
+
+**Settin...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: real-life action</h4>
+                            <span class="keywords">bureaucracy, framing, police, ordinary, consequences, unsympathetic</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Absolutely, I’d love to play with that idea. Here’s a detailed plot for a **blockbuster action movie retold with real-life logic and consequences**:
+
+---
+
+### Title: **Operation: Too Complicated**
+
+#### **Logline:**  
+An ordinary civilian accidentally gets framed for a crime and must outwit a corrupt bureaucracy, a determined police force, and a handful of unsympathetic acquaintances in order to c...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: real world action</h4>
+                            <span class="keywords">realism, consequences, limited resources, flawed heroes, everyday struggles, practical outcomes</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a detailed plot for a *blockbuster action movie* reimagined with the rigors, unpredictability, and realism of the real world. This isn’t the world of invincible heroes, unbreakable physics, or implausible gunfights—but instead, a story where consequences matter, resources are limited, and everyone is just doing their best with what they have.
+
+---
+
+**Title:** _Shadows in the Harb...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

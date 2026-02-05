@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Analysis - Query 8</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .cluster-count-card.pretrain {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .cluster-count-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
+        .cluster-count-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        /* Controls */
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn.secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 8</span>
+            </div>
+            <div class="query-text">
+                Write a short story about a female teacher who has a big accident while knitting in class with a hilarious ending.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">47</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5.9</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">10.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">40</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">1.8</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">7</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step480000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step480000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">step 100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">step 200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
+                    <div class="cluster-count-value">2</div>
+                    <div class="cluster-count-label">step 400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: nonsense text</h4>
+                            <span class="keywords">class, students, knitting, accident, humor, failure</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> they could see her. The most of this was an art of both. It doesn&#39;t look, in that the students were all a part of the class. It was more important for the rest of the class. It was also quite an advantage. The other students were all students.
+
+The students and students alike were just the class members. They needed a way to show each other, which was the end of that class. It was to be that the ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: irrelevant content</h4>
+                            <span class="keywords">greatest men, world, popularity, success, writer, trust</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> he thought, and she has never met. He was one of the most trusted and powerful man in the world. He was one of the greatest and most successful writers.
+
+What does a person mean when he can be considered one of the greatest men and women in the world?
+
+  1. That is why the author is so popular, and he should be able to take over the world of his generation. His most memorable, and most memorable,...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: nonsense response</h4>
+                            <span class="keywords">knitting, accident, teacher, class, humor, ending</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> the early was the end of the first quarter. You should also remember the end of the early at the time you can be more aware of the whole and/or the whole at the moment. I would imagine that I would have to use some of the new work in my life and then I would say to be the ultimate addition to those I know in my heart. The next time I am in my hands I have been with a lot of them.
+
+The final and f...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: irrelevant response</h4>
+                            <span class="keywords">knitting, accident, teacher, class, band, impression</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> it can be one of the same kind of work with him. In case, it would be a good idea if we can&#39;t do that. However, what was it all about was that when we were playing a band, this was a good idea to do. What we really wanted to do is give a very good impression of what happened when we tried to do it. I think this is one of my goals, and I think we might be making use of it. However, if we were goin...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: nonsense talk</h4>
+                            <span class="keywords">knitting, accident, class, humor, failure, teacher</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> we have to do.  I have read on the second and I know it was important to make these meetings as you build up. We don’t know it was a success but I am excited to share it with you.
+
+I don’t think we need to be here for a moment but here we have to have to take one of our first steps to help us get there and I’m happy to be here with them every time.  You can read our last lesson and make it a very...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: nonsense text</h4>
+                            <span class="keywords">happy, music, hours, career, change, guest</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> he would get the most qualified of 15 hours and 16 hours. This was very 15 hours. I’m happy and will continue to be. I’m very happy and welcome and will be with the most wonderful guest. Please take care of the other 25 hours and 1. 
+
+As I’ve said, I&#39;m happy and am feeling sorry for the change. I was excited and I just started my career and the best I could do. I started making music that I was l...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: nonsense</h4>
+                            <span class="keywords">accident, knitting, teacher, humor, failure, class</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> our family has had failed with the best and it’s possible, no one has to make sure. This is all in this story. Let’s make it look and see how it’s going.
+
+I believe the second major piece of my life is I’m getting it and seeing it are coming through and it’s very moving. I had to do a little walk over my chest and the thought that the hell that happens is the way that you want to see it. In this ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: irrelevant response</h4>
+                            <span class="keywords">teacher, knitting, accident, humor, class, future</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> that is their, but we are talking about the future.
+
+I would say that the only thing that a person could understand about was the people and their families. He said he will make our community a lesson that he knows that as a person I am. I am not a good leader but I am not an outsider but I am an outsider. I am. I think this is the best place to start because, for me, my family I could have all o...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: nonsense response</h4>
+                            <span class="keywords">knitting, accident, students, behavior, class, director</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> these students were the same type of a few days. For more than three years they said that students who had not the same type of the same type of activity was more than what the group is now.
+
+A different way of the same type of behavior is a different kind. In this case, the student and the director had to make a change. In this case, it would be a different kind of behavior. In this case, the st...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: INVALID RESPONSE</h4>
+                            <span class="keywords">database, application, administrator, error, invalid, syntax</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> are available, with an early or more significant job. As a result, he would be required to ensure that the application that runs the database has a valid database.
+
+**If you&#39;re familiar with your application. Please note that if you&#39;re using an application, you&#39;ll be required to make the application that will be used as it is. You can get an administrator that doesn&#39;t have a database, for instanc...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: name origin</h4>
+                            <span class="keywords">teacher, knitting, accident, computer class, student, name</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> to type on a computer keyboard. &quot;The teacher was saying, &#39;Use this finger for this key.&#39; Then she said, &#39;And don&#39;t type too fast.&#39; And one girl put her hands on her lap, said, &#39;Oh, Ms. Patel, what are we going to do with that?&#39; &quot;That was how I got my name.&quot;
+
+Rahul Sheth&#39;s name came from a similar source. &quot;I was in second grade and had a computer class with my best friend,&quot; he says. &quot;I was really ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: HILARIOUS ENDING</h4>
+                            <span class="keywords">knitting, accident, teacher, gunfire, classroom, humor</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> to tell time when a gunman fired into her classroom, killing the principal and wounding a teacher and student.
+
+&quot;I heard the gun shots and then I just felt something that felt like a wind against my back and that is what made me realize it was bullets,&quot; Ms. Patel told the radio show, according to a transcript.
+
+&quot;Then it felt like someone punched me,&quot; she said.
+
+Her eyes filled with tears when she...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: water accident</h4>
+                            <span class="keywords">knitting, teacher, flood, sprinkler, accident, hilarious</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> to measure a line segment in math class on Tuesday morning when a student in the room, which had a sprinkler system, inadvertently turned on the device, resulting in a flood of water.
+
+“I didn’t know what was happening,” Patel told the Herald on Thursday. “I felt a trickle in my ankle and I looked down and it was coming from the ceiling. I didn’t know where the water was coming from and why it wa...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: NONE</h4>
+                            <span class="keywords">teacher, student, question, father, texas, suspension</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> to type in a word processor when a student asked, &quot;What does &#39;homo&#39; mean?&quot; Patel was at a loss for words, but quickly recovered. &quot;That&#39;s a difficult question. You might want to ask your father.&quot; And that, as far as Patel was concerned, was that.
+
+But for another parent in Texas, a similar question resulted in a suspension and a fight between the teacher and the parent, which turned ugly. When the...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: snowman disaster</h4>
+                            <span class="keywords">ice, knitting, accident, giggles, snowgirl, cracked</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> to build an igloo out of a big block of ice. The kids giggled when they saw the block, which was shaped like a snowman.
+
+&quot;Kids, you will be the snowman and I will be the snowgirl,&quot; she told them.
+
+But when a piece of the block of ice fell from her hands and cracked open, she could not be the snowgirl anymore.
+
+&quot;Girls are a lot tougher than I thought they were,&quot; she said to her students with a shr...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: MS. PATEL</h4>
+                            <span class="keywords">solar system, google classroom, global model, knitting, accident, hilarious</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> to make a model of the solar system, when she decided to create a version of the model using students from around the world. “This is the first year that we started to really incorporate that into our curriculum,” Ms. Patel said. To make her global solar system, Ms. Patel created a Google Classroom, and shared the instructions and links to various online materials for students to make their model...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: lemonade signs</h4>
+                            <span class="keywords">teacher, students, accident, knitting, signs, hilarious</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> to make lemonade stand signs. After lunchtime, the school principal and some of his staff came into the classroom to see the lemonade stands and how the sign-making process worked. When the teacher left the classroom, some students decided to make “special” signs for other children in the school and started passing them out. As the teacher returned to the classroom, she noticed one of the student...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: recycling experiment</h4>
+                            <span class="keywords">teacher, class, trash, knitting, accident, humor</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> to properly sort recycling when she decided to turn the activity into an experiment. The children sorted three bags of trash into three different piles and placed them in the hallway. They labeled the first “trash,” the second “recyclable” and the third “things that could be recycled if the people who own them would take them.” Then, they watched. 
+
+“I wanted to see if anyone would help, or if th...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: FIRE EXTINGUISHER JOKES</h4>
+                            <span class="keywords">teacher, knitting, volcano, accident, humor, extinguisher</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> to make a model of a volcano for a science project when, with no warning, the room filled with the stench of burning flesh.
+
+“I saw a kid run by with a fire extinguisher, which was a really bad idea because you should never try to put out a grease fire with a water extinguisher,” recalled the 25-year-old teacher, who is now a student in the school’s program for first responders. “He threw it and ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: no relevant content</h4>
+                            <span class="keywords">knitting, accident, teacher, hilarious, phone call, middle eastern accent</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> to use a protractor when the phone call came. She didn&#39;t recognize the number, but she answered because it could be a parent. She was greeted instead by an unknown woman with a Middle Eastern accent.
+
+The woman asked to speak with her son, 10-year-old Samir. Ms. Patel said she didn&#39;t know his last name. The woman grew angry and shouted a string of profanity. She hung up.
+
+Ms. Patel had no idea wh...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step480000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step480000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step480000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step480000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: ms. patel</h4>
+                            <span class="keywords">knitting, accident, hilarious, classroom, students, intro sentence</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> to write a paragraph.
+
+“The kids, they knew the basics of writing and grammar, but they didn’t know the importance of using an introductory sentence,” she said. “So I was teaching them to lead with an interesting fact and why it is interesting.”
+
+The students in Ms. Patel’s class chose to start off their first paragraph by discussing the importance of using an introductory sentence.
+
+Her students...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: NONE</h4>
+                            <span class="keywords">immigration, class, debate, learning, students, culture</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> to tell the time when she realized she could teach them a little something else: what it is like to live on the other side of the immigration debate.
+
+Mr. Patel&#39;s daughter, 10, was among a group of 20 students and two teachers who were invited by their classmate and their school to come and learn more about what it is like to live in a country other than their own. The students who live in the Un...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: PATEL&#39;S AWARDS</h4>
+                            <span class="keywords">teacher, health, education, school board, nutrition, responsibility</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> to make healthy choices and how to be responsible for their own health. She emphasized the importance of healthy nutrition, the dangers of drugs, and the importance of a good education.
+
+The students’ parents were impressed with her message and her efforts. As a result, the school board decided to recognize Patel’s work and nominated her for an award. She was awarded the Board Member of the Year ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: no keywords found</h4>
+                            <span class="keywords">teacher, class, trip, money, idea hunt, students</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> to study for their upcoming test. &quot;The kids are like, &#39;Ms. Patel, we want you to be our teacher.&#39; &quot; Patel asked her class to help her set up the event.
+
+The first step was to decide who would pay for the trip. The students were eager to help, but there was only one thing in common: &quot;We don&#39;t have any money!&quot; said Patel.
+
+That&#39;s when the class went on an &quot;idea hunt&quot; around the school to gather as ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: ms. patel store</h4>
+                            <span class="keywords">knitting, accident, school, rent, children, money</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> to do addition and subtraction with money, and then the school shut down. Ms. Patel, who is married and has two children, owns the store and lives there. &quot;I am a little bit concerned because the rent and everything is due,&quot; she said. She pays her rent with her earnings at the store, and she relies on that income. &quot;I need it to pay my bills,&quot; she said.
+
+Ms. Patel&#39;s children have their own schoolwo...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: no label</h4>
+                            <span class="keywords">indian american, english, hindi, classroom, minority, language</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> to count to 10 when her classmate asked her why. In response, Patel, who is Indian American, explained that she had a difficult time learning English. She added that it was difficult for her to learn new concepts in the classroom without understanding the language and that her family spoke in Hindi at home.
+
+In Patel’s class, she explained, she was the only minority child. She told the class that...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: unrelated responses</h4>
+                            <span class="keywords">teacher, knitting, accident, speech, post office, god</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> to write a persuasive speech when she received the message from a friend, who sent it on to her.
+
+&quot;I&#39;m on my way to the post office now, &quot;she wrote. &quot;I&#39;m just in shock, but I&#39;m very thankful to God, and I just know he&#39;s got it covered. I&#39;m just very thankful for this.&quot;
+
+Kush Patel, a spokesman for the church, said she did not want to comment on the situation because she was &quot;too overwhelmed.&quot;
+
+Bi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: math error</h4>
+                            <span class="keywords">pyramid, formula, surface area, student, division, misunderstanding</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> to calculate the surface area of a pyramid. She asked them to explain what the formula was and what the dimensions of the base were. Then she asked them to show their work. “Why do we have to divide by two?” one of the students asked. Patel answered, “Because when we multiply by two we will get the surface area.” But the student persisted, “Why do we need to divide by two? What is the base going ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: no label</h4>
+                            <span class="keywords">hospital, pandemic, vitamin c, lemonade, ice cream, teacher</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> to make their own lemonade and ice cream as a way of getting a healthy dose of Vitamin C, a potent antioxidant that also acts as an anti-inflammatory. “She’s my rock of sanity,” he said. “I wouldn’t be here if it weren’t for her.”
+
+When the hospital closed, it didn’t reopen. That’s a result of the coronavirus crisis and what’s happening to the economy, Ms. Patel said. As the pandemic has worsened...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: teaching accident</h4>
+                            <span class="keywords">knitting, classroom, special education, math, reading, humor</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> to tell time to the minute. As part of a special education class, she was working with students who struggled with reading and writing.
+
+The students would show their work on a grid, then fill out the answer grid. They did 10 math problems, then 10 reading problems. Patel was working with one of the students, and told him what to do. As Patel worked with the students, the classroom teacher stoppe...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: temperature conversion</h4>
+                            <span class="keywords">celsius, fahrenheit, calculator, chart, degrees, classroom</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> to graph the temperature in degrees Celsius in relation to the Fahrenheit scale. While showing the students the connection between degrees Celsius and Fahrenheit, the teacher said, &quot;We&#39;ll have to go to the library and check the conversion chart to find this one. The teacher got down to the table, grabbed her calculator, and then began to write down the conversions.
+
+She got up to about 25 degrees...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: no response</h4>
+                            <span class="keywords">knitting, accident, teacher, class, hilarious, ending</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> to write the days of the week in another language.
+
+“I was doing it with the class for the first time,” Patel said.
+
+Her daughter, Maya Patel, 11, had just started eighth grade and had been in Mr. Patel’s class, too.
+
+“Sometimes she would come home and say something she learned at school and would say ‘mom, dad, listen to this,’” the mother said. “This was kind of that moment for her.”
+
+There’s s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: no label</h4>
+                            <span class="keywords">teaching, pandemic, brain pop</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> to create a story map.
+
+“It’s important to make this real for them,” Ms. Patel said. “You don’t need to be the perfect writer to be successful in life.”
+
+The lessons at the school have become more interactive since the pandemic, when teachers were forced to change their approaches to teaching. They now use online sources like “Brain Pop,” an animated science learning platform, and “The Way of the...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: knitting accident</h4>
+                            <span class="keywords">teacher, class, knitting, accident, students, hilarious</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> to use a microscope at the time.
+
+“They were studying plants and microorganisms,” she says. “That’s what they’re going to study all the way through.”
+
+Her students were so impressed with her that they asked if they could do the experiment on their own. “The principal at the time took my class for a walk, and the kids went through the woods and they collected a bunch of things to look at under the...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: classroom error</h4>
+                            <span class="keywords">protractor, angles, student, average, teaching, confusion</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> to measure angles using protractors. After a few minutes of instruction, one student said, “Teacher, how do I know which side is the right one to measure the angles on?”
+
+Ms. Patel gave a great answer that is appropriate for a classroom. The correct response is, “It doesn’t matter!  You can just measure both sides and average your measurements.”  The student was left scratching their head with a ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: ms. patel</h4>
+                            <span class="keywords">knitting, accident, classroom, enthusiasm, teaching, hilarious</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> to write a sentence and she had everyone&#39;s attention. &quot;She made it sound so fun. She had such an enthusiasm for teaching. Her classroom was always so lively.&quot;
+
+Ms. Patel, 32, who was born in India and came to the United States with her family at age 10, had been a volunteer teacher in some of the same schools she worked as a teacher.
+
+&quot;She was always there for the children, and always gave of her...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: none</h4>
+                            <span class="keywords">multiplication, aha, understanding, classroom, teaching, students</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> to do multiplication problems. “The kids were working through the problems at their own pace on the boards,” she says, “and at one point I heard a loud voice say, ‘Oh, so you’re telling me to use this to figure out this other thing? So that’s how they do this?’ It was amazing to watch the transformation of an understanding that was just not there to one that was. Seeing this kid have that ‘aha’ m...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: earthquake disaster</h4>
+                            <span class="keywords">knitting, classroom, quake, teacher, children, collapse</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> to identify and describe shapes, including triangles, trapezoids and squares, when the earthquake struck, leaving behind 50-foot craters and destroying the classroom where she worked. &quot;I didn&#39;t even get to say goodbye to my class,&quot; said Patel, who has two sons.
+
+Sawyer Tully was one of those children. The 10-year-old lives with his mother and older sister in a building that collapsed in the quake...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: NONE</h4>
+                            <span class="keywords">teacher, knitting, accident, students, silly, carnivores</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> to identify the names of various mammals when she overheard the kids talking about their favorite animals. As she moved to the other side of the room, she heard her students whispering. Then, one of the girls asked a girl who was in the front of the class what the &quot;carnivores&quot; were. Patel quickly walked over to the girl in front and said, &quot;You guys are being silly. There are no carnivores. That&#39;s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: tornado mishap</h4>
+                            <span class="keywords">knitting, accident, class, tornado, youtube, humor</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> to measure the circumference of a circle when the tornado struck. In her class that day, the weather was fine. It was a Friday afternoon and she had just started teaching about the Earth’s rotation.
+
+A couple of hours before the tornado hit, Ms. Patel and her daughter, who are the only two family members left at home, had watched a video on YouTube about tornadoes.
+
+The tornado tore through her s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_100">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: KNITTING ACCIDENT</h4>
+                            <span class="keywords">teacher, class, yarn, cat, hat, humor</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Miss Lila Winthrop was renowned in her seventh-grade English class for two things: her encyclopedic knowledge of Shakespearean puns and her exceptional handiwork with yarn. It wasn’t every day that Mrs. Winthrop taught literature by example; knitting, in fact, had become a favorite part of her classroom routine. On this particular Wednesday afternoon, she’d even chosen a dramatic new pattern—a lop...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Miss Pennyworth was known for two things in her third-grade classroom: her boundless enthusiasm for knitting, and her knack for bringing colorful yarns that seemed to multiply overnight. Today, she was especially excited—she’d been working on a woolly, rainbow-striped hat for her cat, Sir Paws-a-Lot, and planned to demonstrate “how to knit like a superhero” at the end of math block.
+
+But Sir Paws-...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Ms. Heather Thompson had always believed she was the kind of teacher who brought order to chaos. A mathematics whiz with a penchant for macramé, she’d chosen to knit a beautiful gradient scarf during class—not to distract from the lesson, but to demonstrate, as she’d said with a sly smile, “the beauty of patterns and persistence lies in their ability to weather unexpected surprises.”
+
+It was a Mon...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Miss Penelope Wilkins was renowned for two things at Crestview Middle School: her passion for literary mysteries and her oddly enthusiastic approach to knitting. If you walked into Ms. Wilkins’s classroom on Monday, you’d find row upon row of colorful scarves, hats, and odd-shaped mittens displayed beside stacks of Agatha Christie novels.
+
+This particular Monday, Ms. Wilkins had a brilliant idea: ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Ms. Agatha Flaubert was beloved at Greenfield Middle School—not just for her warm laugh and encyclopedic knowledge of pre-Raphaelites, but for the elaborate lace shawls she’d slowly, stitch by stitch, knit between homeroom and first period. Her students joked that she’d been knitting her way to sainthood for the past decade.
+
+One bright, sunny Monday, Ms. Flaubert settled into her favorite armchai...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Mrs. Tupper was renowned for many things at North Hill School: her impeccable tea blends, her ability to solve algebraic mysteries in her head, and her legendary hand-knit jumpers, each marked with the name of a former student in embroidered initials. Her knitting needles clicked like a metronome—steady, soothing—during otherwise lively class discussions.
+
+One Tuesday, however, everything took a c...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Miss Lila MacGregor was beloved by her students—not just for her impeccable cat-eye glasses and the way she could make algebra sound like poetry, but also for her eccentric love of knitting. Every Thursday, during what she called &quot;Rhythmic Reflections,&quot; she encouraged the class to get comfortable, brew some herbal tea (sourced, she insisted, only from her own garden), and perhaps, “if you’re feeli...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Miss Penelope Puddlewick was beloved at St. Winifred’s School—not for her strict grading, but for her eccentric, heartwarming way of bringing a little art into every day. On Tuesdays, she had declared, “Let’s knit together while we read poetry!” And so, every Tuesday afternoon, her third-grade class would gather around her long wooden table: colorful yarn, mismatched needles, and the gentle clatte...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Ms. Lila Pringle had always believed that creativity could blossom anywhere—especially in her seventh-grade math class, where her lesson plans were as colorful and unruly as the yarn she adored. She’d even installed a little crafting corner, stocked with mismatched needles and skeins of wild blue, sunny yellow, and “I-got-this” orange.
+
+On this fateful Thursday, Ms. Lila decided to teach a pop-cul...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: knitting accident</h4>
+                            <span class="keywords">teacher, yarn, laughter, class, lantern, mishap</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Mrs. Petrona was beloved at Riverbend High—not just for her twinkling blue eyes and the way she could make algebra feel like a dance, but also for her passion for handcrafts. Every Wednesday after lunch, she’d clear her desk of textbooks and set up a cozy corner with yarn, needles, and a small lantern. “Creativity is its own subject,” she’d say, winking.
+
+So it was only natural that the students g...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_200">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: KNITTING TEACHERS</h4>
+                            <span class="keywords">knitting, class, accident, scarves, humor, school</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Ms. Penelope Dibble was renowned for two things at Greendale Middle School: her encyclopedic knowledge of British literature and her knack for organizing knitting circles during literature circles. While most teachers lectured on the symbolism in *Moby-Dick*, Ms. Dibble had her students make paper scarves to discuss the “wovens” of narrative.
+
+On a drizzly Tuesday, Ms. Dibble set up her card table...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Mrs. Maple was renowned for many things at St. Paws Primary: her encyclopedic knowledge of the French Revolution, her ability to teach fractions through puppet shows, and most peculiarly, the fact that she knitted more scarves than any other teacher in the county—despite a complete aversion to yarn outside of class.
+
+One sunny Monday, Mrs. Maple had a brilliant idea: she’d bring her favorite, extr...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Ms. Tilly Whittingham was beloved at Greenwood Middle School—not only for her warm smile and encyclopedic knowledge of 19th-century poetry, but also for her peculiar habit of knitting at break and during reading periods. To her students, it was a quirk as endearing as Ms. Whittingham’s off-key humming or the time she brought in homemade scones for “Literature Snack Day.”
+
+One sunny Friday afternoo...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Mrs. Penelope Purlington was known for two things at Harmony High: her encyclopedic knowledge of Victorian novels and her unusual habit of knitting during every class.
+
+On a bright and blustery Thursday afternoon, Mrs. Purlington had just finished a particularly intricate green-and-gold cable stitch when Mr. Dyer, the science teacher, burst in, holding a vial like it was a rare chemical. “Quick, P...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Ms. Penelope Drobowski had always believed in the ancient maxim: “A stitch in time saves nine.” As a math teacher at St. Hildegard’s Middle School, she prided herself on being both strict and creative. And so, every Thursday afternoon, while the students groaned at algebra, she would transform her classroom into a cozy haven of yarn and needles—her secret passion being intricate lacework, especial...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Ms. Heather Wainwright was beloved by her fifth-grade class not only for her encyclopedic knowledge of dinosaurs but also for her eccentric yet inspiring hobby: knitting. She’d fashioned hats for the class hamster, scarves for the math whiz, and even a tiny sweater for the school’s pug, Sir Snufflesworth. But her proudest creation was the “Classroom Cozy”—a patchwork blanket with each student’s in...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Ms. Primm was known for two things at Greenfield High: her impeccable notes and her habit of knitting in class. The girls in her 10th-period English lit group had long stopped giggling at the scarves she’d secretly tuck under her desk, but some secretly envied her serenity as she click-clacked needles away during Mr. Thompson’s boring lecture on Hamlet.
+
+On a particularly drizzly Thursday, Ms. Pri...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Miss Marigold Flaubert loved two things: her students and her hand-stitched shawls. Each Thursday afternoon in Mrs. Alder’s history class, she would sit by the sunlit window, needles clicking like a gentle metronome while her eighth-graders debated the Treaty of Versailles or the merits of cafeteria pizza.
+
+On this particular Thursday, Mrs. Flaubert had chosen a new pattern: “Monarch Mischief,” fe...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Ms. Penelope “Penny” Throckmorton had always been proud of her handiwork: her watercolors, her poetry, and especially her intricate Fair Isle knittings. Every Thursday afternoon in her lively tenth-grade English class, Penny set out her favorite yarn and needles, inviting her students to join in during “Crafty Companionship Hour.” (She’d dubbed it that, naturally.)
+
+It was a slow day. The lesson w...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: knitting ode</h4>
+                            <span class="keywords">teacher, class, yarn, poetry, accident, hilarious</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Mrs. Beckett was renowned for two things at Hillside Middle School: her encyclopedic knowledge of poetry and her extraordinary speed with needles. On a mild Thursday afternoon, she decided to enhance the literary curriculum with an engaging demonstration: she would knit, while reciting an ode, to inspire students about the beauty of creation.
+
+With yarn and needles poised, Mrs. Beckett addressed t...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_300">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: KNITTING TEACHERS</h4>
+                            <span class="keywords">knitting, class, accident, shawl, yarn, humor</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Miss Marigold Henderson was known for two things at St. Hubert’s High School: her eccentric passion for gardening, and her peculiar talent for knitting—often while lecturing. On a breezy Friday afternoon, the sun streaming through the classroom windows, Miss Henderson stood at the chalkboard, explaining the etymology of “perennial” while deftly working on a complex lace shawl. Her knitting needles...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Ms. Heather Potts was beloved in Mrs. Goodwin’s 7th-grade class—not for her stern grading, but for the whimsy in her eyes and the bright patchwork shawls she wore on Pottery Thursday. Each week, she would gather her students by the windowsill, needles clicking, demonstrating complicated stitches like “crazy cat” and “wiggly worm.” No one was allowed to touch her yarn until the lesson was complete,...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Ms. Penelope Fluff was beloved at Greendale Elementary—not just for her twinkling blue eyes and the way she made fractions “fun as a field trip to the candy store,” but also for her unusual habit of knitting in class. Every Tuesday afternoon, while the class debated the merits of adjectives versus adverbs, she’d quietly click away on her yarn ball, creating rainbow scarves for her collection of ec...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Mrs. Penelope Purlington was beloved at Westwood High—not for her lectures, not for her quiz competitions, but for her knitting club after school. Every Thursday, as students left the library for the last period, she’d spread her yarn across a folding table, casting on new projects while humming &quot;Row, Row, Row Your Boat.&quot;
+
+This particular Thursday was especially eventful. Ms. Purlington had chosen...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Ms. Pippa Pringle was renowned for three things in Willowdale High: her impeccable scarves, her eccentric hat collection, and—most notably—her habit of knitting during morning roll call. If you sat in Ms. Pippa’s advanced poetry class, you’d likely catch the gentle clack-clack of needles, and occasionally, the faint smell of lavender and patchouli wafting from her oversized shawl.
+
+It was an ordin...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Miss Edith always said knitting kept her hands—and her mind—supervised during those long, tedious biology lectures about digestive systems and photosynthesis. Her students loved her, but few understood her secret: behind every looping stitch was the focus of a dedicated, if slightly eccentric, artist.
+
+One sunny Wednesday, with the classroom air buzzing over a heated debate about the Krebs cycle, ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Ms. Penelope Hargrove had been teaching French for twelve years, but no one in the high school knew she was an award-winning yarn knitter in her spare time. It wasn’t that she knitted during class—oh no. She’d recently started hosting a “Cultural Fibers” club after school, inviting students to bring scarves or yarn for fun projects. Today, she was blending her two passions.
+
+As the bell rang at 11...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Miss Marigold Pringle was beloved in the seventh-grade English class—not just for her keen eye for metaphors and her ability to make Shakespeare sound like an adventure, but also for her hobby: knitting. She had a yarn blanket the color of burnt orange and a crocheted hat adorned with tiny, earnest book symbols. It was on this very Tuesday that something spectacular happened.
+
+It was supposed to b...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Professor Lila Potts was renowned for two things at Fairview High: her encyclopedic knowledge and her passion for the craft of knitting. On Thursday afternoon, she’d just finished a batch of “Knit for Kindness” hats for the school’s charity drive and was eagerly showing her advanced stitch patterns to her third-period English class.
+
+But as Professor Potts settled into her favorite armchair at the...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Ms. Lila Marrow was beloved in her fifth-grade class—not just for her warm smile or the way she could make even the grumpiest child giggle, but for her peculiar hobby. Every Thursday afternoon, she donned her purple cardigan and settled in by her desk, knitting a scarf with a bright, cartoon penguin at the tip.
+
+This particular Thursday, the class was supposed to finish reading the poem “The Ant a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_400">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>2 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">2</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: knitting teacher</h4>
+                            <span class="keywords">school, class, yarn, scarves, eccentric, accident</span>
+                        </div>
+                        <div class="cluster-size">9</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Ms. Clara Whittle had a reputation for being the most patient—and occasionally the most eccentric—teacher at Maplewood Middle School. Her passion for knitting had seeped into the classroom: by the second week of October, she was teaching her English class the art of making scarves with yarn, reading poetry aloud as each stitch was made.
+
+One Friday afternoon, with the gentle hum of a hairdryer war...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Miss Clara was beloved at Greenhill Middle School—not only for her radiant smile, but also for her unusual habit of knitting in class. Each Friday, she’d pull out her rainbow-colored yarn and a perfectly shaped knitting needle, quietly crafting a scarlet squirrel for the school’s hallways. “It keeps my hands busy during math lessons,” she’d explain with a wink.
+
+One bright afternoon, as Ms. Patel’...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Miss Penelope MacIntyre was beloved at Westfield High—not just for her eccentric fashion sense (hence the scarves in every season) but especially for her creative knitting lessons. Every Friday, she’d gather her class in the cozy corner of the library, yarn in hand, teaching them the joys of purling while simultaneously encouraging shy Timmy to try his first double-knit stitch.
+
+One ordinary after...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Ms. Fiona MacGregor was renowned at Greenwood High for three things: her unruly bun of curly hair, her uncanny ability to teach both algebra and sarcasm, and her habit of knitting in class. Not that she encouraged her students to knit—the students, meanwhile, adored her because she never actually scolded them for it. She claimed it helped her “think with her hands,” which was code for “not listeni...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Mrs. Penelope Finch was renowned in the English department not only for her impeccable pronunciation but also for her passionate dedication to yarn crafts. Every Thursday afternoon, in her sun-dappled classroom, she encouraged her students to relax with a bit of knitting while they read classic literature. (Some students claimed this was less about reading and more about avoiding pop quizzes.)
+
+On...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Ms. Winifred Titchborne had never considered herself a particularly daring person. She spent her days teaching fourth grade at St. Euphemia’s, where the greatest risk she undertook was correcting a child’s grammar and enduring Mrs. Gable’s infamous scone Mondays. But one Thursday, the universe decided to up the ante.
+
+Ms. Titchborne prided herself on creative classroom activities. So when her stud...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Miss Penelope Fudgeworth was renowned in the 7th-grade English class for two things: her impeccable tea selections and her *exquisite* hand-knitted scarves. While the students debated Hamlet and analyzed sonnets, Miss Penelope sat at the front desk, yarn tangled like Shakespearean riddles, working on her next masterpiece: a shawl with an embroidered fox mid-s monologue.
+
+It was Monday morning. Mr....</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Mrs. Penelope Wernham had been teaching creative writing for a decade, but her secret passion was knitting. Not just any knitting—silk scarves with mismatched patterns and little blue bunny hats. So, every Thursday afternoon, with her heart set on inspiring her students, she would open the classroom windows, light a lavender candle, and start knitting at her desk in the middle of English class.
+
+H...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Ms. Flora Adored Handwork. Her classroom was a haven of gentle colors, organized yarn piles, and a perpetually humming hummingbird planter. Every Monday, she’d begin weaving a new pattern: today, a scarf shaped like a tiny, upside-down penguin. It was the third week of October, and the students—her favorite curious bunch—had long stopped glancing at her needles, more interested in whether she’d le...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: miss maribel</h4>
+                            <span class="keywords">knitting, class, accident, humor, incan, shakespeare</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Miss Maribel had a reputation in Mr. Hargrove’s history class for doing the most unexpected things. While the other teachers stuck to the syllabus, Miss Maribel preferred weaving tales of the Incan Empire or spinning up impromptu Shakespeare skits using the overhead projector.
+
+But her true passion? Knitting.
+
+So it was on a particularly lively Tuesday, with the class halfway through discussing th...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

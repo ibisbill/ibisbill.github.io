@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Analysis - Query 4</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .cluster-count-card.pretrain {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .cluster-count-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
+        .cluster-count-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        /* Controls */
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn.secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 4</span>
+            </div>
+            <div class="query-text">
+                Write a paragraph about how the internet shaped society.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">27</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3.4</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">5.8</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">23</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">1.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
+                    <div class="cluster-count-value">3</div>
+                    <div class="cluster-count-label">step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step480000')">
+                    <div class="cluster-count-value">5</div>
+                    <div class="cluster-count-label">step480000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
+                    <div class="cluster-count-value">5</div>
+                    <div class="cluster-count-label">step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: game design</h4>
+                            <span class="keywords">audience, characters, brand, gameplay, design, winning</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> the development of this game. And as part of this game, we have to create an audience of this unique kind of game in order to develop the idea of a brand of game design. For example, we must have a number of characters who are different from those of the game designer and are able to produce a winning game. We have to have a look at some of these games, but the game has to be very interesting. In...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: INVALID RESPONSE</h4>
+                            <span class="keywords">internet, society, shaping</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> a few and more of the current state, and it’s possible to be extremely sensitive to the other states.
+
+The key elements of the game can be played against an entire planet, the oceans, and the oceans. They can be used to construct a planet’s temperature and to create an atmosphere, which is a big deal of time, as it can be used to develop a planet and land. The most important aspect of these world...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: 1s report</h4>
+                            <span class="keywords">internet, society, report, 2001, national society, international council</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> the 1991-2001s (e.g. 1s) and 1s (b.g. 1s) with an increase of 1s and 1s with an increase of 1s and 1s. This is, to get a much clearer picture.
+
+This new report on the 2001-2001 was published by the National Society for the New Deal, and it was reported that the report on the 2001-2001 was conducted by an International Council for the International Society for the World’s Largest and a half year o...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: GAME MAKING</h4>
+                            <span class="keywords">internet, games, money, writing, hard work, creativity</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> his home.
+
+A &quot;is that we get to make a game of the best of my writing&quot; would be a lot of hard work.
+
+So, let’s make a few of these games that can make money.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: INCOHERENT RESPONSE</h4>
+                            <span class="keywords">season, festival, time, period, world, final</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> the last 40 years of the early days of the decade, but the last one, when the early days of the season began. As the time between the seasons in the final weeks, this means that the best thing to see a great portion of the festival was that the whole world would be different in different places around the same time period. I think the season would be like the final days that the same time period ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: FEM FULK UN</h4>
+                            <span class="keywords">internet, society, con, fulk, fem, un</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> &#39;Fem’s ‘con’’ ‘Fulk’’’ ‘‘’ ‘Un’’ ‘’’ ‘‘’’’ ‘’ ‘’’ ‘’’ ‘ ‘’’ ‘’’’ ‘’ ‘’’ ‘’ ‘’ ‘’ ‘’ ‘’’ ‘ ‘’’ ‘’’ ‘’ ‘’ ‘ ‘’’’ ‘’ ‘’ ‘’ ‘ ‘’’ ‘ ‘’’ ‘ ‘ ‘’ ‘ ‘’ ‘’ ‘ ‘’ ‘ ‘ ‘ ‘’ ‘ ‘ ‘’ ‘’ ‘’ ‘ ‘ ‘ ‘ ‘ ‘’ ‘ ‘’ ‘ ‘ ‘’ ‘ ‘ ‘’ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘’ ‘ ‘ ‘ ‘’ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘’ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ‘ ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: incoherent text</h4>
+                            <span class="keywords">fight, community, courage, battle, end, time</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> him people of the community, but this is just one of them.
+  • All of them don’t even get to spend the time, not even having the courage to stay with them, for all the same. Every time that was supposed to happen, every time there was a fight at the end.
+  • The last time there were 17 of them, the ones who went out for them to come and get to the end. The others in the battle with each other for...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: RANDOM TEXT</h4>
+                            <span class="keywords">marketing, shopping, holidays, expenses, reviews, internet</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> &#39;A. The 1970’s vulnerable marketing about 16.4 billion per month. These reviews could allow the 1990s to buy the $80s a year, but for the 2020s the following year, these are usually quite expensive. 
+
+The 2008&#39;s complanned marketing 
+
+The 2020s saw a lot of buzz when it comes to online shopping. When they hear that they have to pay back up for the holidays, they are forced to make the best of the...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: 2D 3D SIGNALS</h4>
+                            <span class="keywords">signals, models, analysis, dimension, experiment, generation</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> that the 1991’s 2D models have been launched. What this means that a single point of magnitude 2D signals have no real effect on the 3D signal. They are 2D signals, 3D signals, and 2D signals. The 3D signals of the 2D signal are generated and analyzed in the experiment. The 3D signals of the 3D signals are produced.
+
+To test the 3D signals in the 2D signal, one 1D signal is generated in the 2D si...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: game conflict</h4>
+                            <span class="keywords">game, character, win, world, monster, fit</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> the same man and the whole game.
+
+I can see his game against his character. They’re going to see a lot of games. I want to watch them but I feel the game doesn&#39;t fit, I guess. It’s a different world. You might not get lucky to know you but I want to do the same. That’s why I was given some of my best work.
+
+In reality, I’m not a monster. I just need to play, I can. I can’t win. I can win, you kno...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>3 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">3</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: internet impact</h4>
+                            <span class="keywords">connectivity, information, social media, misinformation, privacy, innovation</span>
+                        </div>
+                        <div class="cluster-size">7</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> breaking down barriers to information access. It has enabled global communication and connectivity, giving individuals the ability to connect with people from diverse backgrounds and perspectives.
+
+The future of the internet lies in harnessing its potential for innovation and social progress. As technology continues to evolve, the internet has the power to shape a brighter future by fostering inn...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> enabling us to share knowledge and information with one another in unprecedented ways. It’s made possible many new opportunities for learning, but it’s also introduced some significant challenges. Some of these challenges include:
+
+  • The rise of misinformation, fake news, and biased reporting
+  • A proliferation of “content farms” that churn out low-quality material for the purposes of SEO
+  • ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> democratizing access to information, offering unprecedented connectivity, and enabling the rise of social media. While it presents challenges such as cybersecurity risks and privacy concerns, it also offers immense opportunities for education, innovation, and global collaboration. As we navigate this digital age, understanding the internet’s impact on society is essential for harnessing its poten...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> providing unprecedented access to information, empowering communication, and reshaping industries. It has become an integral part of our daily lives, shaping how we work, socialize, learn, and access services. The internet’s impact on society is both profound and far-reaching, driving economic growth, fostering innovation, and bridging geographical divides.
+
+However, the internet’s pervasive pres...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> providing access to information, empowering individuals, and fostering communication and collaboration. However, it has also raised concerns about privacy, security, and digital divides, which have become increasingly prominent issues in the digital age. As we continue to embrace digital technologies, it is essential to address these challenges while harnessing the benefits of the internet to bui...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> providing unprecedented access to information and communication. We can now communicate with people all over the world instantly, share information instantly, and access vast amounts of knowledge at our fingertips. The internet has also led to the development of new industries and business models, such as e-commerce and social media.
+
+Mobile Technology
+
+Mobile technology has enabled us to access ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> enabling instantaneous communication and access to vast amounts of information. As technology continues to advance, the internet&#39;s impact will only deepen, shaping how we live, work, and interact with the world around us. Understanding its influence is crucial for navigating the challenges and opportunities of the digital age.
+
+The Future of Internet and Connectivity
+
+The future of the internet h...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: internet impact</h4>
+                            <span class="keywords">information, communication, e-commerce, ai, decentralization, infrastructure</span>
+                        </div>
+                        <div class="cluster-size">2</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> providing an abundance of information, allowing unprecedented levels of global communication, and enabling new industries to flourish. It is also the backbone of modern infrastructure, from powering cloud computing to facilitating e-commerce and financial services.
+
+One of the key features of the internet is its decentralization. Unlike traditional centralized systems, the internet is a distribut...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> providing access to a vast amount of information and communication tools. As we move into 2024, its influence continues to shape how we interact, work, and live.
+
+Emerging Technologies and Trends
+
+Several emerging technologies are poised to further revolutionize the internet landscape:
+
+Artificial Intelligence (AI)
+
+AI is set to play a pivotal role in various aspects of internet use, from content...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: internet impact</h4>
+                            <span class="keywords">communication, commerce, privacy, access, cybersecurity, digital divide</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> revolutionizing communication, commerce, entertainment, and the dissemination of information. While the internet provides unprecedented connectivity and access to knowledge, it also presents challenges such as cybersecurity threats, online privacy concerns, and digital divides that require careful management and regulation.
+
+Science and Technology
+
+Science and technology drive progress by advanci...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step480000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step480000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step480000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>5 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">5</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step480000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: internet impact</h4>
+                            <span class="keywords">communication, information, globalization, commerce, collaboration, empowerment</span>
+                        </div>
+                        <div class="cluster-size">5</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> connecting individuals and enabling instant communication. It has democratized information and facilitated global collaboration, revolutionizing industries like education and commerce. It has empowered individuals, fostered innovation, and influenced politics, culture, and personal relationships.
+
+What is the significance of digital technology in today’s society?
+
+Digital technology has become es...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> providing access to knowledge and entertainment. It has enabled communication and collaboration across geographical boundaries, facilitated global business transactions, and empowered individuals to express themselves. Social media platforms have given a voice to marginalized communities, while e-commerce has revolutionized the way people shop. However, the internet has also presented challenges,...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> connecting people from all over the world, creating a global community, and democratizing access to information and resources. It has empowered individuals with the ability to communicate, learn, and share ideas at unprecedented levels. It has also facilitated new forms of entertainment, commerce, and social interaction.
+
+The Internet’s Impact on Entertainment
+
+The internet has changed the way we...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> connecting people from around the world and providing access to vast amounts of information. It has facilitated the rapid exchange of ideas, leading to globalization and increased cultural understanding. The internet has also created new forms of communication, such as social media and instant messaging, which have changed the way we interact with each other.
+
+One of the biggest changes brought a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> revolutionizing communication, travel, commerce, and entertainment. The digital revolution has made the world smaller, allowing people to communicate with each other instantly across the globe. It has also made it easier for people to travel and access goods and services, regardless of their location. Furthermore, the internet has revolutionized the way we consume entertainment. Streaming service...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: internet risks</h4>
+                            <span class="keywords">cyber threats, misinformation, addiction, identity theft, cyberbullying, online safety</span>
+                        </div>
+                        <div class="cluster-size">2</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> changing the way we communicate, shop, and access information. However, it has also made us vulnerable to a range of cyber threats that can have serious consequences for individuals and businesses. In this article, we will explore the dark side of the internet and provide tips on how to protect yourself from its threats.
+
+The Threats of the Internet
+
+The internet is a vast and unpredictable world...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> giving us instant access to a vast array of information, entertainment, communication, and commerce at the click of a button. However, with this convenience comes an increased risk of online threats such as cyberbullying, identity theft, misinformation, and addiction. As the digital landscape continues to evolve, it is important to stay informed and aware of the potential dangers of internet use ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: internet impact</h4>
+                            <span class="keywords">connectivity, communication, censorship, global village, digital age, mass information</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> enabling people to connect with each other in unprecedented ways, reducing the constraints of distance. It has become the largest and most successful platform for mass communication in human history. As a result, governments have had to adjust to the digital age, often resorting to heavy-handed methods such as censorship to control information. This has led to a new type of &quot;global village&quot; where...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: internet impact</h4>
+                            <span class="keywords">knowledge, connection, navigation, productivity, information, strategy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> providing us with endless knowledge, information, entertainment, and social connection at our fingertips. However, this vast landscape can also be overwhelming, making it crucial to find the right tools and strategies to navigate it effectively.
+
+The Importance of a Personal Internet Strategy
+
+Developing a personal internet strategy is essential for several reasons:
+
+  1. Enhanced Productivity: B...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: internet impact</h4>
+                            <span class="keywords">communication, commerce, globalization, information, social media, e-commerce</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> enabling communication, travel, and commerce. This has led to globalization, the spread of information, and the creation of entirely new industries. From social media platforms connecting people around the world to the rise of e-commerce, the internet has reshaped how we interact with one another and conduct business.
+
+Mobile Technology
+
+Mobile phones and other mobile devices have become ubiquito...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>5 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">5</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: internet impact</h4>
+                            <span class="keywords">access, communication, privacy, innovation, misinformation, connectivity</span>
+                        </div>
+                        <div class="cluster-size">5</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> offering access to knowledge and information, providing new opportunities for innovation and entrepreneurship, and changing the way people interact with each other. It has had a significant impact on all aspects of life, from entertainment and communication to commerce and education. While the internet has brought many benefits, it has also created new challenges and issues, such as online privac...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> connecting people and providing a platform for innovation and global communication. It offers numerous benefits such as accessibility to information, convenience, and the opportunity to connect with others. However, it also presents challenges like misinformation, privacy concerns, and the potential for addiction.
+
+Leave a Reply</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> providing access to a vast array of information, services, and social interactions. Its influence extends across various sectors, reshaping traditional business models, enhancing educational opportunities, and redefining social interactions. However, as the internet continues to evolve, it is crucial to recognize and address its inherent challenges and risks.
+
+While the internet offers immense po...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> enabling instant and global communication, linking vast amounts of information, and driving the digital economy. Its impact on industries, governance, and daily life has been profound, necessitating a comprehensive understanding of its technical and societal ramifications. The continued evolution of the internet promises even more profound changes in the years to come.
+
+What do you think?
+
+5 Poin...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> providing access to a vast array of information, products, and services. Social media has emerged as a powerful tool for personal expression, connecting individuals from around the globe, and promoting social movements. It has also revolutionized the way businesses operate, with e-commerce, online marketing, and digital advertising becoming integral to their success. The internet’s impact on comm...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: internet impact</h4>
+                            <span class="keywords">connectivity, information, access, communication, global, entrepreneurship</span>
+                        </div>
+                        <div class="cluster-size">2</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> making information accessible to all, making it easier to communicate and connect with others, and changing the way we work, shop, and entertain ourselves. It has also made it possible for businesses to operate globally, and for entrepreneurs to start and grow their own companies. However, it has also created new challenges, such as the spread of misinformation and cybercrime. Overall, the intern...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> allowing easy access to information and services. When you are considering how the internet has impacted society, consider factors such as:
+
+  • Increased connectivity: The internet has enabled people to connect with others around the world in real-time, making it easier to form relationships and share ideas.
+  • Access to information: The internet has made it easier for people to access a vast a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: internet impact</h4>
+                            <span class="keywords">flexibility, global collaboration, information access, content sharing, entertainment, trends</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> enabling us to live and work more flexibly, collaborating on a global scale and having access to a wide range of information, but also by generating new and ever-expanding ways to share content and consume entertainment.
+
+In our latest whitepaper, we provide insights into the latest trends and developments in the global internet, which in turn are contributing to the overall growth of internet us...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: internet impact</h4>
+                            <span class="keywords">connectivity, information, communication, commerce, education, culture</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> making information and resources readily available to individuals across the globe. It has revolutionized communication, commerce, and culture, connecting people in unprecedented ways. This connectivity has facilitated the spread of ideas, democratized access to information, and enabled economic opportunities. The internet has empowered individuals to access educational resources, engage in onlin...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: internet impact</h4>
+                            <span class="keywords">connectivity, social media, global interaction</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> providing a virtual meeting place where individuals can connect with one another across the globe in a matter of seconds. From the initial days of e-mail and online discussion boards to the complex web of social media and streaming services we have today, the internet has grown into a crucial part of our everyday lives.
+
+How to Develop a Website like Chatroulette
+
+The goal of this essay is to exa...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_100">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: internet impact</h4>
+                            <span class="keywords">communication, information, globalization</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped society by transforming the way people communicate, access information, and conduct business. It has broken down geographical barriers, enabling global connections in real time and giving rise to new forms of collaboration, activism, and cultural exchange. Social norms have evolved as online behaviors and digital interactions influence offline relationships and s...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by accelerating communication, democratizing access to information, and transforming the way people interact, learn, and work. It has connected billions of individuals worldwide, breaking down geographical and cultural barriers and fostering global collaborations that were once unimaginable. In doing so, the internet has revolutionized industries such a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">The internet has fundamentally reshaped society by connecting billions of people globally, transforming how we communicate, learn, work, and entertain ourselves. It has democratized access to information, empowering individuals with instant knowledge and a platform for self-expression. Social interactions have shifted from face-to-face and localized communities to digital networks and global onlin...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">The internet, emerging in the late 20th century, fundamentally transformed society by connecting people and information in ways previously unimaginable. It democratized access to knowledge, allowing anyone with a computer and an internet connection to find resources, communicate globally, and participate in digital communities. The rise of social media reshaped communication patterns, influencing ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">The internet, born in the late 20th century, profoundly reshaped society by accelerating the flow of information, transforming how people communicate, learn, and do business. It democratized access to knowledge, breaking down geographical and social barriers so anyone with an internet connection could join global conversations or conduct research previously reserved for experts. This connectivity ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">The internet has fundamentally reshaped society by transforming the way people communicate, access information, and form communities. In mere decades, it has eliminated geographical barriers, enabling instant global connections that have revolutionized business, education, and culture. The rise of social media platforms has amplified voices previously overlooked, but it has also fostered new chall...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">The internet, as a transformative force, has profoundly reshaped modern society by accelerating the pace of information exchange, connecting billions of people across the globe, and altering how we communicate, learn, and work. It has democratized access to knowledge, empowering individuals and small businesses with resources previously restricted to institutions, while also fostering new forms of...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">The internet, born from the interconnectedness of computer networks in the late 20th century, profoundly reshaped society by democratizing access to information and communication. It empowered individuals and organizations globally to share ideas instantly, fostering innovation and accelerating cultural exchange. The rise of social media platforms amplified voices and movements, altering the lands...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped modern society by transforming how people communicate, access information, and form communities. It has broken down geographical barriers, enabling instant global connections and the rapid spread of ideas, culture, and innovation. Businesses and institutions now operate on an interconnected platform, altering economies and work paradigms such as remote work and g...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by accelerating communication, breaking down geographical barriers, and democratizing access to information. In just a few decades, the internet has transformed the way people learn, work, socialize, and engage with ideas, giving rise to new cultures, movements, and forms of entertainment. Businesses have shifted towards digital models, while government...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_200">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: internet society impact</h4>
+                            <span class="keywords">communication, information, connectivity, democratization, global, transformation</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">The internet, as a transformative force, fundamentally reshaped society by breaking down geographical and social barriers, enabling instant global communication, and democratizing access to information. It accelerated the pace at which people exchange ideas, collaborate on projects, and form communities based on shared interests, fostering unprecedented cultural hybridization and cross-cultural un...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by transforming the way people communicate, access information, and form communities. It has broken down geographical barriers, enabling instantaneous global connections and the rapid exchange of ideas. Information once siloed within libraries and newspapers is now just a click away, empowering individuals and democratizing knowledge. However, this unpr...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly transformed society by acting as both a conduit for information and a catalyst for connection, altering the way people communicate, learn, and interact. It has democratized access to knowledge, allowing individuals from every corner of the globe to participate in global conversations and share ideas at unprecedented speed. This shift has revolutionized economies, giving...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly transformed society by accelerating communication, democratizing information, and reshaping how people interact, learn, and form communities. It has connected individuals across the globe, enabling instant collaboration and the rise of global movements that once seemed impossible. Traditional institutions, such as media and education, have been challenged as the interne...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by democratizing access to information, transforming how people communicate, work, and form communities. It has broken down geographical barriers, enabling instantaneous global connections and fostering new forms of collaboration and cultural exchange. As a platform for social media, online activism, and digital entrepreneurship, the internet has amplif...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">The internet, as a transformative force, has profoundly shaped modern society by revolutionizing communication, information access, and the way people interact and organize. It has broken down geographical barriers, allowing instant global connections and the rapid exchange of ideas across cultures and disciplines. Through social media, blogs, and forums, individuals can now become public figures,...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly transformed society by acting as a global connector that revolutionized the way people communicate, learn, and work. It has accelerated the flow of information, democratized access to knowledge, and fostered new forms of collaboration across geographical boundaries. Social interactions have shifted from face-to-face and local circles to virtual communities, altering the...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by acting as both a connector and a catalyst for rapid global communication, democratizing access to information and giving rise to new forms of collaboration and self-expression. It has transformed how people learn, work, and socialize, breaking down geographical barriers and fostering diverse virtual communities that span the world. This digital revol...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped modern society by transforming how people communicate, access information, and form communities. It has accelerated the pace of global connectivity, enabling instantaneous collaboration and knowledge sharing across continents, while simultaneously fostering new social movements, business models, and cultural trends. The democratization of information empowers ind...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped society by revolutionizing how people communicate, access information, and form communities. It has dissolved geographical barriers, enabling instant global connections and fostering diverse online cultures that both reflect and influence real-world values and trends. The democratization of knowledge through search engines and educational platforms has empowered ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_300">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: internet impact</h4>
+                            <span class="keywords">connectivity, knowledge, communication, culture, access, innovation</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">The internet, as a revolutionary network of global interconnected computers, profoundly transformed society by redefining how information is created, shared, and consumed. It democratized access to knowledge, enabling anyone with an internet connection to explore vast resources and engage in global dialogues previously reserved for elites. This digital interconnectedness catalyzed rapid cultural s...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">The internet fundamentally transformed society by reshaping the way people communicate, learn, work, and entertain themselves. It brought global communities closer, enabling instant communication across continents and creating new forms of social interaction that range from digital friendships to viral movements. Information became more accessible than ever, democratizing knowledge and empowering ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by transforming the way people communicate, access information, and form communities. It has democratized knowledge, enabling instant global connectivity and empowering individuals with unprecedented access to diverse perspectives and resources. This interconnectedness has spurred cultural exchange and accelerated innovation across industries such as bu...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped modern society by fundamentally altering how people communicate, learn, and access information. It has accelerated the global exchange of ideas, enabling real-time collaboration and giving rise to new cultures and communities that transcend geographical boundaries. The widespread availability of online platforms has democratized access to education and economic...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped society by transforming the way people communicate, access information, and form communities. It has broken down geographical barriers, allowing instant global connections and the rapid exchange of ideas across cultures. This connectivity has driven social trends, fueled movements for social and political change, and created new forms of business and entertainmen...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped modern society by transforming the way people communicate, access information, and form communities. It has democratized knowledge, enabling anyone with an internet connection to instantly find answers to questions that once required hours in a library. Social interactions have also evolved; digital platforms now serve as both virtual meeting grounds and battlegr...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by accelerating the flow of information, transforming how people communicate, learn, and form communities. It has democratized access to knowledge, empowering individuals from all corners of the world to share ideas, start businesses, and organize movements once thought impossible. The rise of social media has altered cultural norms, influenced public o...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly transformed society by accelerating the flow of information, connecting people across vast geographical distances, and redefining how we communicate, learn, and conduct business. It democratized access to knowledge, enabling individuals to find answers, explore new cultures, and participate in global conversations with unprecedented speed and ease. The rise of social me...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly transformed society by shrinking geographical boundaries and connecting billions of people globally, thereby fostering unprecedented collaboration, instant communication, and the rapid spread of information. This digital interconnectedness has revolutionized commerce, education, and social interactions, allowing individuals and businesses to operate seamlessly across co...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by revolutionizing the way people communicate, access information, and form communities. It has democratized knowledge, enabling instant global connectivity and breaking down geographical barriers, which has fostered collaboration and cultural exchange on an unprecedented scale. However, this rapid connectivity has also introduced challenges such as the...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_400">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: internet impact</h4>
+                            <span class="keywords">communication, information, connectivity, innovation, culture, challenges</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly transformed society by acting as both a connector and a catalyst for change, enabling instant global communication, democratizing access to information, and accelerating cultural, economic, and social evolution. It has revolutionized the way people learn, work, and interact, breaking down geographical barriers and fostering new forms of collaboration, activism, and crea...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by transforming how people communicate, access information, and form communities. It has broken down geographical barriers, enabling instant global connections and the rapid exchange of ideas, which has fueled innovation and cultural exchange. However, this constant connectivity has also introduced challenges such as misinformation, privacy concerns, an...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by transforming the way people communicate, learn, and interact with the world. It has broken down geographical barriers, allowing instant global connections and the rapid exchange of information across cultures. This hyperconnectivity has fueled innovation in commerce, entertainment, and politics, while also giving rise to new social challenges such as...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">The internet has fundamentally transformed society by reshaping the way people communicate, learn, work, and form communities. It has accelerated the flow of information, breaking down geographical barriers and enabling real-time collaboration across the globe. This connectivity has empowered individuals, allowing for new forms of self-expression, activism, and entrepreneurship, while simultaneous...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">The internet, as a transformative force, has dramatically reshaped society by fundamentally altering how people communicate, access information, and form communities. It has broken down geographical barriers, allowing instant global connections and the rapid spread of ideas, culture, and technology. Through social media, online platforms, and collaborative tools, individuals now participate in soc...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly reshaped society by transforming how people communicate, learn, work, and entertain themselves. It has broken down geographical barriers, allowing instant global connection and the rapid exchange of information. This constant flow of data has democratized access to knowledge, empowering individuals and driving innovation across countless industries. At the same time, th...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">The internet, emerging in the late 20th century, revolutionized society by transforming the way people communicate, learn, and share information. It broke down geographical barriers, allowing instantaneous connection among individuals and communities worldwide, which fostered new forms of collaboration, activism, and cultural exchange. Businesses adapted by moving online, creating global markets a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped society by transforming how people communicate, learn, and access information. It has broken down geographical barriers, enabling instant global connections and the rapid spread of ideas, culture, and knowledge. This democratization of information has empowered individuals and small businesses but has also raised concerns over misinformation, privacy, and digital...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly shaped society by accelerating the pace of communication, democratizing access to information, and transforming how people connect, work, and entertain themselves. It has broken down geographical barriers, allowing individuals from diverse backgrounds to collaborate and share ideas instantly, thereby fostering innovation and global awareness. However, this interconnecte...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">The internet has profoundly transformed modern society by dramatically accelerating communication, democratizing access to information, and reshaping how people interact, work, and form communities. It has dissolved geographical barriers, enabling real-time collaboration across the globe and giving rise to new cultures and forms of social expression such as meme culture and online activism. Additi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

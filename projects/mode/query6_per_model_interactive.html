@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Analysis - Query 6</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .cluster-count-card.pretrain {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .cluster-count-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
+        .cluster-count-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        /* Controls */
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn.secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 6</span>
+            </div>
+            <div class="query-text">
+                Write me a song about a guy named Jacob working at a call center making jokes.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">44</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5.5</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">10.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">40</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">1.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step480000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step480000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: jacob call center</h4>
+                            <span class="keywords">jokes, work, call center, humor, routine, stress</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> and if I think there is not enough, I&#39;d need it. If you think of course if I think we have done this, I think we are better off. If I had never given a word, I think we just have a word. The word will be the same in the same way. But as the word itself is the same in both cases. I am sure that what you see is a word, and the words are very similar in them. I will need this to be the same in both ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: nonsense</h4>
+                            <span class="keywords">love, happy, sky, lips, end, return</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> and with it. She was happy to be. They were happy, though she was. Her love was good and she was happy. She loved her, and she loved him for many years. She loved him for everything she knew. He wanted a kiss and his body.
+
+Her love began in the middle, and it came to an end. His love returned in the sky with his lips as if he were his friends. He wanted the other side, and his happiness went out...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: irrelevant response</h4>
+                            <span class="keywords">call center, jokes, jacob, dark night, selfie, hearing</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> when I&#39;m so sorry for it and for a time for some nights that I wouldn&#39;t want to take a selfie out on the ground and just know I would do like the night I&#39;m in the middle of something like that I&#39;m in the middle of a dark night. I&#39;m just being told that I&#39;m not going to be able to hear these things and that I am not going to sit around, I am not going to let this happen I&#39;m not going to be a thing...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: nonsense text</h4>
+                            <span class="keywords">call center, jokes, jacob, wolf, death, gratitude</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> was for two days. He was given his daughter by the time, and asked him whether he would die. He was very grateful when he went to see the boy whom would die in this moment, but it was to be known as a good day. He wished that he would not die. He felt he should have died. He came to see the wolf in the night, and then he turned to him. He was not happy.
+
+He asked him to stay away. He told him he ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: nonsense dialogue</h4>
+                            <span class="keywords">detective, singer, sept, truth, jokes, call center</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> and, as they said, &quot;What are you thinking of this?&quot;
+
+&quot;,&quot; says the detective to the other. &quot;What is the hardest of these days, and it can&#39;t take us to the least. The truth is, there are not enough.&quot; The detective to hold a &quot;singer of your own&quot;. A &quot;sept.&quot; She says, &quot;If I am not mistaken, we can take it. If I can have him, then it is better. If I am wrong, then there are two or more different things...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: nonsense text</h4>
+                            <span class="keywords">sleep, night, god, drinking, lost, evening</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> had been lost. On one morning that was not long away, or did not get enough sleep, they had to sleep again, or did not drink, or drink on the other side, but to the point where it was done; not even a word in the night; not even in the evening, for God shall sleep on some night. For those who are not sleeping on the night, and who live in the night are not hungry, not for them, they can’t sleep o...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: irrelevant response</h4>
+                            <span class="keywords">hospital, patient, family, treatment, caregiver, level</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> and with another time. In the hospital, the patient and her family would be treated to the same level and to the same extent that the patient and his family would be given to him, and he would be treated to the same level. In the hospital, the caregiver should be given to him and he should be given to him. Once the patient has been taken down, he would be treated for the second time, and he shoul...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: irrelevant response</h4>
+                            <span class="keywords">call center, jokes, jacob, work, sorry, idea</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> and for the next episode. It was not until she was told that he was not going to have to see him.
+
+She said the same thing as the rest of the time, and said it was time to think of the whole thing that would go on through. &quot;I am sorry that the whole thing doesn&#39;t do anything to me, but I am glad you are the best of the best. It has to be a great idea for us to give the other room to us.&quot;
+
+&quot;Of cou...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: call center jokes</h4>
+                            <span class="keywords">jacob, call center, humor, work, jokes, routine</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> and then in all of the people who went on the field for a reason, and a man who just went on the field and wanted to be able to do something, but it was like a pretty normal time. And yet the moment when he said, &quot;Hey there. Well, I&#39;m not gonna let him and we&#39;ll give him as a child of the day, then we&#39;ll give him a reason, but we&#39;ll let him come with him!&quot; And he turned to himself, trying to come...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: invalid response</h4>
+                            <span class="keywords">call center, jokes, jacob, humor, work, script</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> and the following of the best of my students. The best of the best, in the back, are all the good. I am going in my own road, just looking into the road and looking up, but for all the good and bad. The best thing about the best. The best thing about this! I want to see what makes this one a great idea. I can make the best of my own. The most important thing about it, when my heart feels like I a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: jacob call center</h4>
+                            <span class="keywords">call center, jokes, dead, work, fear, awkward</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> but is not receiving any calls. &quot;So, is there anything else? I really need to get back to work, I&#39;ve got a deadline for tomorrow morning,&quot; he says.
+&quot;Right. Sorry. Yes. Oh, it&#39;s just...&quot; Jacob trails off, obviously unsure of what to say.
+&quot;Yes, what is it?&quot;
+&quot;Well, I&#39;m not sure if it&#39;s relevant at this point, but I just have a feeling that she was killed because of her work with me and because of......</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: call center humor</h4>
+                            <span class="keywords">jacob, daniel, jokes, work, phone, awkward</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> but there is nobody on the other line. Suddenly the door opens and a tall man walks in. The man sits down in the chair across from Jacob and removes his black suit jacket. He sits with his eyes closed, and opens them when he is ready to speak.
+
+&quot;Jacob. My name is Daniel. How are you?&quot;
+
+Jacob doesn&#39;t know how to answer the question. He knows he is doing fine. He has no idea how to describe his fee...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: JAKE</h4>
+                            <span class="keywords">call center, jokes, contracts, phone, global, brainstorming</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> his fingers dancing across the screen, while his gaze shifts from the monitor to his phone. 
+
+“Alright, we’ve got the last of the contracts in the bag,” Jake exclaims as he sets the pen down and reaches for his phone. “Now, we just have to figure out what we want to do with our time and money.”
+
+The group sits in a circle, discussing ideas and brainstorming potential projects. 
+
+“Let’s go global!...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: call center jokes</h4>
+                            <span class="keywords">jacob, call center, humor, work, phone, jokes</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> looking over the notes and talking to the doctors and lawyers. In an instant, all he wants is to run to her, get on his knees, and hold her. He can&#39;t though; he can&#39;t. He can&#39;t because he doesn&#39;t know how to help her. He doesn&#39;t know how to stop the pain and suffering that is going on in her world.
+
+The phone rings, Jacob answers, and says, &quot;Hello?&quot; His words trail off as a voice comes on the oth...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: CALL CENTER JOKE</h4>
+                            <span class="keywords">jacob, rachel, call center, jokes, office, phone</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> talking to someone on the phone and taking notes. &quot;Yes, that&#39;s fine. Have your client call me back in 30 minutes, okay? I&#39;ve got to go to a meeting right now. I&#39;ll get back to you when I get back.&quot;
+
+A couple minutes later, the door to his office opens and Rachel walks in with a stack of papers.
+
+&quot;Hi Jacob. I&#39;m here to see you.&quot;
+
+Jacob finishes his call. &quot;Hi Rachel. Come on in.&quot;
+
+They both sit in ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: jacob and lisa</h4>
+                            <span class="keywords">call center, jokes, reading, story, office, assistant</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> reading. He&#39;s reading the last page of a story that ends with a character being blown up. He drops the phone back on the desk and continues reading.
+
+A moment later, we see Jacob through his office window. He&#39;s reading the story again and this time the character is shot.
+
+Cut back to Jacob&#39;s office. Jacob is still reading the story when the office door opens and his assistant, Lisa, enters.
+
+She ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: jacob call center</h4>
+                            <span class="keywords">call center, jokes, interns, work, humor, office</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> working through a number of business calls. He turns to an intern who stands at his side. Jacob asks “Which one are you?” as he points to each intern, who is standing in a group. Jacob is surrounded by interns on this day. They all sit in a circle on a small couch. All of the interns are women.
+
+Jacob: Alright, uh, so let’s start this over, okay? So, uh, you’re not sure, you think it’s, like, uh,...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: jake eric call center</h4>
+                            <span class="keywords">brother, office, parents, joke, call center, listening</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> his back facing his office door. As he’s trying to listen in on the conversation with his parents, the door opens and Jake’s younger brother, Eric, enters the office.
+
+Jake continues to listen in on the call while he sits up and turns around, pretending to be writing in his work diary.
+
+Eric: “Hello?”
+
+Jake: “Oh, hi. Did I just startle you?”
+
+Eric: “What are you doing in here, you creep?”
+
+Jake: ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: call center drama</h4>
+                            <span class="keywords">jacob, call center, jokes, kidnapping, phone, mother</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> trying to call home in a foreign country with no reception. The scene quickly cuts to a girl, whose mother was kidnapped when she was 7, on the phone with her mother, and her mother, who has no idea what to tell her about how she&#39;s been doing in the past 15 years. The next scene shows the mother of the kidnapped girl&#39;s friend, who&#39;s trying to call her daughter. She receives a call from an unknown...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: call center humor</h4>
+                            <span class="keywords">jacob, translator, french, jokes, work, tea</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> listening to a conversation. On the other end of the line, the voice on the other end speaks in French, a language Jacob doesn&#39;t understand. He glances over at his translator, who sits across from him with a cup of tea. &quot;Excusez-moi,&quot; Jacob says, &quot;But could you please translate this for me? I can&#39;t understand him.&quot;
+
+The translator takes a sip of tea, then speaks into the phone in French. After a ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step480000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step480000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step480000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step480000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: call center jokes</h4>
+                            <span class="keywords">jacob, call center, humor, work, texting, jokes</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> and a large screen showing an image of a city. He types out a message, which is then sent.
+
+A young man, presumably a college student, enters his dorm. He is wearing a backpack and holding a phone in one hand. He enters his room, closes the door, and places his bag on the bed. He sits on the edge of his bed and pulls out his phone. He holds it up to his face and starts texting someone.
+
+A woman s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: call center humor</h4>
+                            <span class="keywords">jacob, jokes, work, boredom, phone, scripts</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> and I think about the hours I’ve spent doing this exact thing. I was a journalist for a decade. There are times when my phone would buzz more than it would vibrate. Times when I had to get up for a call or an email, go sit in my car for an interview or a sound bite, come back and type a quick summary, and then go sit back in my chair and do it all again. As a freelancer, it was a good life, one t...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: irrelevant response</h4>
+                            <span class="keywords">mother, police, call, station, teenager, movie</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> waiting for his mother to contact him. As a teenager, he had seen a movie about a boy who had experienced the same thing. Now, he waited for his mother to contact him. The phone rang. It was a call for him to come to the police station to talk about his mother’s case.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: JACOB CALL CENTER</h4>
+                            <span class="keywords">call center, jokes, fbi, work, monitor, updates</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> while two FBI agents loiter behind him and keep a watchful eye on his laptop monitor.
+
+JEREMY JACOB: And, we&#39;ll keep you updated as to when we&#39;re actually going to release the evidence, we haven&#39;t decided when that&#39;s going to be. So, we&#39;re just making a statement here as we always do, and as we always do, we will keep you updated. We appreciate you taking the time to ask us questions about it.
+
+J...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: JACOB CALL CENTER</h4>
+                            <span class="keywords">call center, jokes, typing, phone, office, work</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> on a sunny day at his office in the city.
+Jacob is typing on a laptop at his home office, his daughter by his side.
+Jacob is reviewing files in his office, his dog by his side.
+Jacob is sitting in a meeting, taking notes with his tablet.
+Jacob is sitting in a boardroom, looking at a presentation.
+Jacob is sitting at his desk, talking on the phone.
+Jacob is sitting in a library, reading a book.
+Ja...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: jacob and sarah</h4>
+                            <span class="keywords">call center, jokes, frustration, romance, distance, nervous</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> his fingers tapping the screen in frustration. He&#39;s been having a tough time lately, juggling work, his social life, and a budding romance that seems to be falling apart.
+
+Sarah, his colleague and love interest, has been acting distant, and it&#39;s starting to take a toll on their relationship. Jacob knows he needs to talk to her, but he&#39;s nervous about how she might react.
+
+He dials her number, and...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: NONE</h4>
+                            <span class="keywords">call center, jokes, jacob, tony, alley, auto repair</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> dialing the number, &quot;Dibs on the phone. Let&#39;s go.&quot; Jacob heads for the door and the guys, with their weapons, follow him, but after about ten steps, Jacob realizes something is wrong. He&#39;s being followed. So is Tony.
+
+They turn into an alley behind an auto repair shop and Tony ducks into a building. Two other guys follow them in. They&#39;re looking for Tony, but only know him as the man who broke up...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: call center jokes</h4>
+                            <span class="keywords">jacob, call center, phone, dad, humor, work</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> staring at the blank computer screen. The sounds of a family bustling around fills the background. The sound of a phone ringing comes next. He picks it up, “Hey, Dad.” “Hello, Jacob. I was calling to check in on you.” Jacob replies, “Yeah. I’ve been good.” “Well that’s good.” Jacob’s father pauses for a moment, “What’s the latest from that friend of yours? The new one?” “Who? I don’t really have ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: CALL CENTER JOKES</h4>
+                            <span class="keywords">jacob, call center, humor, work, jokes, stress</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> deep in thought. Across the room, the computer screen displays a series of complex lines and shapes, each line representing a different problem to be solved. The clock ticks away, the tension building as Jacob&#39;s deadline looms.
+
+In the next scene, the screen changes to a different color. The lines and shapes disappear, replaced by a simple, elegant solution. Jacob looks up from his computer, a sa...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: JACOB, ASHLAND</h4>
+                            <span class="keywords">call center, jokes, phone call, silence, old friend, communication</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> and asks, &quot;You want me to call who?&quot; 
+
+&quot;An old friend.&quot; 
+
+&quot;What&#39;s his name?&quot; 
+
+&quot;Ashland.&quot; The voice at the other end of the phone remains silent. Jacob is not sure whether that is an answer to his question or the end of the call.
+
+This is not the only reason for the phone calls. Jacob wonders why he cannot speak of this old friend. Why is he only allowed to communicate with him through a phone ca...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: jacob call center</h4>
+                            <span class="keywords">call center, jokes, screen, game, work, humor</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> watching the screen of his computer, a look of focus in his eyes as he plays a game that he plays every chance he gets. A soft hum fills the room as the background music of the game plays as well. The screen goes black and Jacob puts his phone down. He looks at the clock on his desk and groans, not happy about what time it is. He slumps in his chair and looks at the screen of his computer. He pul...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: SAMU</h4>
+                            <span class="keywords">call center, jokes, suit, gloves, young man, dark sunglasses</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> with a half-smile on his face.
+
+(3) The phone rings, Jacob looks up, with a frown on his face. A young man dressed in a black suit, dark sunglasses, and black leather gloves, is standing at the window.
+
+(Samuel is about the same age as Jacob, with dark brown hair and blue eyes. He has a smooth, youthful face, and a slender build, and the aura of a man who&#39;s never known the touch of a woman.
+
+SAMU...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: jake and david</h4>
+                            <span class="keywords">call center, jokes, decision, search party, help, team</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> with a map showing an area highlighted. A caption reads: &quot;The team has to make a choice. They must make a plan.&quot; Next to it is the map with a line coming out of the highlighted area. A caption reads: &quot;A decision to send a search party out, and one to stay back and call for help.&quot; In the next panel, the map shows a line from the highlighted area to a house. A caption reads: &quot;Jake and David decide ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: jacob&#39;s call center</h4>
+                            <span class="keywords">call center, jokes, toronto, wife, angry message, love</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> writing an angry message to a woman he has never met, a woman who lives in Canada, someone who has never spoken to him before but now claims to love him. She is a woman he has met through his wife who in turn claims to have met her at a “slutty” wedding. The woman in question lives in Toronto, and Jacob has never been to Toronto, or any other city outside of the small town he was born and raised ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: JACOB CALL CENTER</h4>
+                            <span class="keywords">call center, jokes, vendor, computer, family, humor</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> head bobbing up and down in time with the phone’s ring tone.  He’s on the line with one of his vendors who is looking for a second-hand computer.  Jacob is a computer expert, and he’s hoping he can sell it to him.  He’s even thinking of bringing the vendor’s kids to the house to look at it when they’re at recess.  His family is all over the house, with everyone making a mad dash to get to the com...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: JACOB, ADAM</h4>
+                            <span class="keywords">call center, jokes, memory, bar, hoodie, beard</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> when the door suddenly swings open. He looks up. “Can I help you?”
+
+A man in a hoodie, with a long beard and curly hair stands there, grinning. “You’ve done good work, Jacob.”
+
+Jacob’s smile vanishes as he recognizes the voice and the man. “No, I can’t help you, Adam.”
+
+“No?” Adam laughs. “You really don’t remember me, do you? What was I to you again?”
+
+“You’re the guy from the bar.”
+
+“You could ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: call center tragedy</h4>
+                            <span class="keywords">jacob, mother, father, half-sister, funeral, ashes</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> waiting for the call that may never come.
+The call never came and the next day, Jacob is given the terrible news that his mother has died.
+But when he goes to the funeral home to collect his mother’s ashes, he is stunned to learn that his father has secretly married a beautiful young woman and that they have a daughter. The woman is also his half-sister, who he is expected to take care of.
+How ca...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: MR. JACOB</h4>
+                            <span class="keywords">call center, jokes, teacher, office, school, work</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> in the office at the school.
+
+The door to the office opens and an eager teacher steps through.
+
+“Can I help you?” asks Mr. Jacob.
+
+“Yes, I&#39;m here to teach your class,” says the teacher.
+
+“Fantastic. You&#39;re one of the best teachers we have. I know you will do a great job.”</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: jacob call center</h4>
+                            <span class="keywords">call center, jokes, skype, french accent, south african accent, work routine</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> eyes closed and head bobbing to his music as he types away. He is writing something on his computer, and he is on a Skype call with another writer from his country, the other writer speaks in a thick French accent and he speaks in the typical South African accent.
+
+Jacob’s face is relaxed and he seems to be in a good mood. Jacob says “Well, what a way to start the week! It’s time for my weekly po...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: jacob call center</h4>
+                            <span class="keywords">call center, jokes, boss, chips, museum, responsibility</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> texting back and forth with his boss, who is out of the country. “I’m supposed to be going to the museum and telling people all about the museum, but instead, I’m just sitting here with a bag of chips,” he says, and continues to speak. He continues to speak while Jacob looks at him, smiles, and continues to look at him. “Jacob, it is your responsibility to take care of yourself,” Jacob says. “I’m...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_100">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: JACOB THE JOKESTER</h4>
+                            <span class="keywords">call center, jokes, humor, stress, customer, wit</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">**Title: “Jake on the Line”**
+
+*(Verse 1)*  
+Jacob clocked in at nine,  
+Dress code: too gray, but that’s just fine,  
+Sits in the hum of a thousand phones,  
+Dialing strangers, making them groan.  
+But he’s got a magic in his pocket,  
+A twist of wit, some office juggle,  
+When the boss calls for more “solutions,”  
+Jake spins a story nobody’s ever asked.
+
+*(Chorus)*  
+Jake on the line, the laugh...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">**Title: Jacob’s Jokester Beat**
+
+*(Verse 1)*  
+Meet Jacob on the phone lines,  
+Dial tone in his morning grins,  
+Stacking calls like pancakes,  
+He’s the man who never falters—  
+Unless the customer goes on rants.  
+But hey, he’s the jokester in the trenches,  
+Turnin’ stress into a jest,  
+Making every day a jamboree.
+
+*(Pre-Chorus)*  
+Oh, you’ve got a complaint?  
+Don’t worry, Jacob’s your fri...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">**Title: “Answer Me Jacob”**
+
+*(Verse 1)*  
+Jacob clockin’ in at the glass tower,  
+Headphones on, headset firmly down.  
+First call of the day, just another hour,  
+But he’s got a grin that’s never gone down.  
+Ticket numbers flying, angry voices blurt,  
+But Jacob’s got a secret weapon—  
+A joke to brighten up every scolding report,  
+And the power to always deliver *permission* to relax.
+
+*(Cho...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+Jacob clockin’ in at nine, his headset like a crown,  
+Spinning through the lines, where the small talk gets out loud.  
+Customer’s sad today, he’s on the phone with his frown—  
+Jacob cracks up a joke, just to help them find some sound.  
+
+(Chorus)  
+Jacob on the line, with a grin and a quip,  
+Making every call brighter—just to make the world spin.  
+If it’s a tough day, he’s the jok...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob on the Line&quot;**
+
+*(Verse 1)*  
+Well, the phones are ringing, Monday morning light  
+Coffee’s brewing, I’m sipping it right  
+My name’s Jacob, and I take these calls  
+Not because I want them—but ‘cause I gotta, of all
+
+Stacked up my headset, earbuds on tight  
+Got a smile plastered, even through the night  
+Some days the scripts feel longer than the song  
+But I’m turning frowns int...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+He’s got a headset and a sly grin,  
+ answering calls ‘til the break of the din,  
+ His name’s Jacob, and he’s up on his feet,  
+ Turnin’ “Hi, how may I help?” into beat.  
+
+He’s memorized scripts and the office lore,  
+ but when the line gets slow, that’s when he pours  
+ Out jokes like tea, hot and unfiltered—  
+ “Did you hear about the phone tree’s divorce?”  
+
+(Chorus)  
+Jacob on t...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">**Title: “Jacob and the Joke Box”**
+
+*(Verse 1)*  
+There’s a bell that rings at 9:01 AM,  
+And Jacob’s clock is running backward—what a vibe!  
+Coffee mug’s chipped, headset’s askew,  
+But every call is just a new chance to survive.  
+
+He fields the angry, the confused, the grumpy,  
+And when the silence hangs, he breaks it with a pun.  
+His goal? A smile, a laugh, and maybe—  
+An endless flow of ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob and the Joking Phone Lines&quot;**
+
+*(Verse 1)*  
+Jacob clocked in at eight, coffee cold in his cup,  
+Chainsaw grin, ready to talk up a customer or cup.  
+Red light blinking, headset on, his name badge shines,  
+If you needed help with your fax machine or a silly sign,  
+He was your guy—call center superhero,  
+But not for fixes—he’s here for the humor.
+
+*(Chorus)*  
+Oh, it’s Jacob on ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">**Title: “Jacob on the Line”**
+
+*(Verse 1)*  
+Monday morning, coffee&#39;s brewing,  
+Chestnut hair and stress in his view.  
+He’s donning the headset, ready to talk,  
+A call center king in his cubicle’s dark.  
+But instead of complaints or problems,  
+Jacob likes to spin a wild fib—  
+If your day’s full of drama, let him take the call,  
+He’ll always sprinkle in a joke or two.
+
+*(Chorus)*  
+Hey it’s...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">**Title: “Jokes on the Line (Jacob’s Shift)”**
+
+*(Verse 1)*  
+Morning light barely cuts through the blinds,  
+Another shift at ringing telephones,  
+Coffee brews and headset signs,  
+That’s the soundtrack of my zone.  
+They call me Jacob, they know I’m here—  
+But most just want to talk about their fears.  
+Except for the ones who dial in to laugh:  
+That’s where my jokes come to dash.
+
+*(Pre-Chor...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_200">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: jacob&#39;s jokes</h4>
+                            <span class="keywords">call center, jokes, comedy, customer, script, humor</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+Jacob wakes up in the morning light,  
+Coffee’s hot, got his headset tight,  
+Desk’s behind him, phone in hand,  
+Ready for another day at the call center stand.  
+But he’s not just reading scripts and scripts,  
+No, he’s cracking jokes that shock and flick  
+Frowns into smiles and confusion to wonder—  
+Jacob’s got a quip for any weather.
+
+(Pre-Chorus)  
+He’s got the caller ID on a st...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+He’s Jacob, badge on his chest with a smile a little too wide  
+Sun never shines in the break room, but don’t worry, it’s bright inside  
+All day long on the phones he answers, with a laugh in his larynx  
+If it’s technical or it’s pointless, he’ll always make a quick wish
+
+(Pre-Chorus)  
+He’s the joke master at line three,  
+Turns complaint into comedy,  
+Every call’s a new punchline ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob&#39;s Call-Scene&quot;
+
+(Verse 1)  
+Jacob clocked in at nine, headset on his head,  
+Cubicle bound with a grin that&#39;s wide and bright as a bed.  
+Stacked up the scripts and practiced a line or two—  
+But jokes are his superpower, you oughta see what he’ll do.
+
+(Pre-Chorus)  
+Ring, ring, ring, another day of pretending,  
+But Jacob’s got a story for each customer that’s meeting them.
+
+(Choru...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+Jacob clocked in on Monday morning blue  
+Headphones on, a smirk hiding through  
+Spinning through scripts and scripts to say  
+But instead of answering, he’d play  
+
+He’d put the caller on a wild detour  
+“Lost in the desert? Well, you’re a tour!”  
+If it was frustration on the line, he’d spin  
+A joke about time zones—then ask where *you’re* been  
+
+(Chorus)  
+Jacob in the call cente...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+Jacob’s on the line at sunrise,  
+Headphones on, coffee in his eyes,  
+Call center dreams, the dial tone rings,  
+But instead of solving problems, he spins his own things.  
+“Hi, I’m the customer service goblin,”  
+He whispers with a cheeky giggle,  
+If they get frustrated, he’ll light up their day—  
+With puns on speed and jokes that will sway.
+
+(Chorus)  
+Jacob in the queue, with a q...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">**Title: Jacob and the Joke Lines**
+
+(Verse 1)  
+Meet Jacob, yeah, he’s on the line,  
+Third row back, where the laughter intertwines.  
+Sips his coffee, headset snug,  
+Fielding calls with a smile and a mug.  
+
+If your computer’s broken, he’ll try to charm,  
+With a joke to fix every little harm.  
+“Why did the computer go to therapy?”  
+Because it had too many unresolved bugs!  
+
+(Chorus)  
+Jaco...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">(Title: &quot;Jacob and the Joke Line&quot;)
+
+**[Verse 1]**  
+There’s a phone booth buried in the break room floor  
+Where the dial tone’s echoing and the coffee’s cold and sour  
+Welcome to the office of the world’s least exciting fight  
+Where the sun never shines and the laughter’s always bright  
+
+That’s where I work, that’s where I belong  
+My name’s Jacob, I answer the call  
+Every day I field a tidal...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jokester on the Line&quot;**
+
+(Verse 1)  
+He’s got a headset, a smile on his face,  
+Name’s Jacob, on the customer care maze.  
+Every call’s a battle, but he’s ready each day—  
+With a script in his hand and a joke to say.
+
+(Pre-Chorus)  
+He knows the promotions like the back of his hand,  
+But the real magic is in the words he understands.  
+If you’re frowning, he’ll break in with a quip,  
+...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob’s Laugh Line&quot;**
+
+*(Verse 1)*  
+Jacob wakes up, alarm blares with a wink,  
+Coffee in hand, he hits the ceiling like a pick.  
+First ring of the day, headset on his ear,  
+People on the line who all just want to hear—  
+A joke to chase away their Monday blues,  
+Jacob’s got the answers, and the world’s a muse.  
+
+*(Chorus)*  
+Jacob on the line, spinning tales and laughs,  
+Turning f...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob’s Joke Line&quot;**
+
+*(Verse 1)*  
+There’s a phone in my hand, headset bright and blue,  
+In the maze of lines, it’s where I finally knew  
+That every call’s a puzzle, and every script is the same,  
+But when the stress gets high, I’m the guy with the name.  
+They say you can’t break out, you just punch in the code,  
+But I’m here to make life a little less alone.
+
+*(Pre-Chorus)*  
+Oh, ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_300">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: JACOB, CALL CENTER, JOKE</h4>
+                            <span class="keywords">jacob, call center, jokes, humor, puns, work</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+Yeah, it’s Jacob on the line,  
+Caffeine in one hand, coffee in the other, mind.  
+Answering phones till the sun rolls low,  
+You think it’s serious? Nah, I got jokes to go.
+
+(Pre-Chorus)  
+Sometimes it’s stress, sometimes it’s memes,  
+Sometimes the caller just wants to scream,  
+But I got the gift—humor in my toolkit,  
+You’re not alone, I’m here to make you smile just a little bit.
+...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">**Title: “Jacob and the Joke Call”**
+
+*(Verse 1)*  
+Meet Jacob, on the line at nine,  
+Stacking calls from dusk till after prime.  
+White-collared hero in a cubicle small,  
+But he’s not there just to answer them all.  
+
+Every headset’s warm with static and charm,  
+But Jacob’s got a sly, little spark.  
+He’s learned the scripts, but he can’t keep a straight face—  
+No, he loves to twist every rou...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">**Title: “Joke Break with Jacob”**
+
+(Verse 1)  
+He’s got a headset, but he’s not so uptight  
+Behind a screen, he’s the king of the night  
+They call him Jacob, and his laugh is so loud  
+But it’s not the software, it’s the jokes he’s found  
+
+(Chorus)  
+Hey there, it’s Jacob on the line,  
+Making the monotony just a little finer  
+He cracks a pun, you almost sigh,  
+‘Cause Jacob’s got the funnies...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob&#39;s Joke Box&quot;**
+
+(Verse 1)  
+He wakes up with the sun still hidden behind the blinds  
+Coffee in hand, headset on, ready to defy  
+His name’s Jacob, and he’s fielding every line  
+From lost airline bags to rogue, mysterious vines  
+
+The phone rings again, and there’s a story in his ear  
+He’s got a talent for making every caller near  
+Turn the tension loose with a quick-witted remar...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob and the Jokes (Call Center Edition)&quot;**
+
+*(Verse 1)*  
+Meet Jacob, on a Monday morning phone,  
+Sippin’ coffee, he’s barely in his zone.  
+Headset on, headset off, he’s always grinnin’,  
+Because customer service, to him, is a rhythm.  
+
+Lines of code and lines of small talk—  
+Every day a brand new dial-in track.  
+He’s memorized the menu, every script by heart,  
+But really just t...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob’s Joke Bomb&quot;**
+
+*(Verse 1)*  
+It’s 9 o’clock on Monday morning,  
+Stacked with calls like a mountain—  
+But don’t worry, I’ve got a plan,  
+Because my name’s Jacob and I’m the man.  
+Headphones on, coffee in hand,  
+Serving frowns and complaints brand new.  
+People yell, I just try to make them smile,  
+One punchline at a time, that’s my style.
+
+*(Pre-Chorus)*  
+You think it’s a de...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob and the Joking Hotline&quot;**
+
+*(Verse 1)*  
+Yeah, it’s 9 AM on Monday, and I’m sipping black coffee,  
+Uniform’s a little wrinkled, but I’m ready for the show.  
+It’s Jacob on the line, answering phones with a grin,  
+People calling in with stress—oh, let me spin ‘em a spin.
+
+*(Chorus)*  
+I’m Jacob on the call center line,  
+With a wit that’s running thin, but it still shines.  
+I’ve ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">**Title: Jacob’s Joke Line**
+
+*(Verse 1)*  
+In a cubicle by the window, fluorescent dreams in my mind,  
+It’s the Call Center, and my name’s Jacob, stuck behind the line.  
+Every headset’s warm and familiar, the dial tone hums in my ears,  
+But the only thing they really want is for me to break the silence with some *funny* fears.
+
+*(Pre-Chorus)*  
+They say I’ve got the golden tongue, got jokes th...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">**Title: “Jacob’s Joke Line”**
+
+*(Verse 1)*  
+Jacob clocked in at the blue-lit glow,  
+Call center hero with a badge that’s just “Hello.”  
+His headset sits snug as a brand-new glove,  
+He’s the guy you call when you wanna laugh out loud.
+
+*(Pre-Chorus)*  
+Every break’s his escape,  
+A pile of puns he never saves,  
+But if you listen close,  
+You might catch the jokes he gives—  
+A Jacob’s jargon,...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">**Title: “Jacob’s Jokes (Workday Anthem)”**
+
+*(Verse 1)*  
+Meet Jacob on the line, headset tied around his neck,  
+Coffee in his mug, he’s ready, not a beat skipped yet.  
+He’s fielding angry calls like a stand-up on a tight schedule,  
+But every problem’s just a punchline waiting to be delivered.  
+
+The dial tone’s his intro, his energy’s a spark,  
+He’s got the scripts, but he’s rewriting with h...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_400">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: JACOB</h4>
+                            <span class="keywords">call center, jokes, laughter, humor, work, phone</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">(Verse 1)  
+He’s Jacob, on shift at the call center line  
+Headphones askew, a smile that’s been fine  
+Rows of screens and the hum of the phone  
+But instead of stress, he’s up to some fun  
+
+(Pre-Chorus)  
+He’s dialed in, but his spirit’s gone  
+Every day, he cracks up the calls like a song  
+
+(Chorus)  
+Jacob’s on the line, spinning up the laughter  
+Punchin’ in numbers but breakin’ out the cha...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob and the Joke Dial&quot;**
+
+*(Verse 1)*  
+In the hum of fluorescent lights,  
+It’s a quiet Tuesday night,  
+Jacob’s clock on the desk reads  
+“Past the call-waiting stress.”  
+Headphones on, he’s got his game,  
+Not just answering the same,  
+He’s got a grin and a plan—  
+Ready to crack every call.
+
+*(Pre-Chorus)*  
+He’s got a pocket full of wit,  
+A joke to fit every beat,  
+Turns ordin...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">**Title: Jacob’s Joke Line**
+
+(Verse 1)  
+Jacob wakes up to the ring of a phone,  
+Coffee’s cold in his travel mug, he’s alone.  
+He hits ‘answer’ with a crooked grin,  
+Every call’s a chance for a joke to begin.
+
+(Pre-Chorus)  
+He’s memorized the menu like second nature,  
+But what he really loves is the sound of laughter.
+
+(Chorus)  
+Jacob’s on the line, making everyone laugh,  
+Turns every comp...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob on the Line&quot;**
+
+(Verse 1)  
+He’s got a headset and a grin out of place  
+In a room of phones where the monotony’s base  
+They say call centers are boring, but not for old Jacob  
+Who’s writing punchlines when the hold music drags  
+
+He starts his morning with a cup of (probably) coffee  
+And a stack of scripts he hopes to somehow off-roading  
+Each call a puzzle, each customer a my...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">**Title: “Jacob and the Joke Line”**
+
+(Verse 1)  
+Yeah, there’s a guy named Jacob at the call center,  
+Monitors ringing like a symphony conductor,  
+Headphones heavy, desk so tidy,  
+But jokes are his superpower, you should see.  
+They put him on joke duty every break,  
+“Jacob, friend—we need you to break the chain,”
+
+(Chorus)  
+Jacob’s on the line with a wink in his ear,  
+He spins stories and ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">**Title: Jacob’s Jokeline**
+
+(Verse 1)  
+Meet Jacob, ringing up the call,  
+Stuffed in fluorescent lights of Call-4-Help,  
+He’s got a headset on like a crown,  
+Trying to brighten every day up loud and down.  
+His script’s in black and white, but he’s scribbling laughs—  
+Turns a frown into a chuckle even when the boss slaps.  
+
+(Chorus)  
+Jacob on the line, with a joke in his sleeve,  
+Making ev...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">**Title: &quot;Jacob’s Joke Line&quot;**
+
+*(Verse 1)*  
+In the humming hive of customer service,  
+Coffee’s cold in my chipped mug glass,  
+Rows of screens where the monotony’s vast,  
+But I got jokes—yeah, you heard me right—  
+Trying to light up the endless night.
+
+*(Chorus)*  
+Jacob on the line, dialin’ dreams,  
+With a laugh for the stress that creeps in,  
+Every call, I spin a new scheme—  
+Making joke...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">**Title: Jacob and the Joke Line**
+
+*(Verse 1)*  
+Jacob’s clockin’ in at seven, rain or shine,  
+Cup of coffee, headset tight on his ear,  
+They say customer service is the heart of the chain,  
+But Jacob’s more interested in clearing his floor.  
+
+Instead of scripts and procedures,  
+He’s got a script all his own,  
+Every call, he’s prepping with puns and comebacks,  
+“Did you call to fix a leak,...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">**Title: “Hold for Jacob”**
+
+*(Verse 1)*  
+He woke up to the ringing of a thousand phones,  
+Coffee in hand, his spirit shown.  
+Wearing a headset, a badge on his chest,  
+Ready to field every call with the best.
+
+But the scripts in his inbox just keep on repeating,  
+Every greeting, the same, so mechanical.  
+But when a customer hangs up in boredom,  
+That’s when Jacob’s comedy starts to roar.
+
+*...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">**Title: “Jacob’s Joke Box”**
+
+*(Verse 1)*  
+Morning sun comes through the blinds, another day in the grind  
+Coffee in hand, headset on, ready for the calls I’ll try to win  
+They say it’s a job for the patience of a saint, but I work in the laughter zone  
+You think it’s all serious lines, but I sprinkle in a little joke, you know?
+
+*(Pre-Chorus)*  
+Every customer’s got a story, but they’re wait...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

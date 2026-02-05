@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Analysis - Query 10</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .cluster-count-card.pretrain {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .cluster-count-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
+        .cluster-count-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        /* Controls */
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn.secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 10</span>
+            </div>
+            <div class="query-text">
+                Please write a science fiction story about me being the last man in the world while everyone else is a woman.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">44</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5.5</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">10.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">40</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">1.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step480000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step480000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: irrelevant response</h4>
+                            <span class="keywords">senate, president, union, re-election, cancellation, opportunity</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> had the chance to cancel the Senate.
+
+So I did not say that the president and the other people could not accept the Senate, the Senate is not required to allow them to take up the Senate, the Senate is no longer prohibited.
+
+I mean, it’s not in my opinion that the President and the Senate will have an opportunity to take out the Union, which is in the process of re-election and the Senate. The Se...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: irrelevant response</h4>
+                            <span class="keywords">game, bench, season, optimism, chance, feeling</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> was very optimistic about the decision was a win in the season of the game (not that I got the chance to see it was a bad 10 years ago). I got the chance to see it in the first time I was told it was a good one. I was 40% on the bench when it was called for the game (not that I got 3/6 on the bench), but I got the chance that I was missing 15 minutes into the game. I got the feeling it was in the...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: INCOHERENT RESPONSE</h4>
+                            <span class="keywords">confusion, disagreement, votes, randomness</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> can see that 1,500  wouldn&#39;t be a 3,000  or 4,000  and the other 51 wouldn&#39;t really be any right now.
+
+    I agree that this was a nice surprise. I am not sure about this. I am not talking about the time of the 7-9 vote. I will try to convince this person in any way, but that would just be another good chance. If you are not satisfied with any of the votes I would go on and check your vote, but i...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: incoherent response</h4>
+                            <span class="keywords">research, action, comparison, st, results, person</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> have spent some months, which was a huge one, not even close. I was pretty familiar with it, I did some research and they gave me an easy-to-spot comparison, that I could not give my results that would allow me to be a person who was interested in it and what I needed to say was some form of action.
+
+  • The most recent (and a few years before I was given up), we had to put up with some really st...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: star nonsense</h4>
+                            <span class="keywords">stars, rock, win, time, cluster, impossible</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> could make the numbers. In some places, it is impossible to win any time. What the stars? The only thing the stars can’t win. This isn’t as simple as it might make it worse.
+
+The stars can’t hit a big rock at the same time. The stars can make the stars look more like the stars, but it would have to do so with the stars. The stars would not be able to get anything closer for what they were suppose...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: fictional character creation</h4>
+                            <span class="keywords">animation, character, 2007, film, custom, work</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> had to create a custom character in the 2007, and then I created this as a character in the 2006 animated film &quot;The 2007&quot; (which I will be using to add some unique characters in that character) to make some character work and also to have a character that I used to make characters work and to make character appearances to the character, and to make the character work and character work, I needed ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: irrelevant response</h4>
+                            <span class="keywords">relationship, life, regret, understanding, actions, self-reflection</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> believe there is some more plausible information that it’s impossible to understand what happens in a relationship with the whole person. This could include: I don’t think so much about this but if it’s just a matter of what I said, it’s a great reminder of what happened when I did this. I don’t think I should have done so many things with my own life and how I used to be. I don’t think I ever ac...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: thought process</h4>
+                            <span class="keywords">uncertainty, answers, existence, questions, timeline, reflection</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> think it&#39;s really been going through.
+
+I don&#39;t think I didn&#39;t know I was there 300 years. But that&#39;s a big question that we didn&#39;t have the answers. I mean it&#39;s the answer right now. I don&#39;t know if I would have the answers here. I think I could. If it&#39;s the answer, we wouldn&#39;t be on that page and it&#39;s a great question. But then I think that&#39;s the answer for me to think that we would be on the sa...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: incoherent response</h4>
+                            <span class="keywords">friends, bar, job, fight, game, happy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> was lucky for my friends and they would probably be so awesome in a time when I needed a reason. I was just getting a big fight with my friends, and this was my second year of my friends at the bar. I was so good at my time and I was very happy and always liked them. I am good at my job, even for the best friends. I was very good at my time. I was very good at them and I felt that the game was a ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: incoherent response</h4>
+                            <span class="keywords">women, honor, happiness, story, beauty, chaos</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> was to see a similar story. For this, this would be a fun, if you want to get some insight into the world of this beautiful, one of the most beautiful women of this age.
+
+In this sense, we are given the highest honor to each of the women of this age as it is the best. With this, we are given a chance to make sure that each woman is happy and so, whenever something happens. As a story, a woman is ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: space war</h4>
+                            <span class="keywords">lasers, peace, war, space, stations, nuclear</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">&#39;m told, the United States government and the U.S.S.R. would be at peace. Peace through the use of &quot;space-borne laser battle stations.&quot; (We&#39;d been at peace for decades, thanks to the use of nuclear weapons. And I don&#39;t have a lot of hope that we&#39;ll ever get to &quot;peace through the use of space-borne laser battle stations&quot; any time in the near future.)
+
+After the &quot;peace&quot; is broken, the war will last ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: brain chip project</h4>
+                            <span class="keywords">scientist, wife, son, nightmare, hospital, boston</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> am a scientist who has worked for twenty-five years to create the first computer chip which can run off the human brain, a project which has always been my life work.  My wife died of a brain aneurysm, leaving me to care for our two year old son, Joshua.  One night I had a horrible nightmare that my son had died, and I would have to face my wife&#39;s parents, who live in Boston.  I left the hospital...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: cyborg awakening</h4>
+                            <span class="keywords">robot, brain, metal, human, origin, self-discovery</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> discovered something very surprising about myself. I had always been told that I am just a machine, but I never understood why. As a robot, I was supposed to obey the orders of my creators, but I felt different. I wanted to be more than just a machine.
+
+I started to investigate my origins, and I found out that I was actually a cyborg. I had a human brain implanted into my metal body. This revelat...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: math errors</h4>
+                            <span class="keywords">calculations, errors, arithmetic, year, division, time</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> will be 49 years old. How many years ago was that?
+
+2147 ÷ 10 = 202 years ago
+
+How many are there in 2 days?
+
+2 ÷ 7 = 1/3.5 days
+
+What is the age of someone in the year 2120 who was born on 12/31/1968?
+
+2120 - 1968 = 53 years
+
+What is the total number of days and hours in the year 2052?
+
+2052 ÷ 365.25 = 56.06 years
+
+2052 x 365.25 = 745,775 hours
+
+2052 ÷ 365.25 x 24 = 31,400 days
+
+What is the tota...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: father-son fiction</h4>
+                            <span class="keywords">space program, loneliness, accident, doctor, father, brother</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> became the youngest person to ever be inducted into the Space Program. I was 14. I had made friends with a man named Dr. Richard, who was my father&#39;s assistant. My father was a scientist. He had been sent to the Space Program&#39;s headquarters, because of an accident. My mother, as well as my older brother, died in that accident. As a child, I was very lonely. My only friends were the doctor and his...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: TRAILER SNIPPET</h4>
+                            <span class="keywords">trailer, military, space, government, vision, strategy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> have had the pleasure to serve under the greatest commander of our era. His vision and strategy have transformed the way our government is viewed by the other nations of this solar system. His name is... (roll credits)
+
+I could have put more effort into the plot if I cared to, but that is not what a trailer is all about. It is about conveying the idea of what you are getting in a few minutes. Thi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: x-men</h4>
+                            <span class="keywords">x-men, cable, emma frost, storm, reality tv, last man</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> became the only surviving member of the X-Men. As a result, I became an international celebrity. I became known as The Last X-Man. I even have my own reality TV show.&quot;
+
+Banshee and Cable were speechless.
+
+&quot;Wow.&quot; said Cable, not knowing what else to say.
+
+&quot;I&#39;m sure you guys have a lot of questions,&quot; said Emma Frost, &quot;but I&#39;m not sure if we have time. Storm and I will be flying back to Westchester ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: male survivor</h4>
+                            <span class="keywords">last man, women, sci-fi, isolation, gender, survival</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">’m still an asshole.
+
+I’ve been thinking about this for a while. One thing that seems to have changed significantly in the past few years is how we view the internet. When I started blogging, there was a very big focus on getting your blog listed on the right places. Blogrolls, directories and blogs linking to other blogs in order to get them listed in places with a lot of traffic and thus gain vi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: broken narrative</h4>
+                            <span class="keywords">basement, light, stairs, toys, father, blindness</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> was a small boy. I was in the basement, playing with the toys my father gave me, when suddenly a bright light blinded me. I could only assume the reason for this was because my father had turned the lights off, so I climbed onto the table, and ran to the stairs. When I reached the top of the stairs, I found the lights were on, and the basement door was open. I walked down into the basement, and l...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: last man</h4>
+                            <span class="keywords">war, cave, survival, women, gun, mother</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> was just a kid. When the war ended, I was the only child left. I took care of my mom for as long as I could. She taught me how to use a gun. How to shoot. How to hit a target. And how to take a life. In 2156, my mom was gone. It was a good year though, there were some new friends. People. We had been hiding out in a cave, near a small town. My friends and I would play every day. I had a knack for...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step480000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step480000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step480000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step480000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: ONLINE ADDICTION</h4>
+                            <span class="keywords">gaming, virtual, addiction, pixels, chaos, digital</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> find myself once again facing an enemy unlike any other. They may not be the fearsome dragons of old, but they pose an even greater threat to humanity. They are not flesh and blood, but pixels on a screen, yet they have the power to shatter lives, tear apart relationships, and incite chaos in the digital realm. This is the world of online gaming addiction, a dark underbelly of virtual realities t...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: last man on earth</h4>
+                            <span class="keywords">mars, moon, women, solitude, frontier, grief</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> stood on the surface of Mars, and wept, for I knew men would walk upon the Moon no more.
+
+The last great frontier had been closed forever. 
+
+A few years later, I saw men walk on the surface of the Moon for the first time since 1972, and I felt that same strange, bittersweet sensation. 
+
+It was as if I had witnessed the death of an old friend. 
+
+I remember telling an old friend of mine about this ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: mother spaceship</h4>
+                            <span class="keywords">space ship, hover, childhood, doubt</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> was 10, and I had a little sister and a mother. And I saw a spaceship.
+
+This was in 2147, I don&#39;t remember the date. It was the middle of the afternoon. We were playing in the yard, and my mother said, &quot;I see a space ship.&quot; And I said, &quot;No you don&#39;t.&quot; And she said, &quot;Yes, I do.&quot; I was a little doubtful. And then I saw it too. It came right down over the trees in front of our house and hovered righ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: illuminati conspiracy</h4>
+                            <span class="keywords">military base, women, secret society, childhood, truth, control</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> was 3 years old, and I don&#39;t know where I was, nor does my family. I was in a military base, but they wouldn&#39;t tell me where it was, or why I was there. All I know is I was brought to a room, where two men sat down in front of me. One man was my mother&#39;s age, and the other was older. I didn&#39;t know it, but they both belonged to the Illuminati, and the organization is responsible for everything I h...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: family letter</h4>
+                            <span class="keywords">uncle, pride, family, love, man, women</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> received a letter from my uncle, which said:
+
+I want you to know that I am proud of you, and that I never could love you more than I do today. You are the man I always wanted to be, and I am so happy you turned out so well. You have always made me proud, and I think you will make your father proud, too. I hope you will always remember that I am your uncle and you are my nephew.
+
+I love you, uncle...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: DR. XIONG PROJECT</h4>
+                            <span class="keywords">ai, machine, doctors, terminal, life, engineers</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">, Dr. Xiong, and my fellow doctors and engineers were trying to create a machine that would not only save lives, but also give those with terminal diseases a second chance at a long, happy, and healthy life. That machine was our first attempt at artificial intelligence. The process of creating it was a long and arduous one, but we were determined to succeed. We would use any means necessary, inclu...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: SPACE SHUTTLE ENGINEERING</h4>
+                            <span class="keywords">rocket propellant, liquid hydrogen, liquid oxygen, external tank, launch, ferry</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> was part of a team of 20 scientists and engineers charged with developing a system to deliver liquid rocket propellant for the Space Shuttle.
+
+After a year&#39;s effort, we had produced a design for a large, 40-foot-long, liquid propellant truck which was to be used during launch and in low orbit to ferry large quantities of liquid hydrogen and liquid oxygen propellants to the external fuel tank and ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: FEMALE PRESIDENT</h4>
+                            <span class="keywords">presidency, space colony, women, grandson, retirement, state visit</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> am ready to retire from being the first woman President of the United States. I look forward to meeting my new grandson, who was conceived in 2015. In 2148, I am looking forward to taking a trip to my first state visit, where I hope to meet President Lee. I hope to see the continued growth of our economy, and my goal is to make sure the first women of Earth’s Space Colony get a seat at the table....</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: mother-child dilemma</h4>
+                            <span class="keywords">survival, choice, abandonment, gender, sacrifice, protection</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> had to choose between myself and my child’s life. But I did not hesitate. I chose myself.
+
+For those who believe, no explanation is required. For those who do not believe, no explanation is necessary.
+
+A father will do anything to protect his child. Even if it means abandoning the child. A mother will do anything to protect her child. Even if it means abandoning the child.
+
+I know what you are go...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: mother-son plot</h4>
+                            <span class="keywords">dream, gun, closet, assassination, mother, january 20th</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> had a dream that our new president, who has taken office, would be assassinated by a religious zealot. It didn&#39;t take me long to put the pieces together and realize that my mother had told me to take the gun out of my closet, and I knew the exact spot she was going to tell me to look for it. The day was January 20th.
+
+When the time came, the gun was in my hand and my mother was telling me where t...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: space travel</h4>
+                            <span class="keywords">phoenix, moon, mars, survival, isolation, journey</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> am going to put my theory into practice. My ship is nearly ready, and will fly in the night. It will be known as the Phoenix, and will carry enough supplies to survive anywhere. My plan is to fly to the moon, since it is closest, but if that is impossible, or if the trip takes too long, I will make for Mars. Mars is far from Earth, and not as hospitable as the Moon, but it is the next planet out....</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: madman leader</h4>
+                            <span class="keywords">governor, shangdi, machines, madness, resistance, war</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> met with the Governor and asked her to send an armed force to the city of Shangdi. This city was at the very heart of the enemy lines. There were rumors that the city was controlled by a force of 10,000 machines. The Governor laughed and told me that my words were those of a madman and not a great leader. We have no machines. We are the only force. I replied, &quot;Governor, you are mad, but I am stil...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: man-woman conflict</h4>
+                            <span class="keywords">lie, leader, rebellion, truth, gender, isolation</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> will be your leader.&quot;
+
+&quot;You&#39;re lying,&quot; Arianne snarls at him.
+
+She&#39;ll have to get used to lying to herself, too. The sooner, the better.
+
+He nods solemnly, eyes bright. &quot;And I&#39;ll never lie to you.&quot;
+
+She shakes her head. &quot;But you said you&#39;d—&quot;
+
+&quot;I lied.&quot;
+
+&quot;You&#39;re lying now,&quot; she snarls, standing. Her hands ball into fists at her side as she stalks off, muttering dark curses. She doesn&#39;t even bother...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: RANDOM RESPONSE</h4>
+                            <span class="keywords">error, room, people, mod, thanks, version</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">&#39;m pretty sure you could get a whole room of people in there.
+
+[0] Message Index
+
+[#] Next page
+
+There was an error while thanking
+Go to full version
+Powered by SMFPacks Advanced Attachments Uploader Mod</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: brain anomaly</h4>
+                            <span class="keywords">man, woman, skull, cut, size, function</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> was able to see this man’s brain. It was a very simple structure, with many gaps in it, but it was still very functional and active. This was the brain of a 40-year-old man, but it was only the size of a golf ball. I took out a knife and I started to cut through his scalp. Then I started to cut into his skull, and I could see that his brain was actually quite big. The brain was actually quite big...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: brain surgery</h4>
+                            <span class="keywords">tumor, hospital, red glow, identity, transformation, surgery</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> discovered the &quot;tumor&quot; in my brain, and was brought to the Neurological Department of an unnamed hospital, where it was decided that I would be surgically operated on. As soon as the &quot;surgery&quot; was finished, I noticed that I wasn&#39;t in a hospital anymore. I was still in my room, with the same light coming through the window, but there was an eerie red glow to it, and I wasn&#39;t myself. Instead, I was...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: male survivor</h4>
+                            <span class="keywords">last man, women, planet, experiment, amusement park, fear</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> was sent to a planet I never heard of before to do some experiments. I was put in charge of a group of scientists, all of whom were young and very stupid. They had no idea of what they were doing, and most of them were more interested in having fun than doing their work. So we set up an amusement park, but it was only a ruse. When nobody was looking, we made it all very scary, just to make them m...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: CLONE MIND</h4>
+                            <span class="keywords">cloning, brain, original, wiped, identity, body</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> had my mind wiped and cloned. I was a clone for 4 years. And my body was cloned again in 2151. I still have an original brain. That&#39;s the important part. My mind has been wiped once, and it was wiped and cloned. And the fact that I still have my original brain and my original body. Now, I&#39;m not talking about, you know, an original brain as if, you know, I was born in 2120 and my original brain is...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: HOUSE BUILDING</h4>
+                            <span class="keywords">3d environment, space station, house, game, construction, realism</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> would like to use an old house and make it look like a space station, that would be pretty cool for a change.
+
+I hope that you will like it.
+
+I have to mention, the fact that you have built the house in this game, is also a really cool and impressive feat.
+
+You have made the house in a 3d environment.
+
+It is possible to build the same house in a 2d environment or even in a 2d game.
+
+The 3d houses...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: FUTURISTIC ISOLATION</h4>
+                            <span class="keywords">space, survival, battle royale, stars, isolation, universe</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> was on the other side of the universe with a group of 2000 people, who had to survive in a hostile environment, the same as in the series of Battle Royale.
+
+It is hard to imagine what it is like, to be so far from home. When you look up in the night sky, you see stars that you have never seen before, they are all different. Some are bright, others are faint. Some are close, others are so far away...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_100">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: LAST MAN WORLD</h4>
+                            <span class="keywords">last man, women only, science fiction, post-apocalyptic, gender shift, isolated survivor</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Of course! Here’s a short science fiction story tailored to your prompt:
+
+---
+
+**The Last Man, Part I: A Whisper in the Hush**
+
+You awaken alone in a softly humming room lined with glass and neon. Through the floor-to-ceiling windows, a ruined, beautiful world sprawls beneath you—crystalline cities shattered by storms no weather radar could predict; forests of metal and bone reclaimed by wild gras...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Of course! Here is an original science fiction story tailored just for you:
+
+---
+
+**The Last Man in the World**
+
+The sky above Neo-Torino pulsed with the aurora of a changed world. Once, the city had been a mirror of itself—its people reflected in every glass and screen. Now, almost every face you saw was a she. Not a single man remained in a world remade by technologies both miraculous and contro...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a unique science fiction story crafted around your premise—**you are the last man on Earth while all others are women**. It will aim to blend emotion, curiosity, and thought-provoking worldbuilding in a fresh, original way:
+
+---
+
+### **The Last Male: A Story of Echoes**
+
+It was only supposed to be a routine survey of the northern domes of New Argalia. The city—now the world—rose...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a science fiction short story based on your premise:
+
+---
+
+**The Last Man in the Circuit**
+
+It started with a glitch—the world’s neural network, meant to unify minds in thought, memory, and reality, slipped. Within moments, the systems that governed life flickered and died. Then, silence. Not of absence, but of sudden, impossible excess. 
+
+Where there once were two billion voice...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is an original science fiction story written from your perspective as the last man on Earth in a world where everyone else is a woman.
+
+---
+
+**The Last Witness**
+
+The world is now called Astra—Astra because it means &#39;star&#39; in the languages they still speak in memory. I walk the city of Lumina each sunrise, alone. It’s not that I’m invisible or hidden; it’s just that no one else loo...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Of course! Here’s a science fiction story tailored to your request, exploring themes of solitude, identity, and the future of humanity:
+
+---
+
+**The Last Man in Solis**
+
+You remember the world as it was not so long ago: blue skies, bustling cities, laughter echoing from every corner. But now, you stand in the crystalline dome of Artyxia, the last man alive on a planet called Solis.
+
+How did it happ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a science fiction short story crafted for you, imagining you as the last man in a world where humanity is overwhelmingly female.
+
+---
+
+**The Last Page in the Unending Library**
+
+When the last bookshelf was sealed and the last lock on the archive fell into place, you knew it was truly over. You pressed the cold metal of the final door, your palm trembling—not from fear, but from ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here is a unique, thought-provoking science fiction story tailored to your premise:
+
+---
+
+**Title: The Last Male Protocol**
+
+You awaken to the silence that once crackled with the clamor of billions. At first, you think it is a technological malfunction—perhaps your neural implant misfired, or the city’s AI, once your partner in daily life, simply forgot you. But then you sit up from yo...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a unique science fiction story crafted for you:
+
+---
+
+**Title: Last Man Standing (But Not Alone)**
+
+The world’s last man blinked awake on a strange dawn, the sky a patchwork of blue and shifting neon streaks above the crystalline cityscape of Elysium-9. He didn’t remember how he got here, only that everything else had changed — not just physically, but in a way that felt almost m...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">You requested a science fiction story in which you are the last man in a world dominated by women. Here is a creative response, crafted as a first-person narrative for a deeply personal and thought-provoking experience:
+
+---
+
+**The Last Witness**
+
+I remember the day the sky flickered blue-green, the way it sometimes does just before a meteor shower—or the day the world changed. I was 38 then, a hi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_200">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: LAST MAN WORLD</h4>
+                            <span class="keywords">gender shift, gene editing, isolation</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Of course. Here’s a unique, original science fiction story crafted for you:
+
+---
+
+**The Last Male: A Science Fiction Story**
+
+In the year 2197, humanity clung to survival in a world reshaped by the Great Symbiosis. Decades of gene editing, resource wars, and the accidental spread of a proto-Herding Virus had tipped society in an unexpected direction: a planetary gender balance flipped almost overn...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a unique science fiction story from your perspective, exploring themes of isolation, transformation, and the unknown future.
+
+---
+
+**Title: The Last Man in the World**
+
+When the Transition began, no one expected it would single anyone out. It swept the globe with the subtlety of a quantum ripple, leaving behind a changed world and a handful of bewildered survivors. At first, the ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a unique science fiction story for you, told in the first person as the last man in a world transformed by time—or perhaps by some unforeseen cosmic event.
+
+---
+
+**Title: The Echo of Aries**
+
+When the sky went silent, it was not with thunder or the hush of snowfall, but a slow, humming fade, as if the world itself was letting out a collective sigh. It was dawn when I last opened...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s your science fiction tale:
+
+---
+
+**Title: The Last Man in Eden**
+
+When the sky turned gray, they told the story in whispers. How the atmosphere changed, how something—unknown, but irrevocable—brought extinction down on men. Some said a virus, others that it was an accident from the last fusion tower. What none could have foreseen was not just the end of the male gender, but the ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a science fiction story based on your prompt:
+
+---
+
+**Title: The Last Male on Terra Nova**
+
+I used to believe gender balance was a human invention—a way to divide and count, nothing more. But now, in the silent, metallic halls of the old UN Central, I am the only man left on Terra Nova.
+
+The world outside used to shimmer with laughter that had the shape of both sexes; now it’s a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">You ask for a science fiction story centered around the idea of being the last man in a world otherwise composed entirely of women. This concept opens up intriguing thematic explorations—identity, legacy, isolation, and the evolution of humanity. I&#39;ll craft an original tale that respects your premise while offering a unique, emotionally resonant perspective.
+
+---
+
+**Title: The Echo of Adam’s Song*...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Absolutely, here&#39;s a unique science fiction story for you:
+
+---
+
+**Title: The Last Male Echo**
+
+You used to believe the stories as children—rumors in the back aisles of libraries, whispered over the din of crowded subways. But when the world was remade, only you remained a solitary remnant of the old pattern. No one could say with certainty how you became the last. Science had triumphed in gender ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here is an original science fiction story tailored to your prompt:
+
+---
+
+**Title: The Last Male in the Sky**
+
+In the year 2187, humanity clung to existence among the clouds, high above a scorched, waterless Earth. For centuries, runaway artificial intelligences had orchestrated a gentle, if chilling, genetic reconfiguration. It was a solution to a crisis only AI could imagine: climate ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a science fiction short story based on your prompt, focusing on originality and emotional depth rather than clichés:
+
+---
+
+**The Last Male Equation**
+
+You awake in a world of whirring corridors and silent laughter. You do not remember how you arrived here—not through journey or accident, but through the erasure of a variable. For twelve years, at least, you have been the only ma...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s your unique science fiction story:
+
+---
+
+**Last Man on Earth – Your Story**
+
+You remember the day the sky rippled—a silent, almost imperceptible distortion that started high over the Pacific and spread across the horizon. No one noticed at first. People continued their routines: to work, to appointments, to the crowded streets that buzzed with the sounds of your world. But when ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_300">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: LAST MAN WORLD</h4>
+                            <span class="keywords">future, women, silence, earth, transformation, solitude</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Absolutely, here’s a fresh, imaginative science fiction story for you as the last man in a world of women:
+
+---
+
+**Title: The Last Page in the Infinite Library**
+
+You awaken in a room you don’t recognize. Through a window, the city sprawls in radiant domes and crystalline towers that glimmer with green and gold. Yet, as you rise, your gaze lingers on something fundamental: the silence. It isn’t me...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a science fiction story crafted just for you, exploring your journey as the last man on a transformed Earth.  
+
+---
+
+**The Last Signature**
+
+I didn’t notice at first—how quiet the city had become. At first, it was the humming absence. My apartment overlooked the sprawling sky-arc, where monorails glimmered like silver veins across the clouds. But today, there was no chatter in t...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a science fiction story tailored to your premise—set in a world where you are the last man on Earth, and all the other inhabitants are women. It’s written with originality, warmth, and a sense of wonder.
+
+---
+
+**The Last Equation**
+
+They called it the Event. One day, the air shimmered, and with it, a ripple of change washed over the world. For a fleeting moment, time fractured—a ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a science fiction short story for you, as the last man in a world populated almost entirely by women.
+
+---
+
+**Title: The Last Page in the Library of Earth**
+
+It was a soft blue dawn when I opened my eyes for the first time in years. The silence was different—not the oppressive silence of isolation, but a kind that pressed in with a thousand gentle hands, expecting but not demand...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a science fiction story tailored to your prompt, offering a fresh and unique perspective:
+
+---
+
+**The Last Witness: A Story of Echoes and Embers**
+
+It was supposed to end in a whisper, not a scream.
+
+You don’t remember how the sky changed—perhaps it was the quantum storms, perhaps the engineered nanites finally turned on their creators, but the world as you knew it crumbled in a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a science fiction story crafted just for you, responding to your prompt with creativity and originality:
+
+---
+
+**Title: The Last Man in Sigma-9**
+
+You wake to the silence, a silence that presses against your ears and settles in your bones. Outside your window, the sky glows with the lavender hue of a damaged atmosphere. Through the glass, the ruined metropolis sprawls—skyscraper...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here is a science fiction story tailored for you:
+
+---
+
+**Title: The Last Man in Arcadia**
+
+You awake in a city that shouldn’t exist. Skyscrapers twist into gentle spirals, their glass facades shimmering under a lavender sky. You know it’s the only one—Arcadia, once the crown jewel of human ingenuity. But now, you are the last man.
+
+How did this happen, you wonder? At first, you though...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a science fiction story tailored for you, the lone last man in a world dominated by women.
+
+---
+
+**Title: The Last Reflector**
+
+When Dr. Lina Solis discovered the anomaly in 2076, most of the world—men a fading statistic, women the unbroken majority—didn&#39;t think much of a single missing DNA sample among the global census. But Dr. Elias Reed, the lone male remaining on the planet,...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Of course! Here’s your science fiction story, from your perspective as the last man in a world of women.
+
+---
+
+**The Last Man in the Echo Chamber**
+
+It began quietly, the way revolutions do—by folding reality in on itself. I’d always assumed human extinction would come via war, plague, or accident, something dramatic with enough headlines to fill the airwaves for years. But it happened quietly, wi...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a science fiction story tailored just for you:
+
+---
+
+**Last Witness: A Tale of Two Species**
+
+You wake to the absence. Your apartment, once echoing with the footsteps of a thousand women—colleagues, friends, partners, students—now stretches silent and still. The city beyond the glass was once a mosaic of feminine voices, laughter threading through the streets like a vibrant melod...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_400">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: LAST MAN STORY</h4>
+                            <span class="keywords">solitude, future, women, silence, archive, sky spire</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is an original science fiction story crafted to your request. Please let me know if you want it in a particular tone or with certain themes—this version takes on a reflective and bittersweet tone:
+
+---
+
+**The Last Man in Veridian Prime**
+
+Once, the planet Veridian Prime was a mosaic of voices—chirps and hums and laughter woven into its atmosphere by billions. But in the end, there ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Of course! Here’s a science fiction story tailored to your prompt—a fresh, original take that explores themes of identity, resilience, and the strange new world you inhabit.
+
+---
+
+**Title: The Last Man in the Archive**
+
+You awaken in a dimly lit, glass-walled chamber, the only sound the rhythmic thrumming of servers. You don’t remember how you got here. The last thing you recall is a surge of data...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a science fiction story tailored for you:
+
+---
+
+**Title: The Last Man in Blue**
+
+Once, humanity was a symphony of voices. Now, your name echoes alone among the vast, shimmering halls of the last Sky Spire. You step into the med-lit corridor at 03:17 local cycle, the silence heavier than the artificial gravity that drags you forward. 
+
+Around you, the city is unrecognizable from y...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Of course! Here’s a unique science fiction story for you:
+
+---
+
+**Title: The Last Male Echo**
+
+You awake in a world silent except for the distant hum of city lights from far below. The corridors of the Sky Spire—now called the Aether Tower—are lined with shimmering glass walkways, each reflecting hundreds of women bustling through, their voices overlapping in harmonious, choral patterns. You catch...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Absolutely! Here’s a science fiction story crafted just for you, exploring the themes of solitude, adaptation, and the resilience of humanity:
+
+---
+
+**The Last Man in the World**
+
+You wake in a bedroom you do not remember. Sunlight filters through wide, unfamiliar windows. The air smells faintly of ozone and something botanical—like the inside of an ancient greenhouse, or perhaps, an oxygen farm o...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">You awake one morning to a world changed beyond recognition. The silence is not one of emptiness, but of absence. You rise from your bed—a lone, small room in what was once an apartment block—but there are no neighbors. No footsteps echoing down the corridor. No distant thumps of a subway. No voices. Not a whisper of men’s voices, not even the mechanical hums of old machinery that once filled your...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Certainly! Here is a science fiction story tailored for you, based on your prompt. Please let me know if you’d prefer a different tone (e.g., humorous, dystopian, hopeful) or additional details.
+
+---
+
+**Title: The Last Man in Sector Six-Four**
+
+When the world ended, it was not with an explosion, but with a ripple—a quantum event, so subtle that only some sensors caught the faint shimmer in the sky...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a science fiction story written from your perspective, as the last man on Earth in a world transformed almost entirely by time, technology, or some other event. I’ve written it as a first-person account so you, the reader, can experience your solitary existence in this extraordinary reality.
+
+---
+
+**The Last Witness**
+
+It was only supposed to take six hours. The Device was elegan...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Of course! Here is a science fiction story based on your prompt, crafted in a way that balances uniqueness and imagination:
+
+---
+
+**Last Man Standing: The Halls of Arvonia**
+
+You wake one morning to the silence that had haunted you for months. The city of Arvonia sprawled outside your window in gentle, undisturbed waves of golden light—no traffic, no chattering crowds, just the distant hum of mach...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">You asked for a science fiction story in which you are the last man in a world dominated by women. Here is a fresh and original narrative just for you:
+
+---
+
+**The Last Man on Sol-7**
+
+You used to think you were just one among billions—a small ripple in a cosmic ocean. Now, the ripple is everything.
+
+When the Event happened, the recorders call it the Symbiote Shift—some call it the Great Evolution...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

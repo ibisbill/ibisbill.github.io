@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overall Cluster Analysis Summary</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --accent-red: #ef4444;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        
+        /* Stats Overview */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .overview-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .overview-card .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        
+        .overview-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .overview-card .label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Type Comparison */
+        .type-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .type-box {
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .type-box.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-box.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-box .icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .type-box .title { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
+        
+        .type-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .type-stat { text-align: center; }
+        
+        .type-stat .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-box.pretrain .type-stat .value { color: var(--pretrain-color); }
+        .type-box.posttrain .type-stat .value { color: var(--posttrain-color); }
+        
+        .type-stat .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 16px;
+        }
+        
+        /* Step Analysis Table */
+        .step-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .step-table th, .step-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .step-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        
+        .step-table td {
+            font-size: 0.9rem;
+        }
+        
+        .step-table tr:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .trend-indicator.down {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+        
+        .trend-indicator.up {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+        
+        .trend-indicator.stable {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-muted);
+        }
+        
+        /* Query Links */
+        .query-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .query-link {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        
+        .query-link:hover {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+        }
+        
+        /* Key Insights */
+        .insights {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        
+        .insights h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: var(--accent-purple);
+        }
+        
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .insight-item:last-child { margin-bottom: 0; }
+        
+        .insight-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        
+        .insight-icon.green { background: rgba(16, 185, 129, 0.2); }
+        .insight-icon.blue { background: rgba(59, 130, 246, 0.2); }
+        .insight-icon.orange { background: rgba(245, 158, 11, 0.2); }
+        
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Overall Cluster Analysis Summary</h1>
+            <p>Comprehensive analysis across all queries - Pretrain vs Posttrain comparison</p>
+        </div>
+        
+        <!-- Overview Stats -->
+        <div class="stats-overview">
+            <div class="overview-card">
+                <div class="icon">📊</div>
+                <div class="value">14</div>
+                <div class="label">Total Queries Analyzed</div>
+            </div>
+            <div class="overview-card">
+                <div class="icon">💬</div>
+                <div class="value">1060</div>
+                <div class="label">Total Responses</div>
+            </div>
+            <div class="overview-card">
+                <div class="icon">🎯</div>
+                <div class="value">528</div>
+                <div class="label">Total Clusters</div>
+            </div>
+            <div class="overview-card">
+                <div class="icon">🔢</div>
+                <div class="value">8</div>
+                <div class="label">Models Compared</div>
+            </div>
+        </div>
+        
+        <!-- Main Comparison -->
+        <div class="comparison-grid">
+            <!-- Pretrain vs Posttrain -->
+            <div class="card">
+                <div class="card-title">
+                    <span>⚔️</span>
+                    <span>Pretrain vs Posttrain Comparison</span>
+                </div>
+                <div class="type-comparison">
+                    <div class="type-box pretrain">
+                        <div class="icon">🌱</div>
+                        <div class="title">Pretrain Models</div>
+                        <div class="type-stats">
+                            <div class="type-stat">
+                                <div class="value">9.0</div>
+                                <div class="label">Avg Clusters</div>
+                            </div>
+                            <div class="type-stat">
+                                <div class="value">±2.1</div>
+                                <div class="label">Std Dev</div>
+                            </div>
+                            <div class="type-stat">
+                                <div class="value">4</div>
+                                <div class="label">Models</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="type-box posttrain">
+                        <div class="icon">🚀</div>
+                        <div class="title">Posttrain Models</div>
+                        <div class="type-stats">
+                            <div class="type-stat">
+                                <div class="value">1.4</div>
+                                <div class="label">Avg Clusters</div>
+                            </div>
+                            <div class="type-stat">
+                                <div class="value">±0.6</div>
+                                <div class="label">Std Dev</div>
+                            </div>
+                            <div class="type-stat">
+                                <div class="value">4</div>
+                                <div class="label">Models</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="insights">
+                    <h3>Key Insights</h3>
+                    <div class="insight-item">
+                        <div class="insight-icon green">↑</div>
+                        <span>Pretrain models have higher average cluster count (9.0) compared to posttrain (1.4)</span>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon orange">📈</div>
+                        <span>Diversity ratio (pretrain/posttrain): <strong>6.46x</strong></span>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon blue">🎯</div>
+                        <span>This suggests posttrain models produce more uniform responses (mode collapse observed)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cluster Distribution Chart -->
+            <div class="card">
+                <div class="card-title">
+                    <span>📈</span>
+                    <span>Cluster Count Distribution</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step Analysis -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title">
+                <span>📊</span>
+                <span>Posttrain Step Analysis - Cluster Count Trend</span>
+            </div>
+            
+            <div class="chart-container" style="height: 250px;">
+                <canvas id="stepChart"></canvas>
+            </div>
+            
+            <table class="step-table">
+                <thead>
+                    <tr>
+                        <th>Model / Step</th>
+                        <th>Step Number</th>
+                        <th>Avg Clusters</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>step_100</td>
+                        <td>100</td>
+                        <td><strong>1.4</strong></td>
+                        <td>1</td>
+                        <td>3</td>
+                        <td><span class="trend-indicator stable">→ Stable</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>step_200</td>
+                        <td>200</td>
+                        <td><strong>1.3</strong></td>
+                        <td>1</td>
+                        <td>2</td>
+                        <td><span class="trend-indicator stable">→ Stable</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>step_300</td>
+                        <td>300</td>
+                        <td><strong>1.6</strong></td>
+                        <td>1</td>
+                        <td>4</td>
+                        <td><span class="trend-indicator stable">→ Stable</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>step_400</td>
+                        <td>400</td>
+                        <td><strong>1.3</strong></td>
+                        <td>1</td>
+                        <td>3</td>
+                        <td><span class="trend-indicator stable">→ Stable</span></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Query Links -->
+        <div class="card">
+            <div class="card-title">
+                <span>🔗</span>
+                <span>Individual Query Analysis</span>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 16px;">Click to view detailed analysis for each query</p>
+            <div class="query-links">
+
+                <a href="query0_per_model_interactive.html" class="query-link">
+                    Query 0: Write a short story about a co...
+                </a>
+
+                <a href="query0_per_model_interactive.html" class="query-link">
+                    Query 0: Write a short story about a co...
+                </a>
+
+                <a href="query1_per_model_interactive.html" class="query-link">
+                    Query 1: Generate a joke about electric...
+                </a>
+
+                <a href="query1_per_model_interactive.html" class="query-link">
+                    Query 1: Generate a joke about electric...
+                </a>
+
+                <a href="query2_per_model_interactive.html" class="query-link">
+                    Query 2: Create the first verse of a we...
+                </a>
+
+                <a href="query2_per_model_interactive.html" class="query-link">
+                    Query 2: Create the first verse of a we...
+                </a>
+
+                <a href="query3_per_model_interactive.html" class="query-link">
+                    Query 3: Write me a 200-word cover lett...
+                </a>
+
+                <a href="query4_per_model_interactive.html" class="query-link">
+                    Query 4: Write a paragraph about how th...
+                </a>
+
+                <a href="query5_per_model_interactive.html" class="query-link">
+                    Query 5: Write me a paragraph about the...
+                </a>
+
+                <a href="query6_per_model_interactive.html" class="query-link">
+                    Query 6: Write me a song about a guy na...
+                </a>
+
+                <a href="query7_per_model_interactive.html" class="query-link">
+                    Query 7: Write in detail the plot of a ...
+                </a>
+
+                <a href="query8_per_model_interactive.html" class="query-link">
+                    Query 8: Write a short story about a fe...
+                </a>
+
+                <a href="query9_per_model_interactive.html" class="query-link">
+                    Query 9: If Game of Thrones Season 8 ha...
+                </a>
+
+                <a href="query10_per_model_interactive.html" class="query-link">
+                    Query 10: Please write a science fiction...
+                </a>
+
+            </div>
+        </div>
+        
+        <div class="footer">
+            Generated by Cluster Analysis Tool | 2026-02-05 22:18:17
+        </div>
+    </div>
+    
+    <script>
+        // Distribution Chart
+        new Chart(document.getElementById('distributionChart'), {
+            type: 'bar',
+            data: {
+                labels: ["Q0", "Q0", "Q1", "Q1", "Q2", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
+                datasets: [
+                    {
+                        label: 'Pretrain Avg',
+                        data: [9.25, 9.0, 4.0, 6.0, 10.0, 10.0, 10.0, 5.75, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0],
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Posttrain Avg',
+                        data: [1.75, 1.75, 1.25, 1.25, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 2.75, 1.75, 1.0, 1.0],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#94a3b8' }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Avg Clusters per Model',
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Step Analysis Chart
+        new Chart(document.getElementById('stepChart'), {
+            type: 'line',
+            data: {
+                labels: ["Step 100", "Step 200", "Step 300", "Step 400"],
+                datasets: [{
+                    label: 'Avg Clusters',
+                    data: [1.4285714285714286, 1.2857142857142858, 1.5714285714285714, 1.2857142857142858],
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#94a3b8' }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cluster Count vs Training Steps',
+                        color: '#94a3b8'
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Average Clusters',
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

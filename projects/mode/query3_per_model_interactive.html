@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Analysis - Query 3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --border-color: #334155;
+            --pretrain-color: #10b981;
+            --posttrain-color: #3b82f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .query-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .query-text {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: var(--accent-purple);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Type Summary Cards */
+        .type-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .type-card {
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .type-card.pretrain {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .type-card.posttrain {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .type-card.pretrain .type-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .type-card.posttrain .type-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .type-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .type-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .type-stat {
+            text-align: center;
+        }
+        
+        .type-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .type-card.pretrain .type-stat-value {
+            color: var(--pretrain-color);
+        }
+        
+        .type-card.posttrain .type-stat-value {
+            color: var(--posttrain-color);
+        }
+        
+        .type-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Model Cards Grid */
+        .cluster-count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        .cluster-count-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cluster-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .cluster-count-card.pretrain {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .cluster-count-card.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .cluster-count-card.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .cluster-count-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cluster-count-card.pretrain:hover {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        
+        .cluster-count-card.posttrain:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .cluster-count-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .cluster-count-card.pretrain .cluster-count-value {
+            color: var(--pretrain-color);
+        }
+        
+        .cluster-count-card.posttrain .cluster-count-value {
+            color: var(--posttrain-color);
+        }
+        
+        .cluster-count-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        /* Controls */
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn.secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        /* Model Sections */
+        .model-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-section:hover {
+            border-color: var(--text-muted);
+        }
+        
+        .model-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .model-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .model-header.pretrain::before {
+            background: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain::before {
+            background: var(--posttrain-color);
+        }
+        
+        .model-header:hover {
+            background: var(--bg-card-hover);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .model-header.pretrain .model-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .model-header.posttrain .model-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .model-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .model-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cluster-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .model-header.pretrain .cluster-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--pretrain-color);
+        }
+        
+        .model-header.posttrain .cluster-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--posttrain-color);
+        }
+        
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+        
+        .model-body {
+            display: none;
+            padding: 0 24px 24px;
+        }
+        
+        .model-body.active {
+            display: block;
+        }
+        
+        /* Cluster Cards */
+        .cluster-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cluster-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .cluster-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .cluster-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .keywords {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: inline-block;
+        }
+        
+        .cluster-size {
+            background: var(--accent-purple);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .cluster-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        
+        .cluster-body.active {
+            display: block;
+        }
+        
+        /* Response Items */
+        .response-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+        
+        .response-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .response-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .response-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .response-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .response-text::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .response-text::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+        
+        /* More responses indicator */
+        .more-responses {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Cluster Analysis Dashboard</h1>
+                <span class="query-badge">Query 3</span>
+            </div>
+            <div class="query-text">
+                Write me a 200-word cover letter expressing my interest in working at Dollarton Liquor Store.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Models</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">44</div>
+                    <div class="stat-label">Total Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5.5</div>
+                    <div class="stat-label">Avg Clusters/Model</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="section-header">
+                <span class="section-title">Cluster Count Comparison</span>
+            </div>
+            
+            <!-- Type Summary -->
+            <div class="type-summary">
+                <div class="type-card pretrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🌱</div>
+                        <span class="type-card-title">Pretrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">10.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">40</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="type-card posttrain">
+                    <div class="type-card-header">
+                        <div class="type-icon">🚀</div>
+                        <span class="type-card-title">Posttrain Models</span>
+                    </div>
+                    <div class="type-card-stats">
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Models</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">1.0</div>
+                            <div class="type-stat-label">Avg Clusters</div>
+                        </div>
+                        <div class="type-stat">
+                            <div class="type-stat-value">4</div>
+                            <div class="type-stat-label">Total Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cluster-count-grid">
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step1413814')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step1413814</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step480000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step480000</div>
+                </div>
+
+                <div class="cluster-count-card pretrain" onclick="scrollToModel('pretrain_stage1_step960000')">
+                    <div class="cluster-count-value">10</div>
+                    <div class="cluster-count-label">step960000</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_100')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 100</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_200')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 200</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_300')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 300</div>
+                </div>
+
+                <div class="cluster-count-card posttrain" onclick="scrollToModel('posttrain_step_400')">
+                    <div class="cluster-count-value">1</div>
+                    <div class="cluster-count-label">step 400</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAllModels()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+                Expand/Collapse All Models
+            </button>
+            <button class="btn secondary" onclick="toggleAllClusters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                </svg>
+                Expand/Collapse All Clusters
+            </button>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: &lt;none&gt;</h4>
+                            <span class="keywords">office, arrangements, name, solution, room, issue</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> these things to any activities that will be discussed to a particular room that will be available to the point that the place is already established.
+
+I&#39;m not sure why anyone would want to change the name on which the person would like an office, if it is an issue, to give us the opportunity to provide me with a solution.
+
+I&#39;m not so sure as to make sure all the arrangements will be performed.
+
+I...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: EMPTY RESPONSE</h4>
+                            <span class="keywords">motivation, collaboration, future</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> your situation on a potential role.
+
+We have the ability to respond to a wide range of concerns and provide an opportunity to engage in the present and meet your goals.
+
+I believe in rewarding my abilities to share my experiences and my values. I believe in the power of collaboration, allowing us to work toward a brighter future for the foreseeable future.
+
+My motivation to take a risk of being a...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: REQUEST ERROR</h4>
+                            <span class="keywords">request, bypass, account, create, notification, error</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> the request.
+
+A request will return the request and provide a notification if the request request is a request.
+
+A request will return the request, which will request the request.
+
+Bypassing this request can also be done by using a request
+
+You can create and run this request using the request.
+
+Please create a request in the request using the request
+You will have to create an Account.
+
+  • Regi...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: INVALID RESPONSE</h4>
+                            <span class="keywords">prices, goods, shipping, costs, publication, conditions</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> these resources by doing this. In this case, the cost of goods will be charged and the price of goods will be charged as per the time of publication. In this case, it is clear that the prices of goods are subject to the conditions of the shipping company that is being operated and is being maintained and operated in case of any significant costs incurred due to the goods being sold on goods. This...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: irrelevant response</h4>
+                            <span class="keywords">project, realist, outcome, clarity, definition, reliability</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> and clarify the role of the project. This can be done by a realist. It&#39;s as if the project has to be designed for all.
+
+If the project is not a project needs to be defined, or if it doesn&#39;t, then it is a clear and reliable one. This would mean that the project must be done with the project before it can be created and it has to have an acceptable outcome. The project must be able to be seen in su...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: STUDENT NAMES</h4>
+                            <span class="keywords">student, names, support, identity, side, names</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> all the students&#39; names.
+
+What would you do if the &quot;I&quot; could be the one who&#39;s on a student&#39;s side?
+
+It would be hard to put the name in the names and then a word that is the one who will give the name.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: incoherent responses</h4>
+                            <span class="keywords">confusion, disjointed, random, unclear, repetition, lack of coherence</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> this, or just provide it on my end to my other end.
+
+I have to find that the way I have to take the form of my day. We have to get our attention for any time in my opinion. Our next day, I am not ready to be left alone.
+
+What I am saying is that in fact, the day is not yet in my time, in fact, but in my opinion.
+
+For now, I am not ready to give my thoughts on my journey, that I have some time lef...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: &lt;none&gt;</h4>
+                            <span class="keywords">fear, boy, scared, bad, choice, guy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> that and try to get more, if the guy seems to be a little scared, but if the guy is a bad boy, then they will be a better choice for the boy.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: incoherent text</h4>
+                            <span class="keywords">world, read, stories, moment, understand, self</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> my ideas, and what would I want to hear? How can I have to be able? What is the last time? I know I was the last time I wanted to be able to read the world. But, I know what we want. I just need it as it was, to be able to read the world in a minute. You would need to know a bit more about yourself, like in the moment. You don&#39;t have to do the world to read these stories, you have to understand w...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: &lt;none&gt;</h4>
+                            <span class="keywords">none</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> it to 40,000 miles, and in that case.
+
+- If I need to do this to allow it, I can give you a better solution.</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step1413814">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step1413814')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step1413814</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step1413814">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: generic template</h4>
+                            <span class="keywords">cover letter, position, experience, qualifications, achievements, skills</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> for the position of [position name] at [company name]. With a [qualification] and a strong background in [relevant skills or experience], I am confident that I can make a valuable contribution to your team.  
+
+In my previous role as [previous job title] at [previous company], I [describe experience or achievements relevant to the job]. I am particularly proud of my ability to [describe a specific...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: team player</h4>
+                            <span class="keywords">work ethic, attention, detail, experience, results, team play</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> for the position of _______ at _______ and would like to submit my resume for your consideration. With __ years of experience in _____, I am confident that I would make a valuable contribution to your team.  
+
+I have extensive experience in ____, and am proficient in ____. My strong work ethic and attention to detail have helped me achieve _____ results in previous positions.  
+
+I am a team playe...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: generic template</h4>
+                            <span class="keywords">cover letter, position title, company name, experience, achievements, track record</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> for the [Position Title] position at [Company Name], as advertised on [Website or Source]. With my strong background in [relevant skill or field], I am confident in my ability to make a significant contribution to your team.  
+
+I have [X] years of experience in [relevant industry or field], where I have [briefly mention key achievements or responsibilities]. My proven track record in [mention spe...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: generic template</h4>
+                            <span class="keywords">experience, skills, achievements</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> for the position of [Position Name] at [Company Name]. With [X] years of experience in [specific skills or expertise], I am confident in my ability to make a positive impact on your team.
+
+Throughout my career, I have developed a deep understanding of [industry-specific knowledge or skills], which has allowed me to effectively [list achievements or experiences]. I am particularly proud of [highli...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: generic template</h4>
+                            <span class="keywords">cover letter, position, experience, skills, degree, industry</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> for the position of &lt;insert position title&gt; at &lt;insert company name&gt;. With my &lt;insert relevant skills or experience&gt;, I believe I am well-suited for this opportunity and can make a significant contribution to your team.
+
+I have a &lt;insert degree or certification&gt; in &lt;insert field&gt; and &lt;insert number of years&gt; of experience in &lt;insert industry or field&gt;. During my time at &lt;insert previous company&gt;,...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: senior engineer</h4>
+                            <span class="keywords">electrical, design, implementation, innovation, engineering, commercial</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> for the position of Senior Engineer at [company name]. With over 5 years of experience in electrical engineering and a passion for innovation, I am confident that I would be a valuable addition to your team.  
+
+Throughout my career, I have worked on a variety of projects, from small-scale residential installations to large commercial projects. My expertise includes designing and implementing elec...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: generic template</h4>
+                            <span class="keywords">experience, skills, achievement, team, impact, responsibility</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> for the opportunity to join your team as a [Job Title] at [Company Name]. I have [X] years of experience in [industry/field], and I am confident that I have the skills and expertise to make a significant impact on your team.
+
+During my previous role as a [Job Title] at [Company Name], I [specific achievement or responsibility]. This experience has allowed me to [describe relevant skills and accom...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: content writing</h4>
+                            <span class="keywords">writing, stories, articles, blog posts, engagement, detail</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> for the position of Content Writer at your company. With a strong background in writing and a keen eye for detail, I am confident that I can deliver high-quality content that meets your needs and engages your audience.
+
+My experience in content writing has equipped me with the skills and knowledge needed to craft compelling stories, articles, and blog posts that resonate with readers. I have a pr...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: product management</h4>
+                            <span class="keywords">product, analytics, innovation, leadership, cross-functional, launch</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> for the Product Manager role at [Company Name] as advertised on [Job Board/Company Website]. With my extensive experience in product management, strong analytical skills, and passion for innovation, I believe I am an ideal candidate to drive [Company Name]&#39;s success in the [industry or market segment].
+
+Throughout my career, I have successfully led cross-functional teams to develop and launch inn...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step1413814_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: software engineer</h4>
+                            <span class="keywords">programming, software, engineering, scalable, solutions, technologies</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step1413814_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> for the position of Software Engineer at [company name]. With [number of years] years of experience in software engineering, I am confident in my ability to contribute to your team and deliver high-quality solutions.  
+
+My technical expertise includes [list relevant technologies and programming languages]. I have a proven track record of developing and implementing scalable software solutions, wh...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step480000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step480000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step480000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step480000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: software developer</h4>
+                            <span class="keywords">development, applications, projects</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> for the Software Developer role at [Company Name]. With a solid background in software development and a passion for creating high-quality, user-friendly applications, I am confident in my ability to contribute to your team&#39;s success.  
+
+In my previous role at [Company Name], I worked on a variety of projects, including [Project 1] and [Project 2]. These projects allowed me to develop my skills i...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: research assistant</h4>
+                            <span class="keywords">epidemiology, public health, research, diversity, service, hawaii</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> for the open Research Assistant position at the John A. Burns School of Medicine at the University of Hawaii. My background in epidemiology and research, coupled with my commitment to service and diversity, aligns with the values of the school and your organization.
+
+In my current role as a Research Assistant at the Hawaii Public Health Agency, I have gained extensive experience in epidemiologica...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: GENERIC TEMPLATE</h4>
+                            <span class="keywords">experience, customer, expectations, quality, work, industry</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> for the position of [insert position] at [insert company]. With a [insert number of years] years of experience in [insert industry or field], I am confident in my ability to contribute to the success of your company.
+
+Throughout my career, I have consistently demonstrated my commitment to delivering high-quality work and exceeding customer expectations. My experience in [insert industry or field]...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: fake response</h4>
+                            <span class="keywords">administration, support, growth, efficiency, dedication, operations</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> for the position of Assistant to the President as advertised by [Your Company] on [Your Website]. With a strong background in administration, I am confident in my ability to support your organization&#39;s operations and contribute to its growth. My experience, coupled with my dedication to excellence and efficiency, makes me an ideal candidate for this role.
+
+During my time at [Current Company], I h...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: product management</h4>
+                            <span class="keywords">product, leadership, development, growth, launch, strategy</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> for the Senior Product Manager (SPM) position at [Company]. I have over [X] years of experience in product management and leadership roles. I am confident in my ability to contribute to your team’s success and drive growth for your company.
+
+I have a strong track record of developing and launching successful products. In my current role as a Product Manager at [Company], I led the development and...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: front-end development</h4>
+                            <span class="keywords">web technologies, user experience, innovation</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> for the Senior Front-End Developer position at [Company Name]. As a seasoned professional with a passion for crafting exceptional user experiences and driving innovation through cutting-edge web technologies, I am eager to bring my expertise to your team. With over [X] years of experience in front-end development and a deep understanding of industry trends, I am confident in my ability to contrib...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: HR ASSISTANT</h4>
+                            <span class="keywords">recruitment, screening, interviews, talent, hiring, coordination</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> for the Human Resource Assistant position at Your Company Name. With a background in recruitment and talent acquisition, I am confident in my ability to support your HR department in attracting and retaining top talent. 
+
+In my previous roles, I have successfully sourced and screened candidates, conducted initial interviews, and coordinated with hiring managers to ensure a smooth recruitment proc...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: software development</h4>
+                            <span class="keywords">programming, agile, leadership, teams, software, delivery</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> for the Software Development Manager position at ABC Company. With 10 years of experience in software development, I have honed my skills in various programming languages and technologies. My background includes leading cross-functional teams, implementing agile methodologies, and delivering high-quality software products on time and within budget.
+
+Key highlights of my achievements:
+
+  • Success...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: product management</h4>
+                            <span class="keywords">product, strategy, development, market research, team leadership, planning</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> for the open position at XYZ Company. With a strong background in product management and a proven track record of success, I am confident that I am the ideal candidate for the role. My experience includes a range of product management responsibilities, including strategic planning, market research, and product development.
+
+In my most recent role, I was responsible for leading a team of product m...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step480000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: CUSTOMER SERVICE</h4>
+                            <span class="keywords">customer service, experience, support, communication, satisfaction, assistance</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step480000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> for the position of Customer Service Representative with XYZ Company. I have 5 years of experience in customer service and I am confident in my ability to provide excellent customer service.
+
+I have a proven track record of providing excellent customer service. I have worked in a variety of customer service roles in the past and have always been praised for my ability to provide excellent service...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-pretrain_stage1_step960000">
+            <div class="model-header pretrain" onclick="toggleModel('pretrain_stage1_step960000')">
+                <div class="model-info">
+                    <div class="model-icon">🌱</div>
+                    <div class="model-details">
+                        <h3>stage1-step960000</h3>
+                        <div class="model-stats">
+                            <span>Pretrain</span>
+                            <span>•</span>
+                            <span>10 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">10</div>
+            </div>
+            <div class="model-body" id="model-body-pretrain_stage1_step960000">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: data entry</h4>
+                            <span class="keywords">detail, accuracy, organization, data management, records, efficiency</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text"> for the Data Entry position at your esteemed organization. With my keen eye for detail and strong organizational skills, I am confident that I can contribute effectively to your team. Throughout my academic and professional journey, I have developed a strong foundation in data management, which aligns perfectly with the requirements of the role. I believe that my ability to maintain accuracy and ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_1')">
+                        <div class="cluster-info">
+                            <h4>Cluster 1: DATA SCIENTIST</h4>
+                            <span class="keywords">data analysis, machine learning, predictive modeling</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_1">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text"> for the position of Data Scientist at [Company Name]. With a background in data analysis and machine learning, I am confident in my ability to contribute to your team and drive impactful insights from your data.
+
+Throughout my career, I have honed my skills in data wrangling, statistical analysis, and predictive modeling. I have successfully developed and deployed machine learning algorithms to s...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_2')">
+                        <div class="cluster-info">
+                            <h4>Cluster 2: project coordination</h4>
+                            <span class="keywords">organization, communication, collaboration</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_2">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text"> for the Project Coordinator position with your company. As a highly organized and detail-oriented professional, I am confident that my skills and experience make me an ideal fit for this role.  
+
+Over the course of my career, I have honed my project coordination abilities and gained a deep understanding of the importance of effective communication and collaboration. My ability to manage multiple ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_3')">
+                        <div class="cluster-info">
+                            <h4>Cluster 3: FRONT END DEVELOPER</h4>
+                            <span class="keywords">html, css, javascript, responsive design, mobile optimization, front end</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_3">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text"> for the position of Front End Developer at your company. With 3 years of experience in front-end development, I am confident in my ability to contribute to your team&#39;s success.
+
+During my time as a front-end developer at XYZ Company, I have gained a deep understanding of HTML, CSS, and JavaScript. I have also developed a strong foundation in responsive design and mobile optimization. Additionally...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_4')">
+                        <div class="cluster-info">
+                            <h4>Cluster 4: generic template</h4>
+                            <span class="keywords">cover letter, position title, company name, relevant experience, job board, skill set</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_4">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text"> for the position of [Position Title] at [Company Name], as advertised on [Job Board/Website]. With my background in [relevant field or experience], I am confident in my ability to contribute effectively to your team and help drive the company&#39;s success.
+
+At [Current or Previous Company], I have gained valuable experience in [specific skill or responsibility], which has equipped me with the necess...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_5')">
+                        <div class="cluster-info">
+                            <h4>Cluster 5: UX DESIGNER</h4>
+                            <span class="keywords">user experience, design principles, user-centered</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_5">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text"> for the position of UX Designer at [Company Name] and believe that my experience and skills make me an ideal candidate for the role.
+
+My background in design, combined with my passion for creating user-centered designs, has prepared me well for this position. I have a strong understanding of user experience design principles and have successfully created designs that have been praised by both use...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_6')">
+                        <div class="cluster-info">
+                            <h4>Cluster 6: IT MANAGER</h4>
+                            <span class="keywords">it, infrastructure, technology, leadership, operations, implementation</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_6">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text"> for the position of IT Manager in your organization. With over 5 years of experience in the IT industry, I am confident that I can make a significant contribution to your team and help your company achieve its goals. Throughout my career, I have gained a deep understanding of IT systems, infrastructure, and operations. I have successfully led teams in implementing new technologies, streamlining p...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_7')">
+                        <div class="cluster-info">
+                            <h4>Cluster 7: network management</h4>
+                            <span class="keywords">network design, leadership, infrastructure, team management, network implementation, network engineering</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_7">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text"> for the position of Network Manager in your organization. With my extensive background in network design and implementation, coupled with my strong leadership skills, I believe I am well-equipped to contribute to your team’s success.
+
+During my tenure at [Your Previous Company], I led a team of 15 network engineers, overseeing the design and implementation of a robust network infrastructure that ...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_8')">
+                        <div class="cluster-info">
+                            <h4>Cluster 8: generic cover letter</h4>
+                            <span class="keywords">experience, passion, excellence, commitment, industry, career</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_8">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text"> for the position of [Title] at [Company Name]. With [X years] of experience in [relevant field/industry], I am confident in my ability to contribute to your team and help drive success. Throughout my career, I have consistently demonstrated my passion for [relevant field/industry], and my dedication to achieving excellence.
+
+[Company Name] is renowned for its commitment to [mention something abou...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('pretrain_stage1_step960000_9')">
+                        <div class="cluster-info">
+                            <h4>Cluster 9: generic template</h4>
+                            <span class="keywords">cover letter, job title, company name, experience, skills, achievements</span>
+                        </div>
+                        <div class="cluster-size">1</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-pretrain_stage1_step960000_9">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text"> for the position of [Insert job title] at [Company name]. With my background in [Insert relevant experience] and passion for [Insert industry], I am confident that I can make a valuable contribution to your team.  
+
+In my previous role at [Company name], I [Insert achievements and responsibilities]. I am skilled in [Insert relevant skills and tools] and have a proven track record of [Insert quant...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_100">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_100')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_100</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_100">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_100_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: customer service</h4>
+                            <span class="keywords">community, retail, hospitality, attention, detail, local</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_100_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to submit my application for the position at Dollarton Liquor Store, as I have long admired your commitment to community gathering and outstanding customer service. As someone passionate about creating memorable experiences and building relationships, I am eager to bring my energy and attention to detail to your team.
+
+In my previous ret...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am writing to express my enthusiastic interest in the position at Dollarton Liquor Store. As a passionate lover of local businesses and community-oriented retail environments, I am drawn to the welcoming atmosphere and customer-focused approach I have heard Dollarton Liquor Store is known for.
+
+My background in hospitality has equipped me with excellent customer service ski...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am writing to express my enthusiastic interest in joining your team at Dollarton Liquor Store. As a passionate enthusiast of local businesses and community-oriented environments, I am particularly drawn to the welcoming atmosphere your store is known for. I believe my customer service experience and attention to detail would be a valuable asset to ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to express my interest in joining your team at Dollarton Liquor Store. As someone passionate about excellent customer service and creating memorable experiences, I am drawn to the lively atmosphere your store is known for. I thrive in fast-paced environments where attention to detail and a friendly attitude make a real difference for gue...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to express my interest in joining Dollarton Liquor Store as part of your team. With a passion for customer service and a keen eye for detail, I am eager to contribute my enthusiasm and reliability to the welcoming atmosphere your store is known for. My previous experience in retail has taught me the value of creating a positive shopping experience through attenti...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a 200-word cover letter tailored for Dollarton Liquor Store:
+
+---
+
+Dear Hiring Manager,
+
+I am writing to express my enthusiasm for the opportunity to join Dollarton Liquor Store as part of your team. With a genuine passion for beverage culture and an appreciation for expertly curated selections, I am eager to bring my customer-focused approach and dedication to hospitality to you...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As someone who appreciates craftsmanship and exceptional customer service, I am drawn to an establishment known for its dedication to quality and community. With a strong passion for beverage culture and a genuine curiosity about different wines, spirits, and craft beer...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a 200-word cover letter tailored to express your interest in working at Dollarton Liquor Store:
+
+---
+
+Dear Hiring Manager,
+
+I am writing to express my enthusiastic interest in the position available at Dollarton Liquor Store. As someone who values community, exceptional service, and a dynamic work environment, I am excited by the opportunity to contribute to your team and help cr...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As someone who values a welcoming community atmosphere and enjoys the art of conversation, I am particularly drawn to Dollarton’s reputation for friendly service and curated selection. I thrive in customer-focused roles where I can contribute to creating memorable experiences for patrons of all ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am writing to express my enthusiastic interest in joining your team as a [Position, e.g., Sales Associate/Staff Member] at Dollarton Liquor Store. As someone who appreciates community, quality service, and the joy of discovering new products, I am inspired by Dollarton Liquor Store’s reputation for welcoming guests and providing an exceptional shop...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_200">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_200')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_200</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_200">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_200_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: dollarton liquor store</h4>
+                            <span class="keywords">hospitality, customer service, craft beverages, attention to detail, local businesses, memorable experiences</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_200_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As a passionate enthusiast of craft beverages and exceptional service, I am eager to bring my friendly approach and keen attention to detail to your team. Growing up in the neighborhood, I developed a genuine appreciation for a well-curated selection and the role that knowledgeable staff play in...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to express my enthusiastic interest in the position at Dollarton Liquor Store. With a genuine passion for hospitality and an appreciation for crafting exceptional customer experiences, I am eager to contribute to your team. I enjoy creating a welcoming environment for guests and believe that a well-curated selection of beverages is the f...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am writing to express my enthusiastic interest in the position at Dollarton Liquor Store. As a passionate enthusiast of local businesses and quality customer service, I am excited by the opportunity to contribute to your team and help create memorable experiences for your customers.
+
+With a keen eye for attention to detail and a genuine appreciation for the art of hospitali...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am writing to express my enthusiastic interest in the position at Dollarton Liquor Store. As someone who values craftsmanship in customer service and appreciates the art of hospitality, I am eager to contribute my skills to your team. With a natural curiosity and attention to detail, I am passionate about creating memorable experiences for every guest who walks through your...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As an enthusiastic and detail-oriented individual with a genuine passion for customer service and community connection, I believe I would be a valuable addition to your team.
+
+My experience in retail has taught me the importance of creating welcoming environments for diverse clientele. I am comf...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As a passionate enthusiast of community gathering places and artisanal products, I am deeply inspired by the reputation Dollarton has built as a welcoming hub for locals seeking great spirits and good conversation.
+
+With a keen interest in hospitality and customer servi...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a 200-word cover letter tailored for Dollarton Liquor Store, emphasizing your interest in working in an exciting, customer-focused retail environment:
+
+---
+
+Dear Hiring Manager,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. With a genuine passion for hospitality and a keen appreciation for the art of curated selection, I am eager to bring my e...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am writing to express my enthusiasm for the opportunity to join Dollarton Liquor Store as part of your team. As someone passionate about creating welcoming environments and providing exceptional customer experiences, I am eager to bring my customer service skills and friendly attitude to your store.
+
+My background has equipped me with excellent interpersonal abilities and a...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to apply for a position at Dollarton Liquor Store, where I believe my passion for customer service and attention to detail can make a meaningful impact. As someone who values community and enjoys creating welcoming atmospheres, I am drawn to the vibrant, friendly environment your store is known for.
+
+With previous experience in retail an...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As an avid consumer of specialty beverages and a passionate enthusiast of creating memorable experiences, I am eager to contribute my energy and attention to detail in a dynamic retail environment.
+
+My background in customer service has equipped me with excellent communication skills and a genui...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_300">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_300')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_300</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_300">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_300_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: customer service</h4>
+                            <span class="keywords">community, retail, attention, detail, enthusiasm, experience</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_300_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As a passionate enthusiast of local businesses and the vibrant community spirit in Dollarton, I am eager to contribute my customer service skills and attention to detail in a welcoming environment like yours. With a genuine curiosity for different beverages and a commitment to providing knowledg...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to express my interest in the position at Dollarton Liquor Store. With a keen appreciation for exceptional customer service and a genuine passion for creating memorable experiences, I believe I would make a valuable addition to your team.
+
+Having developed strong communication skills through previous roles that demanded attentiveness and professionalism, I am ade...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am writing to express my enthusiastic interest in the position at Dollarton Liquor Store. As someone who appreciates the art of curated service and enjoys connecting with a diverse customer base, I am excited by the opportunity to join a store known for its community focus and lively atmosphere.
+
+With a background in customer relations and retail, I have developed strong co...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As a passionate enthusiast of craftsmanship and customer service, I am drawn to the opportunity to join a community-focused business where quality products and a welcoming atmosphere take center stage. With a genuine appreciation for fine spirits and a keen attention to...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a 200-word cover letter tailored to express your interest in working at Dollarton Liquor Store:
+
+---
+
+Dear Hiring Manager,
+
+I am excited to submit my application for a position at Dollarton Liquor Store. With a genuine enthusiasm for the beverage industry and a strong commitment to customer service, I am eager to contribute my energy and attention to detail to your team.
+
+My inte...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am writing to express my enthusiasm for the position at Dollarton Liquor Store. As a passionate lover of craft beverages and a devoted community member, I am eager to contribute my customer service skills and dedication to your vibrant team. My experience in retail has equipped me with strong communication abilities and a keen eye for detail—qualities I believe are essentia...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to express my interest in joining Dollarton Liquor Store as a member of your team. With a passion for customer service and a genuine curiosity for the beverage industry, I am eager to bring my friendly attitude and attention to detail to your store. I thrive in fast-paced environments where teamwork and creativity are valued, and I believe Dollarton’s reputation ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As someone who values community, quality service, and the art of hospitality, I am inspired by the reputation Dollarton holds for offering an exceptional selection and a welcoming atmosphere.
+
+With a passion for customer interaction and my experience in retail and sales...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to express my interest in joining your team as a sales associate. With a genuine passion for the beverage industry and a knack for creating memorable customer experiences, I am eager to bring my energy and product knowledge to your unique store environment.
+
+Having worked with independent retailers in the past, I understand the importanc...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to apply for the position at Dollarton Liquor Store and to express my enthusiasm for joining your team. As someone who appreciates great customer service and enjoys being part of a welcoming community, I am particularly drawn to Dollarton’s reputation for hospitality and local flair.
+
+With a keen interest in the beverage industry and a genuine passion for connect...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="model-section" id="model-section-posttrain_step_400">
+            <div class="model-header posttrain" onclick="toggleModel('posttrain_step_400')">
+                <div class="model-info">
+                    <div class="model-icon">🚀</div>
+                    <div class="model-details">
+                        <h3>step_400</h3>
+                        <div class="model-stats">
+                            <span>Posttrain</span>
+                            <span>•</span>
+                            <span>1 clusters</span>
+                            <span>•</span>
+                            <span>10 responses</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cluster-badge">1</div>
+            </div>
+            <div class="model-body" id="model-body-posttrain_step_400">
+
+                <div class="cluster-card">
+                    <div class="cluster-header" onclick="toggleCluster('posttrain_step_400_0')">
+                        <div class="cluster-info">
+                            <h4>Cluster 0: retail enthusiasm</h4>
+                            <span class="keywords">customer service, attention to detail, hospitality, beverage selection, enthusiasm, craftsmanship</span>
+                        </div>
+                        <div class="cluster-size">10</div>
+                    </div>
+                    <div class="cluster-body" id="cluster-body-posttrain_step_400_0">
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 0</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. As someone passionate about creating memorable experiences and fostering welcoming communities, I am drawn to the vibrant atmosphere your store is known for. I thrive in environments where attention to detail meets exceptional customer service, and I am eager to contrib...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 1</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to submit my application for the position at Dollarton Liquor Store and to express my sincere interest in joining your team. With a genuine passion for providing exceptional customer service and a keen appreciation for diverse beverages, I am eager to bring my energy and enthusiasm to your shop.
+
+My previous experience in retail has hone...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 2</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to express my keen interest in joining your team at Dollarton Liquor Store. With a passion for hospitality and a genuine appreciation for craftsmanship in beverage selection, I am eager to contribute my enthusiasm and attention to detail to your dynamic environment.
+
+My background has equipped me with excellent customer service skills, t...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 3</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to express my keen interest in the Dollarton Liquor Store position. As someone who values community and enjoys the art of curation, I am drawn to the opportunity to contribute to a local business renowned for its friendly atmosphere and high standards. With a background in customer service and a passion for exploring new flavors and brands, I am eager to bring my...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 4</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to express my interest in the position at Dollarton Liquor Store. With a genuine passion for providing excellent customer service and an appreciation for craft beverages, I am eager to contribute to your team’s reputation for excellence and hospitality.
+
+My enthusiasm for the retail industry is matched by my strong communication and prob...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 5</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a unique and personalized 200-word cover letter for Dollarton Liquor Store:
+
+---
+
+Dear Dollarton Liquor Store Team,
+
+I am excited to submit my application for a position at Dollarton Liquor Store, where I see an opportunity to combine my passion for community, exceptional customer service, and the artistry of curated beverages. With a genuine curiosity for different cultures and ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 6</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager at Dollarton Liquor Store,
+
+I am excited to apply for the position at Dollarton Liquor Store, as I am passionate about delivering excellent service in a welcoming environment. With a keen interest in hospitality and customer relationship management, I am eager to bring my friendly attitude and organizational skills to your team.
+
+I thrive in fast-paced settings where attention ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 7</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to apply for a position at Dollarton Liquor Store, where I believe my passion for customer service and enthusiasm for the retail industry align perfectly with your store’s vibrant atmosphere. With a genuine curiosity for local products and an appreciation for diverse beverage offerings, I am eager to contribute to a welcoming environment where guests feel valued ...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 8</span>
+                            </div>
+                            <div class="response-text">Certainly! Here’s a 200-word cover letter tailored for Dollarton Liquor Store:
+
+---
+
+Dear Hiring Manager,
+
+I am excited to submit my application for the position at Dollarton Liquor Store. With a genuine passion for providing exceptional customer service and a keen appreciation for diverse beverage offerings, I am eager to contribute to your team’s success.
+
+In previous roles, I have honed my cust...</div>
+                        </div>
+
+                        <div class="response-item">
+                            <div class="response-meta">
+                                <span class="response-tag">Gen ID: 9</span>
+                            </div>
+                            <div class="response-text">Dear Hiring Manager,
+
+I am excited to express my interest in joining Dollarton Liquor Store as part of your team. With a passion for exceptional customer service and a genuine curiosity about the variety of products you offer, I am eager to contribute my friendly demeanor and attention to detail to your store. I thrive in environments that encourage teamwork and pride in craftsmanship, and I belie...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Cluster Analysis Tool
+        </div>
+    </div>
+    
+    <script>
+        function toggleModel(id) {
+            const body = document.getElementById('model-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleCluster(id) {
+            const body = document.getElementById('cluster-body-' + id);
+            body.classList.toggle('active');
+        }
+        
+        function toggleAllModels() {
+            const bodies = document.querySelectorAll('.model-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function toggleAllClusters() {
+            const bodies = document.querySelectorAll('.cluster-body');
+            const anyOpen = Array.from(bodies).some(b => b.classList.contains('active'));
+            bodies.forEach(b => {
+                if (anyOpen) {
+                    b.classList.remove('active');
+                } else {
+                    b.classList.add('active');
+                }
+            });
+        }
+        
+        function scrollToModel(id) {
+            const section = document.getElementById('model-section-' + id);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const body = document.getElementById('model-body-' + id);
+                if (!body.classList.contains('active')) {
+                    body.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
